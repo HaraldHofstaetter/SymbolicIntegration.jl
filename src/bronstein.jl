@@ -187,9 +187,47 @@ function HermiteReduce(A::PolyElem{T}, D::PolyElem{T}) where T <: FieldElement
     return g, A//Dstar
 end
 
-function IntRationalLogPart(A::PolyElem{T}, D::PolyElem{T}; make_monic::Bool=false) where T <: FieldElement
-    QQt,t = PolynomialRing(QQ, "a")
-    QQtX, X = PolynomialRing(QQt, "x")
+struct SumOfLogTerms{T<:FieldElement, P<:PolyElem{T}}
+    R::P
+    S::PolyElem{P}
+end
+
+function Base.show(io::IO, t::SumOfLogTerms)
+    s = string(parent(t.R).S)
+    print(io, "Σ_{$s: ")
+    show(io, t.R)
+    print(io, " = 0}$s*log(")
+    show(io, t.S)
+    print(io, ")")
+end
+
+struct AtanTerm #{T<:FieldElement, P<:PolyElem{T}}
+    coeff #::T
+    arg #::FracElem{P}
+end
+
+
+
+function Base.show(io::IO, t::AtanTerm)
+    if iszero(t.coeff)
+        print(io, 0)
+        return
+    end
+    if !isone(t.coeff)
+        show(io, t.coeff)
+        print(io, "*")
+    end
+    print(io, "atan(")
+    show(io, t.arg)
+    print(io, ")")
+end
+
+
+
+function IntRationalLogPart(A::PolyElem{T}, D::PolyElem{T}; make_monic::Bool=false, symbol=:α) where T <: FieldElement
+    F = parent(leading_coefficient(A))
+    Ft, t = PolynomialRing(F, symbol)
+    FtX, X = PolynomialRing(Ft, symbols(parent(A))[1])
     R, Rs = SubResultant(D(X), A(X)-t*derivative(D)(X))
     Qs = Squarefree_Musser(leading_coefficient(R))
     ds = degree.(Qs)
@@ -211,36 +249,41 @@ function IntRationalLogPart(A::PolyElem{T}, D::PolyElem{T}; make_monic::Bool=fal
             if make_monic
                 Qs[ii] = divexact(Qs[ii], leading_coefficient(Qs[ii]))
                 h = invmod(leading_coefficient(S), Qs[ii])
-                S = QQtX([rem(h*c, Qs[ii]) for c in coefficients(S)])
+                S = FtX([rem(h*c, Qs[ii]) for c in coefficients(S)])
             else
-                S = QQtX([rem(c, Qs[ii]) for c in coefficients(S)])                            
+                S = FtX([rem(c, Qs[ii]) for c in coefficients(S)])                            
             end
             push!(Ss, S)
             ii+=1                        
         end
     end
-    collect(zip(Qs, Ss))
+    [SumOfLogTerms(Q, S) for (Q, S) in zip(Qs, Ss)]
 end
 
-function IntegrateRationalFunction(f::FracElem{P}) where {T<:FieldElement, P<: PolyElem{T}}    
+function IntegrateRationalFunction(f::FracElem{P}; symbol=:α) where {T<:FieldElement, P<:PolyElem{T}}    
     g, h = HermiteReduce(numerator(f), denominator(f))
     Q, R = divrem(numerator(h), denominator(h))
     if iszero(R)
-        return integral(Q), g, nothing
+        return vcat(integral(Q), g)
     else
-        return integral(Q), g, IntRationalLogPart(R, denominator(h), make_monic=true)
+        return vcat(integral(Q), g, IntRationalLogPart(R, denominator(h), make_monic=true, symbol=symbol)...)
     end
 end
 
 
-function Complexify(R::PolyElem{T}) where T <: FieldElement
-    QQuv,uv = PolynomialRing(QQ, ["u", "v"])
-    u=uv[1]
-    v=uv[2]
+function Complexify(R::PolyElem{T}; symbols=[:α, :β]) where T <: FieldElement
+    F = parent(leading_coefficient(R))
+    Fuv, uv = PolynomialRing(F, symbols)
+    u = uv[1]
+    v = uv[2]
     c = collect(coefficients(R))
     d = length(c)-1
     P = sum([sum([(-1)^div(k,2)*binomial(n,k)*c[n+1]*u^(n-k)*v^k for k=0:n if iseven(k)]) for n=0:d])
-    Q = sum([sum([(-1)^div(k,2)*binomial(n,k)*c[n+1]*u^(n-k)*v^k for k=1:n if isodd(k)]) for n=1:d])   
+    if (d==0)
+        Q = zero(Fuv)
+    else
+        Q = sum([sum([(-1)^div(k,2)*binomial(n,k)*c[n+1]*u^(n-k)*v^k for k=1:n if isodd(k)]) for n=1:d])   
+    end
     P,Q
 end
 
@@ -248,11 +291,56 @@ end
 function LogToAtan(A::PolyElem{T}, B::PolyElem{T}) where T <: FieldElement
     Q, R = divrem(A, B)
     if iszero(R)
-        return [Q//one(A)]
+        return [AtanTerm(2, Q)]
     end
     if degree(A)<degree(B)
         return LogToAtan(-B, A)
     end
     G, D, C = gcdx(B, -A)
-    return vcat((A*D+B*C)//G, LogToAtan(D, C))
+    return vcat(AtanTerm(2, (A*D+B*C)//G), LogToAtan(D, C))
 end
+
+struct SumOfRealTerms 
+    R
+    S
+    P
+    Q
+    LT
+    ATs
+end
+
+function Base.show(io::IO, t::SumOfRealTerms)
+    s = string.(parent(t.P).S)
+    print(io, "Σ_{$(s[1]),$(s[2]): $(s[2])>0, ")
+    show(io, t.P)
+    print(io, " = ") 
+    show(io, t.Q)
+    print(io, " = 0}($(s[1])*log(")
+    show(io, t.LT)
+    print(io, ") + $(s[2])*(")
+    print(io, join(string.(t.ATs), "+"))
+    print(io, "))")
+    s0 = string(parent(t.R).S)
+    print(io, " + Σ_{$s0: Im($s0)=0, ")
+    show(io, t.R)
+    print(io, " = 0}$s0*log(")
+    show(io, t.S)
+    print(io, ")")
+
+end
+
+
+
+function LogToReal(t::SumOfLogTerms; symbols=[:α, :β]) #{T, PP}) where {T<:FieldElement, PP<:PolyElem{T}}
+    F = parent(leading_coefficient(t.R))
+    R, uv = PolynomialRing(F, symbols)
+    K = FractionField(R)
+    Kx, x = PolynomialRing(K, "x")
+    P, Q = Complexify(t.R)
+    cc =[Complexify(c) for c in coefficients(t.S)]
+    A = Kx([c[1] for c in cc])
+    B = Kx([c[2] for c in cc])
+    SumOfRealTerms(t.R, t.S, P, Q, A^2+B^2, LogToAtan(A, B))
+end
+
+

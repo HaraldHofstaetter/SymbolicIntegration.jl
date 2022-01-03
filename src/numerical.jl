@@ -85,6 +85,8 @@ function Base.show(io::IO, f::NumericalPolynomial)
                 if i>0
                     print(io, "*")
                 end
+            elseif !first
+                print(io, "+")
             end
             if i>0
                 print(io, f.var)

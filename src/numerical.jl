@@ -115,20 +115,60 @@ function Base.show(io::IO, t::FunctionTerm{T}) where T<:Number
     print(io, ")")
 end
 
+function improve_zero(z0::S, f::NumericalPolynomial{T}, fd::NumericalPolynomial{T}; tol::Float64=-1.0) where {S<:Real, T<:Real}
+    if tol<=0
+        tol = Float64(1000*eps(T))
+    end
+    z = T(z0)
+    res = f(z)
+    k = 0
+    while abs(res) > tol
+        if k>100
+            println(stderr, "WARNING: improve_zero did not converge after 100 steps, res=$(Float64(abs(res))), tol=$tol")
+            break
+        end
+        z -= res/fd(z)
+        res = f(z)
+        k+=1
+    end
+    z
+end
 
+function improve_zero(z0::S, f::NumericalPolynomial{T}, fd::NumericalPolynomial{T}; tol::Float64=-1.0) where {S<:Complex, T<:Real}
+    if tol<=0
+        tol = Float64(1000*eps(T))
+    end
+    z = Complex{T}(z0)
+    res = f(z)
+    k = 0
+    while abs(res) > tol
+        if k>100
+            println(stderr, "WARNING: improve_zero did not converge after 100 steps, res=$(Float64(abs(res))), tol=$tol")
+            break
+        end
+        z -= res/fd(z)
+        res = f(z)
+        k+=1
+    end
+    z
+end
 
-function NumericalZeros(f::PolyElem{T}) where T <: FieldElement
+function NumericalZeros(f::PolyElem{T}; tol::Float64=-1.0) where T <: FieldElement
     cs = collect(coefficients(f))
     d = length(cs)-1
     comp = diagm(-1 => ones(Rational{BigInt}, d - 1))
     comp[1,:] = reverse(-cs[1:d] ./ cs[d+1])
     zs = eigvals(Float64.(comp))
+    f10 = divexact(f, gcd(f, derivative(f)))
+    f1  = NumericalPolynomial(f10)
+    f1d = NumericalPolynomial(derivative(f10))
+    [improve_zero(z, f1, f1d, tol=tol) for z in zs]
 end
 
 
-function NumericalEval(t::SumOfLogTerms; real_output::Bool=true)
+function NumericalEval(t::SumOfLogTerms; real_output::Bool=true, tol::Float64=-1.0)
     var = string(symbols(parent(t.S))[1])
-    as = NumericalZeros(t.R)
+    as = NumericalZeros(t.R, tol=tol)
     if !isa(as, Vector{<:Complex})
         return [FunctionTerm("log", a, NumericalPolynomial(BigFloat[c(a) 
                     for c in coefficients(t.S)], var)) for a in as]
@@ -158,7 +198,7 @@ function NumericalEval(t::SumOfLogTerms; real_output::Bool=true)
     out
 end
 
-function integrate0(f::FracElem{P}; real_output::Bool=true) where {T<:FieldElement, P<:PolyElem{T}}
+function integrate0(f::FracElem{P}; real_output::Bool=true, tol::Float64=-1.0) where {T<:FieldElement, P<:PolyElem{T}}
     h = IntegrateRationalFunction(f)
     out = Any[]
     if !iszero(h[1])
@@ -168,7 +208,7 @@ function integrate0(f::FracElem{P}; real_output::Bool=true) where {T<:FieldEleme
         push!(out, h[2])
     end
     for i=3:length(h)
-        push!(out, NumericalEval(h[i], real_output=real_output)...)
+        push!(out, NumericalEval(h[i], real_output=real_output, tol=tol)...)
     end
     out    
 end

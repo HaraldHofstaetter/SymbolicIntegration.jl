@@ -201,23 +201,23 @@ function Base.show(io::IO, t::SumOfLogTerms)
     print(io, ")")
 end
 
-struct AtanTerm #{T<:FieldElement, P<:PolyElem{T}}
-    coeff #::T
-    arg #::FracElem{P}
+struct FunctionTerm{T} 
+    fun::String
+    coeff::T
+    arg 
 end
 
-
-
-function Base.show(io::IO, t::AtanTerm)
+function Base.show(io::IO, t::FunctionTerm)
     if iszero(t.coeff)
         print(io, 0)
         return
     end
     if !isone(t.coeff)
+        print(io, "(")
         show(io, t.coeff)
-        print(io, "*")
+        print(io, ")*")
     end
-    print(io, "atan(")
+    print(io, t.fun, "(")
     show(io, t.arg)
     print(io, ")")
 end
@@ -291,13 +291,13 @@ end
 function LogToAtan(A::PolyElem{T}, B::PolyElem{T}) where T <: FieldElement
     Q, R = divrem(A, B)
     if iszero(R)
-        return [AtanTerm(2, Q)]
+        return [FunctionTerm("atan", 2, Q)]
     end
     if degree(A)<degree(B)
         return LogToAtan(-B, A)
     end
     G, D, C = gcdx(B, -A)
-    return vcat(AtanTerm(2, (A*D+B*C)//G), LogToAtan(D, C))
+    return vcat(FunctionTerm("atan", 2, divexact(A*D+B*C, G)), LogToAtan(D, C))
 end
 
 struct SumOfRealTerms 
@@ -306,7 +306,7 @@ struct SumOfRealTerms
     P
     Q
     LT
-    ATs
+    ATs::Vector{FunctionTerm}
 end
 
 function Base.show(io::IO, t::SumOfRealTerms)
@@ -343,4 +343,4 @@ function LogToReal(t::SumOfLogTerms; symbols=[:α, :β]) #{T, PP}) where {T<:Fie
     SumOfRealTerms(t.R, t.S, P, Q, A^2+B^2, LogToAtan(A, B))
 end
 
-
+    

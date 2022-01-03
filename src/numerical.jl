@@ -156,10 +156,10 @@ end
 function NumericalZeros(f::PolyElem{T}; tol::Float64=-1.0) where T <: FieldElement
     cs = collect(coefficients(f))
     d = length(cs)-1
-    comp = diagm(-1 => ones(Rational{BigInt}, d - 1))
-    comp[1,:] = reverse(-cs[1:d] ./ cs[d+1])
-    zs = eigvals(Float64.(comp))
-    f10 = divexact(f, gcd(f, derivative(f)))
+    comp = diagm(-1 => ones(d-1)) # companion matrix
+    comp[1,:] = reverse(Float64.(-cs[1:d] ./ cs[d+1]))
+    zs = eigvals(comp)
+    f10 = divexact(f, gcd(f, derivative(f))) # f10 = squarefree kernel of f
     f1  = NumericalPolynomial(f10)
     f1d = NumericalPolynomial(derivative(f10))
     [improve_zero(z, f1, f1d, tol=tol) for z in zs]

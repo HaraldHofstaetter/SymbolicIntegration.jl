@@ -93,9 +93,8 @@ problems = [
 
 
 for prob in problems
-    println("∫", prob[1], "dx =")
-    h = SymbolicIntegration.integrate(prob[1])
-    println(join(string.(h), "+"))
+    result = SymbolicIntegration.integrate(prob[1])
+    println("∫", prob[1], "dx = ", result)
     println("expected: ", prob[4])
     println("--------------------------------------------------------------------")
 end

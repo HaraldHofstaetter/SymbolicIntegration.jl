@@ -69,6 +69,6 @@ function integrate(f::FracElem{P}; real_output::Bool=true) where {T<:FieldElemen
     for i=3:length(h)
         push!(result, Eval(h[i], real_output=real_output)...)
     end
-    result    
+    Result(result)
 end
 

@@ -41,4 +41,22 @@ Base.show(io::IO, t::IdTerm) = show(io, t.arg)
 Base.show(io::IO, t::LogTerm) = show_function_term(io, t.coeff, "log", t.arg)
 Base.show(io::IO, t::AtanTerm) = show_function_term(io, t.coeff, "atan", t.arg)
 
+struct Result
+   t::Vector{Term}
+end
 
+function Base.show(io::IO, r::Result)
+    if length(r.t)==0
+        print(io, "0")
+        return
+    end
+    show(io, r.t[1])
+    for i=2:length(r.t)
+        s = string(r.t[i])
+        if s[1]!='+' && s[1]!='-'
+            print(io, " + ", s)
+        else        
+            print(io, " ", s[1], " ", s[2:end])
+        end
+    end
+end

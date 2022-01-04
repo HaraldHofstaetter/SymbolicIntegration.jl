@@ -21,9 +21,7 @@ julia> using Pkg; Pkg.add(PackageSpec(url="https://github.com/HaraldHofstaetter/
 
 ## Usage
 ```julia
-julia> using SymbolicIntegration
-
-julia> using Nemo
+julia> using SymbolicIntegration, Nemo
 
 julia> QQx, x = PolynomialRing(QQ, :x)
 (Univariate Polynomial Ring in x over Rational Field, x)

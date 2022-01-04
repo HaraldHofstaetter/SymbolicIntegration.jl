@@ -193,7 +193,7 @@ function HermiteReduce(A::PolyElem{T}, D::PolyElem{T}) where T <: FieldElement
     return g, A//Dstar
 end
 
-struct SumOfLogTerms{T<:FieldElement, P<:PolyElem{T}} <: Term
+struct SumOfLogTerms{T<:FieldElement, P<:PolyElem{T}} <: ResultTerm
     R::P
     S::PolyElem{P}
 end
@@ -281,7 +281,7 @@ function LogToAtan(A::PolyElem{T}, B::PolyElem{T}) where T <: FieldElement
     return vcat(AtanTerm(2, divexact(A*D+B*C, G)), LogToAtan(D, C))
 end
 
-struct SumOfRealTerms 
+struct SumOfRealTerms <: ResultTerm
     R
     S
     P

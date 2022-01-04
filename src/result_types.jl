@@ -1,17 +1,17 @@
 using AbstractAlgebra
 
-abstract type Term end
+abstract type ResultTerm end
 
-struct IdTerm{T<:RingElement} <: Term
+struct IdTerm{T<:RingElement} <: ResultTerm
     arg::Union{PolyElem{T}, FracElem{<:PolyElem{T}}}
 end
 
-struct LogTerm{T<:RingElement} <: Term
+struct LogTerm{T<:RingElement} <: ResultTerm
     coeff
     arg::Union{PolyElem{T}, FracElem{<:PolyElem{T}}}
 end
 
-struct AtanTerm{T<:RingElement} <: Term
+struct AtanTerm{T<:RingElement} <: ResultTerm
     coeff
     arg::Union{PolyElem{T}, FracElem{<:PolyElem{T}}}
 end
@@ -42,7 +42,7 @@ Base.show(io::IO, t::LogTerm) = show_function_term(io, t.coeff, "log", t.arg)
 Base.show(io::IO, t::AtanTerm) = show_function_term(io, t.coeff, "atan", t.arg)
 
 struct Result
-   t::Vector{Term}
+   t::Vector{ResultTerm}
 end
 
 function Base.show(io::IO, r::Result)

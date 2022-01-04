@@ -46,7 +46,7 @@ function Eval(t::SumOfLogTerms; real_output::Bool=true)
             polynomial(QQBar, [c(a) for c in coefficients(t.S)], var)))) for a in as]
     end
     r = LogToReal(t)
-    result = Term[]
+    result = ResultTerm[]
     for i = 1:length(as)
         a = as[i]
         u, v = us[i], vs[i]
@@ -70,7 +70,7 @@ end
 
 function integrate(f::FracElem{P}; real_output::Bool=true) where {T<:FieldElement, P<:PolyElem{T}}
     h = SymbolicIntegration.IntegrateRationalFunction(f)
-    result = Term[]
+    result = ResultTerm[]
     if !iszero(h[1].arg)
         push!(result, h[1])
     end

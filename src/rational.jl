@@ -1,3 +1,9 @@
+# This file contains algorithms from chapters 1 and 2 of the book
+#
+#    Manuel Bronstein, Symbolic Integration I: Transcendental Functions,
+#    2nd ed., Springer 2005. 
+#
+
 using AbstractAlgebra
 
 #PolyDivide: Implemented in AbstractAlgebra.jl as divrem
@@ -5,7 +11,7 @@ using AbstractAlgebra
 #PolyPseudoDivide: Implemented in AbstractAlgebra.jl as pseudodivrem
 
 #ExtendedEuclidean: implemented in AbstractAlgebra.jl as gcdx 
-#   Note that the order of output parameters is g, s, t instead of s, t, g.
+#  Note that the order of output parameters is g, s, t instead of s, t, g.
 
 
 EuclideanSize(f::T) where T <: Integer = abs(f)

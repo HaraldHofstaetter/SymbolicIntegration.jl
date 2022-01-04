@@ -42,8 +42,8 @@ function Eval(t::SumOfLogTerms; real_output::Bool=true)
     us = real.(as)
     vs = imag.(as)
     if iszero(vs) || !real_output
-        return [LogTerm(a, positive_constant_coefficient(
-            polynomial(QQBar, [c(a) for c in coefficients(t.S)], var))) for a in as]
+        return [LogTerm(rationalize(a), rationalize(positive_constant_coefficient(
+            polynomial(QQBar, [c(a) for c in coefficients(t.S)], var)))) for a in as]
     end
     r = LogToReal(t)
     result = Term[]

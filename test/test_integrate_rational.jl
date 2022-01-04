@@ -1,5 +1,5 @@
 using SymbolicIntegration
-using AbstractAlgebra
+using Nemo
 
 QQx, x = PolynomialRing(QQ, "x")
 
@@ -94,7 +94,7 @@ problems = [
 
 for prob in problems
     println("∫", prob[1], "dx =")
-    h = SymbolicIntegration.integrate0(prob[1])
+    h = SymbolicIntegration.integrate(prob[1])
     println(join(string.(h), "+"))
     println("expected: ", prob[4])
     println("--------------------------------------------------------------------")

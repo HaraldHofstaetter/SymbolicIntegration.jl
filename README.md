@@ -3,7 +3,7 @@ This package provides Julia implementations of symbolic integration algorithms.
 
 The basic algorithms are implemented in a generic way using the 
 [AbstractAlgebra.jl](https://nemocas.github.io/AbstractAlgebra.jl/dev/) package.
-More advanced algorithms require the
+Some algorithms require the
 [Nemo.jl](https://nemocas.github.io/Nemo.jl/dev/) computer algebra package
 for calculations with algebraic numbers.
 

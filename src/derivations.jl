@@ -111,7 +111,7 @@ function SplitFactor(p::PolyElem, D::Derivation)
 end
 
 function SplitSquarefreeFactor(p::PolyElem, D::Derivation)
-    ps = SymbolicIntegration.Squarefree(p)
+    ps = Squarefree(p)
     Ss = [gcd(ps[i], D(ps[i])) for i=1:length(ps)]
     Ns = [divexact(ps[i], Ss[i]) for i=1:length(ps)]
     return Ns, Ss

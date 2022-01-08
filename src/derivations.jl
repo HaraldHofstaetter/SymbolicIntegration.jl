@@ -31,6 +31,25 @@ BasicDerivation(domain::PolyRing) = BasicPolyDerivation(domain)
 BasicDerivation(domain::FracField{P}) where P<:PolyElem = BasicFracDerivation(domain)
 
 
+struct CoefficientLiftingDerivation{T<:RingElement} <:Derivation
+    domain::PolyRing{T}
+    D::Derivation
+    function CoefficientLiftingDerivation{T}(R::PolyRing{T}, D::Derivation) where T<:RingElement
+        base_ring(R)==D.domain || error("domain of D must be base ring S of R=S[t]")
+        new(R, D)
+    end
+end
+
+CoefficientLiftingDerivation(R::PolyRing{T}, D::Derivation) where T<:RingElement = 
+    CoefficientLiftingDerivation{T}(R, D)
+
+function (D::CoefficientLiftingDerivation{T})(p::PolyElem{T}) where T<:RingElement
+    parent(p)==D.domain || error("p not in domain of D")
+    map_coefficients(c->D.D(c), p)
+end
+
+
+
 
 struct FracExtensionDerivation{P<:PolyElem} <: Derivation 
     domain::FracField{P}
@@ -101,7 +120,7 @@ end
 
     
 
-function SplitFactor(p::PolyElem, D::Derivation)
+function SplitFactor(p::PolyElem{T}, D::Derivation) where T<:RingElement
     S = divexact(gcd(p, D(p)), gcd(p, derivative(p)))
     if degree(S)==0
         return(p, one(p))
@@ -110,14 +129,14 @@ function SplitFactor(p::PolyElem, D::Derivation)
     qn, S*qs
 end
 
-function SplitSquarefreeFactor(p::PolyElem, D::Derivation)
+function SplitSquarefreeFactor(p::PolyElem{T}, D::Derivation) where T<:RingElement
     ps = Squarefree(p)
     Ss = [gcd(ps[i], D(ps[i])) for i=1:length(ps)]
     Ns = [divexact(ps[i], Ss[i]) for i=1:length(ps)]
     return Ns, Ss
 end
 
-function CanonicalRepesentation(p::FracElem{P}, D::Derivation) where P<:PolyElem
+function CanonicalRepresentation(f::FracElem{P}, D::Derivation) where {T<:FieldElement, P<:PolyElem{T}}
     a = numerator(f)
     d = denominator(f)
     q, r = divrem(a, d)

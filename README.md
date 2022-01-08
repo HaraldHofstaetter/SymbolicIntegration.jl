@@ -3,7 +3,7 @@ This package provides Julia implementations of symbolic integration algorithms.
 
 The basic algorithms are implemented in a generic way using the 
 [AbstractAlgebra.jl](https://nemocas.github.io/AbstractAlgebra.jl/dev/) package.
-More advanced algorithms require the
+Some algorithms require the
 [Nemo.jl](https://nemocas.github.io/Nemo.jl/dev/) computer algebra package
 for calculations with algebraic numbers.
 
@@ -11,7 +11,7 @@ Currently, only algorithms for integrating rational functions are provided, whic
 
 > Manuel Bronstein, [Symbolic Integration I: Transcentental Functions](https://link.springer.com/book/10.1007/b138171), 2nd ed, Springer 2005.
 
-Based on the [AbstractAlgebra.jl](https://nemocas.github.io/AbstractAlgebra.jl/dev/) framework,
+It should be mentioned that building on the framework provided by [AbstractAlgebra.jl](https://nemocas.github.io/AbstractAlgebra.jl/dev/),
 the task of translating the book's pseudocode into Julia code was remarkably straightforward.
 
 ## Installation

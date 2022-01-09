@@ -84,7 +84,7 @@ function SubResultant(A::PolyElem{T}, B::PolyElem{T}) where T <: RingElement
         return zero_poly, vcat(Rs[1:k+1], zero_poly)
     end
     if degree(Rs[k-1+1])==1
-        return Rs[k+1], vcat(Rs[1:k+1], zero_poly)
+        return constant_coefficient(Rs[k+1]), vcat(Rs[1:k+1], zero_poly)
     end
     s = 1
     c = one(T)
@@ -95,7 +95,7 @@ function SubResultant(A::PolyElem{T}, B::PolyElem{T}) where T <: RingElement
         q = divexact(β[j], r[j]^(1+δ[j]))        
         c = c*q^degree(Rs[j+1])*r[j]^(degree(Rs[j-1+1])-degree(Rs[j+1+1]))            
     end
-    (s*c)*Rs[k+1]^degree(Rs[k-1+1]), vcat(Rs[1:k+1], zero_poly)
+    constant_coefficient((s*c)*Rs[k+1]^degree(Rs[k-1+1])), vcat(Rs[1:k+1], zero_poly)
 end
 
 function Squarefree_Musser(A::PolyElem{T}) where T <: RingElement
@@ -212,7 +212,7 @@ function IntRationalLogPart(A::PolyElem{T}, D::PolyElem{T}; make_monic::Bool=fal
     Ft, t = PolynomialRing(F, symbol)
     FtX, X = PolynomialRing(Ft, symbols(parent(A))[1])
     R, Rs = SubResultant(D(X), A(X)-t*derivative(D)(X))
-    Qs = Squarefree_Musser(leading_coefficient(R))
+    Qs = Squarefree(R)
     ds = degree.(Qs)
     Qs = [f for f in Qs if degree(f)>0]
     Ss = typeof(X)[] 
@@ -224,7 +224,7 @@ function IntRationalLogPart(A::PolyElem{T}, D::PolyElem{T}; make_monic::Bool=fal
             else
                 m = findfirst(z->z==i, degree.(Rs))
                 S =  Rs[m]
-                As = Squarefree_Musser(leading_coefficient(S))
+                As = Squarefree(leading_coefficient(S))
                 for j=1:length(As)
                     S = divexact(S, gcd(As[j],Qs[ii])^j)
                 end

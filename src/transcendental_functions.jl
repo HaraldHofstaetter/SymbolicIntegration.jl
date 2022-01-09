@@ -21,7 +21,7 @@ function HermiteReduce(f::FracElem{P}, D::Derivation) where {T<:FieldElement, P<
 end
 
 
-function PolynomialReduce(p::P, D::MonomialFracExtensionDerivation{P}) where {T<:FieldElement, P<:PolyElem{T}}
+function PolynomialReduce(p::P, D::ExtensionDerivation) where {T<:FieldElement, P<:PolyElem{T}}
     δ = degree(D.H)
     δ > 1 || error("not a nonlinear monomial")
     t = gen(parent(D.H))
@@ -35,7 +35,7 @@ function PolynomialReduce(p::P, D::MonomialFracExtensionDerivation{P}) where {T<
 end
 
 
-function ResidueReduce(f::F, D::MonomialFracExtensionDerivation{P}; symbol=:α) where 
+function ResidueReduce(f::F, D::ExtensionDerivation; symbol=:α) where 
     {T<:RingElement, P<:PolyElem{T}, F<:FracElem{P}}
     d = denominator(f)
     (p,a) = divrem(numerator(f), d)

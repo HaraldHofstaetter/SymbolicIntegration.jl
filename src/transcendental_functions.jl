@@ -35,7 +35,7 @@ function PolynomialReduce(p::P, D::ExtensionDerivation) where {T<:FieldElement, 
 end
 
 
-function ResidueReduce(f::F, D::ExtensionDerivation; symbol=:α) where 
+function ResidueReduce(f::F, D::Derivation; symbol=:α) where 
     {T<:RingElement, P<:PolyElem{T}, F<:FracElem{P}}
     d = denominator(f)
     (p,a) = divrem(numerator(f), d)
@@ -46,8 +46,7 @@ function ResidueReduce(f::F, D::ExtensionDerivation; symbol=:α) where
     else
         r, Rs = SubResultant(a(t)-z*D(d)(t), d(t))
     end
-    r = constant_coefficient(r) # r ∈ kz 
-    κD = CoefficientLiftingDerivation(kz, D.D)
+    κD = CoefficientLiftingDerivation(kz, BaseDerivation(D))
     ns, ss = SplitSquarefreeFactor(r, κD)    
     ds = degree.(ss)
     ss = [ss[i] for i=1:length(ss) if ds[i]>0]
@@ -60,7 +59,7 @@ function ResidueReduce(f::F, D::ExtensionDerivation; symbol=:α) where
             else
                 m = findfirst(z->z==i, degree.(Rs))
                 S =  Rs[m]
-                As = Squarefree_Musser(leading_coefficient(S))
+                As = Squarefree(leading_coefficient(S))
                 for j=1:length(As)
                     S = divexact(S, gcd(As[j],ss[ii])^j)
                 end

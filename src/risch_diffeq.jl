@@ -480,7 +480,7 @@ function RischDE(f::F, g::F, D::Derivation) where
     {T<:RingElement, P<:PolyElem{T}, F<:FracElem{P}}
     H = MonomialDerivative(D)
     δ = degree(H)
-    is_d_over_dt = isa(SD.BaseDerivation(D), SD.BasicDerivation) #D=d/dt ?
+    is_d_over_dt = isa(BaseDerivation(D), BasicDerivation) #D=d/dt ?
     primitive_case = degree(H)==0  # includes D=D/dt case
     hyperexponential_case = degree(H)==1 && izero(constant_coefficient(H))
     #hypertangent_case = ... TODO

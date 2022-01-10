@@ -67,9 +67,9 @@ function RdeNormalDenominator(f::F, g::F, D::Derivation) where
     p = gcd(dn, en)
     h = divexact(gcd(en, derivative(en)), gcd(p, derivative(p)))
     if !iszero(rem(dn*h^2, en))
-        return zero(h), zero(f), zero(f), zero(h), false
+        return zero(h), zero(f), zero(f), zero(h), 0
     end
-    dn*h, dn*h*f-dn*D(h), dn*h^2*g, h, true
+    dn*h, dn*h*f-dn*D(h), dn*h^2*g, h, 1
 end
 
 
@@ -326,7 +326,7 @@ function PolyRischDENoCancel1(b::P, c::P, D::Derivation, n::Int=typemax(Int)) wh
         end
         p = (leading_coefficient(c)//leading_coefficient(b))*t^m
         q += p
-        n = m - 1 # SIC!?!?!
+        n = m - 1
         c -= D(p)+b*p
     end
     q, 1
@@ -361,7 +361,7 @@ function PolyRischDENoCancel2(b::P, c::P, D::Derivation, n::Int=typemax(Int)) wh
             p = (leading_coefficient(c)//leading_coefficient(b)) + zero(b) #make p\in k an element of k(t)
         end
         q += p
-        n = m - 1 # SIC!?!?!
+        n = m - 1
         c -= D(p)+b*p
     end
     q, zero(λ), zero(λ), 1
@@ -401,12 +401,137 @@ function PolyRischDENoCancel3(b::P, c::P, D::Derivation, n::Int=typemax(Int)) wh
             p = (leading_coefficient(c)//leading_coefficient(b)) + zero(b) #make p\in k an element of k(t)
         end
         q += p
-        n = m - 1 # SIC!?!?!
+        n = m - 1
         c -= D(p)+b*p
     end
     q, 0, zero(b), 1
 end
 
+function PolyRischDECancelPrim(b::T, c::P, D::Derivation, n::Int=typemax(Int)) where
+    {T<:RingElement, P<:PolyElem{T}} # here typemax(Int) represents +infinity
+    # See Bronstein's book, Section 6.6, p. 212
+    t = gen(parent(b))
+    if false # TODO
+        if false #TODO
+        else
+            return zero(c), 0 # no solution
+        end
+    end
+    if iszero(c)
+        return zero(c), 0 # no solution
+    end
+    q = zero(c)
+    while !iszero(c)
+        m = degree(c)
+        if n<m
+            return zero(c), 0 # no solution
+        end
+        s, success = RischDE(b, leading_coefficient(c), BaseDerivation(D))
+        if success==0
+            return zero(c), 0 # no solution
+        end
+        q += s*t^m
+        n = m - 1
+        c -= b*s*t^m + D(s*t^m)
+    end
+    q, 1
+end
+
+function PolyRischDECancelExp(b::T, c::P, D::Derivation, n::Int=typemax(Int)) where
+    {T<:RingElement, P<:PolyElem{T}} # here typemax(Int) represents +infinity
+    # See Bronstein's book, Section 6.6, p. 213
+    t = gen(parent(b))
+    H = MonomialDerivative(D)
+    w = coeff(H,1) # = Dt/t for hyperexponentialm case
+    n, m, z, β = ParametricLogarithmicDerivative(b, w, BaseDerivation(D))
+    if β<0
+        error("ParametricLogarithmicDerivative failed")
+    end
+    if  β>0 && n==1
+        # TODO
+    end
+    if iszero(c)
+        return zero(c), 1
+    end
+    if n<degree(c)
+        return zero(c), 0 # no solution
+    end
+    q = zero(c)
+    while !iszero(c)
+        m = degree(c)
+        if n<m
+            return zero(c), 0 # no solution
+        end
+        s, success = RischDE(b+m*w, leading_coefficient(c), BaseDerivation(D))
+        if success==0
+            return zero(c), 0 # no solution
+        end
+        q += s*t^m
+        n = m - 1
+        c -= b*s*t^m + D(s*t^m)
+    end
+    q, 1
+end
 
 
+
+
+function RischDE(f::F, g::F, D::Derivation) where 
+    {T<:RingElement, P<:PolyElem{T}, F<:FracElem{P}}
+    H = MonomialDerivative(D)
+    δ = degree(H)
+    is_d_over_dt = isa(SD.BaseDerivation(D), SD.BasicDerivation) #D=d/dt ?
+    primitive_case = degree(H)==0  # includes D=D/dt case
+    hyperexponential_case = degree(H)==1 && izero(constant_coefficient(H))
+    #hypertangent_case = ... TODO
+    #if !(primitive_case || hyperexponential_case || hypertangent_case )
+    if !(hyperexponential_case)
+        error("RischDE not implemented for Dt=$H")
+    end
+    q = WeakNormalizer(f, D)
+    f1 = f - D(q)//q
+    g1 = q*g
+    a, b, c, h, success = RdeNormalDenominator(f1, g1, D)
+    success>=1 || return zero(f), zero(f), 0
+    if primitive_case
+        a1 = a
+        b1 = numerator(b)
+        c1 = numerator(c)
+        h1 = one(c1)
+        if is_d_over_dt
+            n = RdeBoundDegreeBase(a1, b1, c1) # not yet implemented
+        else
+            n = RdeBoundDegreePrim(a1, b1, c1, D) # not yet implemented
+        end
+    elseif hyperexponential_case
+        a1, b1, c1, h1 =  RdeSpecialDenomExp(a, b, c, D)
+        n = RdeBoundDegreeExp(a1, b1, c1, D) 
+    elseif  hypertangent_case
+        a1, b1, c1, h1  =  RdeSpecialDenomTan(a, b, c, D) # not yet implemented
+        n = RdeBoundDegreeNonLinear(a1, b1, c1, D)
+    end
+    b2, c2, α, β, success = SPDE(a1, b1, c1, D, n)
+    success>=1 || return zero(f), zero(f), 0
+    if  is_d_over_dt || degree(b2)>max(0, δ-1)
+        z, success = PolyRischDENoCancel1(b2, c2, D, n)
+    elseif degree(b2)<δ-1 && (is_d_over_dt || δ>=2)
+        z, b3, c3, success = PolyRischDENoCancel2(b2, c2, D, n)
+        if success==2
+            z1, success = RischDE(b3, c3, BaseDerivation(D))
+            success>=1 || return zero(f), zero(f), 0
+            z = z1 - z
+        end
+    elseif δ>=2 && degree(b2)==δ-1
+        z, m, c3, success = PolyRischDENoCancel3(b2, c2, D, n) 
+        # TODO: handle case success == 2
+    elseif primitive_case
+        z, success = PolyRischDECancelPrim(constant_coefficient(b2), c2, D, n) #not yet fully implemented
+    elseif hyperexponential_case
+        z, success = PolyRischDECancelExp(constant_coefficient(b2), c2, D, n) #not yet fully implemented
+    elseif hypertangent_case
+            # TODO....
+    end
+    success>=1 || return zero(f), zero(f), 0
+    (α*z+β)//(q*h*h1), 1
+end
 

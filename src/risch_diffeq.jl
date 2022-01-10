@@ -284,4 +284,35 @@ function RdeBoundDegreeNonLinear(a::P, b::P, c::P, D::Derivation) where
     n
 end
 
+function SPDE(a::P, b::P, c::P, D::Derivation, n::Int) where
+    {T<:RingElement, P<:PolyElem{T}}
+    # See Bronstein's book, Section 6.4, p. 203
+    ZP = zero(a)
+    if n<0
+        if iszero(c)
+            return ZP, ZP, 0, ZP, ZP, 1 
+        else
+            return ZP, ZP, 0, ZP, ZP, 0 # no solution
+        end
+    end
+    g = gcd(a, b)
+    if !iszero(rem(c, g))
+        return ZP, ZP, ZP, 0, ZP, 0 # no solution
+    end
+    a = divexact(a, g)
+    b = divexact(b, g)
+    c = divexact(c, g)
+    if degree(a)==0
+        return divexact(b, a), divexact(c, a), n, one(a), zero(a), 1
+    end
+    r, z = gcdx(b, a, c)
+    u = SPDE(a, b + D(a), z - D(r), D, n - degree(a))
+    if u[6]==0
+        return u
+    end
+    b1, c1, m, α, β, _ = u
+    b1, c1, m, a*α, a*β+r, 1
+end
+
+
 

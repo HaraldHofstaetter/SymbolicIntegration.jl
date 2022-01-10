@@ -36,6 +36,7 @@ function (D::BasicDerivation{T})(f::FracElem{P}) where {T<:RingElement, P<:PolyE
 end
 
 BaseDerivation(D::BasicDerivation) = NullDerivation(base_ring(D.domain))
+MonomialDerivative(D::BasicDerivation) = zero(D.domain)
 
 
 struct ExtensionDerivation{T<:RingElement} <: Derivation
@@ -99,6 +100,7 @@ end
 
 
 BaseDerivation(D::ExtensionDerivation) = D.D 
+MonomialDerivative(D::ExtensionDerivation) = D.H 
 
     
 

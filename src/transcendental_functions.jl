@@ -21,15 +21,16 @@ function HermiteReduce(f::FracElem{P}, D::Derivation) where {T<:FieldElement, P<
 end
 
 
-function PolynomialReduce(p::P, D::ExtensionDerivation) where {T<:FieldElement, P<:PolyElem{T}}
-    δ = degree(D.H)
+function PolynomialReduce(p::P, D::Derivation) where {T<:FieldElement, P<:PolyElem{T}}
+    H = MonomialDerivative(D)
+    δ = degree(H)
     δ > 1 || error("not a nonlinear monomial")
-    t = gen(parent(D.H))
+    t = gen(parent(H))
     if degree(p)<δ
         return (0, p)
     end
     m = degree(p) - δ +1
-    q0 = (leading_coefficient(p)//(m*leading_coefficient(D.H)))*t^m
+    q0 = (leading_coefficient(p)//(m*leading_coefficient(H)))*t^m
     q, r = PolynomialReduce(p-D(q0), D)
     q0+q, r
 end

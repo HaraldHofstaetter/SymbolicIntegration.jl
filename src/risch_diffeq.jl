@@ -221,8 +221,7 @@ function ParametricLogarithmicDerivative(f::F, w::F, D::Derivation) where
     end
 end
 
-
-function RdeSpecialDenomExp(a::P, b::F, c::F, D::ExtensionDerivation{T}) where
+function RdeSpecialDenomExp(a::P, b::F, c::F, D::Derivation) where
     {T<:RingElement, P<:PolyElem{T}, F<:FracElem{P}}
     # See Bronstein's book, Section 6.2, p. 190
     t = gen(parent(a))
@@ -232,9 +231,9 @@ function RdeSpecialDenomExp(a::P, b::F, c::F, D::ExtensionDerivation{T}) where
     n = min(0, nc - min(0,nb))
     if nb==0 
         α = Remainder(-b//a, p)
-        w = constant_coefficient(divexact(MonomialDerivative(D), t))
+        w = coeff(MonomialDerivative(D), 1)
         n0, m, z, β = ParametricLogarithmicDerivative(constant_coefficient(α), w, BaseDerivation(D))
-        if β==-1
+        if β<0
             error("ParametricLogarithmicDerivative failed")
         end
         if  β>0 && n0==1
@@ -244,4 +243,45 @@ function RdeSpecialDenomExp(a::P, b::F, c::F, D::ExtensionDerivation{T}) where
     N = max(0, -nb, n-nc)
     a*p^N, (b+n*a*divexact(D(p), p))*p^N, c*p^(N-n), p^(-n)
 end
+
+function RdeBoundDegreeExp(a::P, b::P, c::P, D::Derivation) where
+    {T<:RingElement, P<:PolyElem{T}}
+    # See Bronstein's book, Section 6.3, p. 200
+    da = degree(a)
+    db = degree(b)
+    dc = degree(c)
+    n = max(0, dc - max(db, da))
+    if da==db
+        α = -leading_coefficient(b)//leading_coefficient(a)
+        w = coeff(MonomialDerivative(D), 1)
+        n0, m, z, β = ParametricLogarithmicDerivative(α, w, BaseDerivation(D))
+        if β<0
+            error("ParametricLogarithmicDerivative failed")
+        end
+        if  β>0 && n0==1
+            n = max(n,m)
+        end
+    end
+    n
+end
+
+function RdeBoundDegreeNonLinear(a::P, b::P, c::P, D::Derivation) where
+    {T<:RingElement, P<:PolyElem{T}}
+    # See Bronstein's book, Section 6.3, p. 201
+    da = degree(a)
+    db = degree(b)
+    dc = degree(c)
+    H = MonomialDerivative(D)
+    δ = degree(H)
+    λ = leading_coefficient(H)
+    n = max(0, dc - max(da + δ - 1, db))
+    if db==da+δ-1
+        m = -leading_coefficient(b)/(λ*leading_coefficient(a))
+        if is_rational(m) && isone(denominator(rationalize(m)))
+            n = max(0, m, dc-db)
+        end
+    end
+    n
+end
+
 

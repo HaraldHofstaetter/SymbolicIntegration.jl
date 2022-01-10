@@ -314,5 +314,99 @@ function SPDE(a::P, b::P, c::P, D::Derivation, n::Int) where
     b1, c1, m, a*α, a*β+r, 1
 end
 
+function PolyRischDENoCancel1(b::P, c::P, D::Derivation, n::Int=typemax(Int)) where
+    {T<:RingElement, P<:PolyElem{T}} # here typemax(Int) represents +infinity
+    # See Bronstein's book, Section 6.5, p. 208
+    t = gen(parent(b))
+    q = zero(b)
+    while !iszero(c)
+        m = degree(c)-degree(b)
+        if n<0 || m<0 || m>n 
+            return zero(b), 0 # no solution
+        end
+        p = (leading_coefficient(c)//leading_coefficient(b))*t^m
+        q += p
+        n = m - 1 # SIC!?!?!
+        c -= D(p)+b*p
+    end
+    q, 1
+end
+
+function PolyRischDENoCancel2(b::P, c::P, D::Derivation, n::Int=typemax(Int)) where
+    {T<:RingElement, P<:PolyElem{T}} # here typemax(Int) represents +infinity
+    # See Bronstein's book, Section 6.5, p. 209
+    t = gen(parent(b))
+    H = MonomialDerivative(D)
+    δ = degree(H)
+    λ = leading_coefficient(H)
+    q = zero(b)
+    while !iszero(c)
+        if n==0
+            m=0
+        else
+            m = degree(c) - δ + 1
+        end
+        if n<0 || m<0 || m>n 
+            return zero(b), zero(λ), zero(λ), 0 # no solution
+        end
+        if m>0
+            p = (leading_coefficient(c)//(m*λ))*t^m
+        else
+            if degree(b)!=degree(c)
+                return zero(b), zero(λ), zero(λ), 0 # no solution
+            end
+            if degree(b)==0
+                return q, constant_coefficient(b), constant_coefficient(c), 2  
+            end
+            p = (leading_coefficient(c)//leading_coefficient(b)) + zero(b) #make p\in k an element of k(t)
+        end
+        q += p
+        n = m - 1 # SIC!?!?!
+        c -= D(p)+b*p
+    end
+    q, zero(λ), zero(λ), 1
+end
+
+function PolyRischDENoCancel3(b::P, c::P, D::Derivation, n::Int=typemax(Int)) where
+    {T<:RingElement, P<:PolyElem{T}} # here typemax(Int) represents +infinity
+    # See Bronstein's book, Section 6.4, p. 210
+    t = gen(parent(b))
+    H = MonomialDerivative(D)
+    δ = degree(H)
+    λ = leading_coefficient(H)
+    M = -1
+    h = -leading_coefficient(b)//λ
+    if isrational(h) 
+        h = rationalize(h)
+        if isone(denominator(h)) &&  h>0
+            M = numerator(h)
+        end
+    end
+    q = zero(b)
+    while !iszero(c)
+        m = max(M, degree(c)-δ+1)
+        if n<0 || m<0 || m>n
+            return zero(b), 0, zero(b), 0 # no solution
+        end
+        u = m*λ + leading_coefficient(b)
+        if iszero(u)
+            return q, m, c, 2
+        end
+        if m>0
+            p = (leading_coefficient(c)//u)*t^m
+        else
+            if degree(c)!=δ-1
+                return zero(b), 0, zero(b), 0 # no solution
+            end
+            p = (leading_coefficient(c)//leading_coefficient(b)) + zero(b) #make p\in k an element of k(t)
+        end
+        q += p
+        n = m - 1 # SIC!?!?!
+        c -= D(p)+b*p
+    end
+    q, 0, zero(b), 1
+end
+
+
 
 

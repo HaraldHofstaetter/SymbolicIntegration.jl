@@ -60,11 +60,16 @@ function PartialFraction(a::T, d::Vector{T}, e::Vector{Int}) where T <: RingElem
     a0, A
 end
 
-function SubResultant(A::PolyElem{T}, B::PolyElem{T}) where T <: RingElement
+
+function SubResultant(A::PolyElem{T}, B::PolyElem{T}) where T <: FieldElement
+    # Note: This implementation requires that A, B are polynomials over a field
+    # (and not mereley over an integral domain), because some intermediate
+    # calculations use divisons. For example, negative exponents of γ[i-1] 
+    # can occur, or the division in the definition of q.
     T_one = one(leading_coefficient(A)) # 1 of type T
     Rs = [A, B] # indices shifted! 
     i = 1
-    γ = T[-T_one]
+    γ = T[-T_one] 
     δ = Int[degree(A)-degree(B)]
     β = T[(-T_one)^(δ[1]+1)]
     r = T[]
@@ -76,7 +81,7 @@ function SubResultant(A::PolyElem{T}, B::PolyElem{T}) where T <: RingElement
         i += 1
         push!(γ, (-r[i-1])^δ[i-1]*γ[i-1]^(1-δ[i-1]) )
         push!(δ, degree(Rs[i-1+1]) - degree(Rs[i+1]) )
-        push!(β, -r[i-1]*γ[i]^δ[i] )        
+        push!(β, -r[i-1]*γ[i]^δ[i])       
     end
     k = i - 1
     zero_poly = zero(A)
@@ -87,15 +92,31 @@ function SubResultant(A::PolyElem{T}, B::PolyElem{T}) where T <: RingElement
         return constant_coefficient(Rs[k+1]), vcat(Rs[1:k+1], zero_poly)
     end
     s = 1
-    c = one(T)
+    c = T_one
     for j=1:k-1
         if isodd(degree(Rs[j-1+1])) && isodd(degree(Rs[j+1]))
             s = -s
         end
-        q = divexact(β[j], r[j]^(1+δ[j]))        
+        q = divexact(β[j], r[j]^(1+δ[j]))   # only exact if T is field     
         c = c*q^degree(Rs[j+1])*r[j]^(degree(Rs[j-1+1])-degree(Rs[j+1+1]))            
     end
     constant_coefficient((s*c)*Rs[k+1]^degree(Rs[k-1+1])), vcat(Rs[1:k+1], zero_poly)
+end
+
+function SubResultant(A::PolyElem{T}, B::PolyElem{T}) where T <: RingElement
+    # If we have polynomials over integral domain we upgrade them to polynomials
+    # over the fraction field. Then we call the above implementation of SubResultant 
+    # for polynomials over fields. Finally we downgrade the results to elements
+    # over the base integral domain.
+    Z = zero(leading_coefficient(A))//one(leading_coefficient(A))
+    # upgrade A, B \in R[t] to elements a, b of K[t] where K is the fraction ring of R
+    a = map_coefficients(c->(c+Z), A)
+    b = map_coefficients(c->(c+Z), B)
+    r0, Rs0 = SubResultant(a, b) 
+    # downgrade r, RS from elements of K[t] to elements  of R[t]
+    r = numerator(r0)
+    Rs = [map_coefficients(c->numerator(c), R) for R in Rs0]
+    r, Rs
 end
 
 function Squarefree_Musser(A::PolyElem{T}) where T <: RingElement

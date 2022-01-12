@@ -5,6 +5,7 @@
 #    2nd ed., Springer 2005. 
 #
 
+using AbstractAlgebra
 using Nemo
 
 isrational(x::fmpq) = true # Nemo rational type

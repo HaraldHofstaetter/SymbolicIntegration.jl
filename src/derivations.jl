@@ -1,8 +1,20 @@
+export Derivation, NullDerivation, BasicDerivation, ExtensionDerivation,
+   CoefficientLiftingDerivation,
+   BaseDerivation, MonomialDerivative, domain,
+   isbasic, isprimitive, ishyperexponential, isnonlinear, ishypertangent,
+   iscompatible, isnormal, isspecial, issimple, isreduced
+
+
 abstract type Derivation end
+
+domain(D::Derivation) = D.domain
+iscompatible(p::RingElement, D::Derivation) = parent(p)==domain(D)
+iscompatible(f::FracElem{P}, D::Derivation) where P<:PolyElem =
+    base_ring(parent(f))==D.domain
 
 
 struct NullDerivation <: Derivation
-    domain #Ring does not work ... :(
+    domain #::Ring does not work ... :(
 end
 
 NullDerivation(domain::FracField{T}) where T<:RingElement = NullDerivation(base_ring(domain))
@@ -26,12 +38,12 @@ end
 BasicDerivation(domain::FracField{P}) where P<:PolyElem = BasicDerivation(base_ring(domain))
 
 function (D::BasicDerivation{T})(p::PolyElem{T}) where T<:RingElement 
-    parent(p)==D.domain || error("p not in domain of D")
+    iscompatible(p, D) || error("p not in domain of D")
     derivative(p)
 end
 
 function (D::BasicDerivation{T})(f::FracElem{P}) where {T<:RingElement, P<:PolyElem{T}}
-    base_ring(parent(f))==D.domain || error("f not in domain of D")
+    iscompatible(f, D) || error("f not in domain of D")
     derivative(f)
 end
 
@@ -48,7 +60,7 @@ struct ExtensionDerivation{T<:RingElement} <: Derivation
         new{R}(domain, D, H)
     end
 
-    function ExtensionDerivation(domain::PolyRing{F}, D::SymbolicIntegration.Derivation, H::PolyElem{F}) where 
+    function ExtensionDerivation(domain::PolyRing{F}, D::Derivation, H::PolyElem{F}) where 
         {R<:RingElement, F<:FracElem{R}}
         base_ring(base_ring(domain))==D.domain || error("base ring of domain must be domain of D")
         new{F}(domain, D, H)
@@ -68,7 +80,7 @@ function CoefficientLiftingDerivation(domain::FracField{T}, D::Derivation) where
 end
 
 function (D::ExtensionDerivation{T})(p::PolyElem{T}) where T<:RingElement
-    parent(p)==D.domain || error("p not in domain of D")
+    iscompatible(p, D) || error("p not in domain of D")
     if iszero(D.H)
         return map_coefficients(c->D.D(c), p)
     else
@@ -77,7 +89,7 @@ function (D::ExtensionDerivation{T})(p::PolyElem{T}) where T<:RingElement
 end
 
 function (D::ExtensionDerivation{T})(f::FracElem{P}) where {T<:RingElement, P<:PolyElem{T}}
-    base_ring(parent(f))==D.domain || error("f not in domain of D")
+    iscompatible(f, D) || error("f not in domain of D")
     a = numerator(f)
     b = denominator(f)
     if isone(b)
@@ -102,9 +114,48 @@ end
 BaseDerivation(D::ExtensionDerivation) = D.D 
 MonomialDerivative(D::ExtensionDerivation) = D.H 
 
+AbstractAlgebra.degree(D::Derivation) = 
+    degree(MonomialDerivative(D)) # \delta(t), see Def. 3.4.1
+AbstractAlgebra.leading_coefficient(D::Derivation) = 
+leading_coefficient(MonomialDerivative(D)) # \lambda(t), see Def. 3.4.1
+Base.iszero(D::Derivation) = false
+Base.iszero(D::NullDerivation) = true
+isbasic(D::Derivation) = false
+isbasic(D::BasicDerivation) = true
+isprimitive(D::Derivation) = degree(D)==0 # see Def. 5.1.1 
+ishyperexponential(D::Derivation) = # see Def, 5.1.1
+    degree(D)==1 && izero(constant_coefficient(MonomialDerivative(D)))
+isnonlinear(D::Derivation) = degree(D)>=2 # see Def. 3.4.1  
+
+function ishypertangent(D::Derivation) 
+    # see Def. 5.10.1
+    t = gen(domain(D))
+    q, r = divrem(MonomialDerivative(D), t^2+1)
+    iszero(r) && degree(q)<=0
+end
+
+
+isnormal(p::PolyElem, D::Derivation) =
+    # see Def. 3.4.2
+    iscompatible(p, D) && degree(gcd(p, MonomialDerivative(D)))==0
+
+isspecial(p::PolyElem, D::Derivation) =
+    # see Def. 3.4.2
+    iscompatible(p, D) && iszero(rem(MonomialDerivative(D),p))
+
+issimple(f::FracElem{P}, D::Derivation) where P<:PolyElem =
+    #see Def. 3.5.2.
+    iscompatible(f, D) && isnormal(denominator(f), D)
+
+isreduced(f::FracElem{P}, D::Derivation) where P<:PolyElem =
+    #see Def. 3.5.2.
+    iscompatible(f, D) && isspecial(denominator(f), D)
+
+
     
 
 function SplitFactor(p::PolyElem{T}, D::Derivation) where T<:RingElement
+    # See Bronstein's book, Section 3.5, p. 100
     S = divexact(gcd(p, D(p)), gcd(p, derivative(p)))
     if degree(S)==0
         return(p, one(p))
@@ -114,6 +165,7 @@ function SplitFactor(p::PolyElem{T}, D::Derivation) where T<:RingElement
 end
 
 function SplitSquarefreeFactor(p::PolyElem{T}, D::Derivation) where T<:RingElement
+    # See Bronstein's book, Section 3.5, p. 102
     ps = Squarefree(p)
     Ss = [gcd(ps[i], D(ps[i])) for i=1:length(ps)]
     Ns = [divexact(ps[i], Ss[i]) for i=1:length(ps)]
@@ -121,6 +173,7 @@ function SplitSquarefreeFactor(p::PolyElem{T}, D::Derivation) where T<:RingEleme
 end
 
 function CanonicalRepresentation(f::FracElem{P}, D::Derivation) where {T<:FieldElement, P<:PolyElem{T}}
+    # See Bronstein's book, Section 3.5, p. 103
     a = numerator(f)
     d = denominator(f)
     q, r = divrem(a, d)

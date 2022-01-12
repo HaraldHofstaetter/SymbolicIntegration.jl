@@ -133,11 +133,12 @@ isbasic(D::Derivation) = false
 isbasic(D::BasicDerivation) = true
 isprimitive(D::Derivation) = degree(D)==0 # see Def. 5.1.1 
 ishyperexponential(D::Derivation) = # see Def, 5.1.1
-    degree(D)==1 && izero(constant_coefficient(MonomialDerivative(D)))
+    degree(D)==1 && iszero(constant_coefficient(MonomialDerivative(D)))
 isnonlinear(D::Derivation) = degree(D)>=2 # see Def. 3.4.1  
 
 function ishypertangent(D::Derivation) 
     # see Def. 5.10.1
+    isnonlinear(D) || return false
     t = gen(domain(D))
     q, r = divrem(MonomialDerivative(D), t^2+1)
     iszero(r) && degree(q)<=0
@@ -165,6 +166,7 @@ isreduced(f::FracElem{P}, D::Derivation) where P<:PolyElem =
 
 function SplitFactor(p::PolyElem{T}, D::Derivation) where T<:RingElement
     # See Bronstein's book, Section 3.5, p. 100
+    iscompatible(p, D) || error("polynomial p must be in the domain of derivation D")
     S = divexact(gcd(p, D(p)), gcd(p, derivative(p)))
     if degree(S)==0
         return(p, one(p))
@@ -175,6 +177,7 @@ end
 
 function SplitSquarefreeFactor(p::PolyElem{T}, D::Derivation) where T<:RingElement
     # See Bronstein's book, Section 3.5, p. 102
+    iscompatible(p, D) || error("polynomial p must be in the domain of derivation D")
     ps = Squarefree(p)
     Ss = [gcd(ps[i], D(ps[i])) for i=1:length(ps)]
     Ns = [divexact(ps[i], Ss[i]) for i=1:length(ps)]
@@ -183,6 +186,7 @@ end
 
 function CanonicalRepresentation(f::FracElem{P}, D::Derivation) where {T<:FieldElement, P<:PolyElem{T}}
     # See Bronstein's book, Section 3.5, p. 103
+    iscompatible(f, D) || error("rational function f must be in the domain of derivation D")
     a = numerator(f)
     d = denominator(f)
     q, r = divrem(a, d)

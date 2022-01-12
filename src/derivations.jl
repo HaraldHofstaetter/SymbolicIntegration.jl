@@ -29,6 +29,8 @@ function (D::NullDerivation)(f::FracElem{T}) where {T<:RingElement}
     zero(f)
 end
 
+Base.show(io::IO, D::NullDerivation) = print(io, "Null derivation D=0 on ", domain(D))
+
 
 
 struct BasicDerivation{T<:RingElement} <: Derivation
@@ -49,6 +51,8 @@ end
 
 BaseDerivation(D::BasicDerivation) = NullDerivation(base_ring(D.domain))
 MonomialDerivative(D::BasicDerivation) = one(D.domain)
+
+Base.show(io::IO, D::BasicDerivation) = print(io, "Basic derivation D=d/d", gen(domain(D)), " on ", domain(D))
 
 
 struct ExtensionDerivation{T<:RingElement} <: Derivation
@@ -113,6 +117,11 @@ end
 
 BaseDerivation(D::ExtensionDerivation) = D.D 
 MonomialDerivative(D::ExtensionDerivation) = D.H 
+
+Base.show(io::IO, D::ExtensionDerivation) = print(io, "Extension by D", 
+    gen(domain(D))," = ", MonomialDerivative(D),
+    " of ", BaseDerivation(D), " on ", domain(D))
+
 
 AbstractAlgebra.degree(D::Derivation) = 
     degree(MonomialDerivative(D)) # \delta(t), see Def. 3.4.1

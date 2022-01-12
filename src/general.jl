@@ -89,7 +89,8 @@ EuclideanSize(f::T) where T <: Integer = abs(f)
 EuclideanSize(f::T) where T <: PolyElem = degree(f)
 
 function Base.gcdx(a::T, b::T, c::T) where T <: RingElem
-    #ExtendedEuclidean - diophantine version
+    # ExtendedEuclidean - diophantine version
+    # See Bronstein's book, Section 1.3, p. 13
     R = parent(a)    
     (parent(b) == R && parent(c) == R) || error("Incompatible parents")
     g, s, t = gcdx(a, b)
@@ -106,6 +107,7 @@ function Base.gcdx(a::T, b::T, c::T) where T <: RingElem
 end
 
 function PartialFraction(a::T, d::Vector{T}) where T <: RingElem
+    # See Bronstein's book, Section 1.3, p. 15
     n = length(d)
     if n==1
         return divrem(a, d[1]) # ???? , T[]
@@ -118,6 +120,7 @@ function PartialFraction(a::T, d::Vector{T}) where T <: RingElem
 end
 
 function PartialFraction(a::T, d::Vector{T}, e::Vector{Int}) where T <: RingElem
+    # See Bronstein's book, Section 1.3, p. 17
     n = length(d)
     a0, aa = PartialFraction(a, [d[i]^e[i] for i=1:n])
     A = [zeros(parent(a), e[i]) for i=1:n]
@@ -131,8 +134,8 @@ function PartialFraction(a::T, d::Vector{T}, e::Vector{Int}) where T <: RingElem
     a0, A
 end
 
-
 function SubResultant(A::PolyElem{T}, B::PolyElem{T}) where T <: FieldElement
+    # See Bronstein's book, Section 1.5, p. 24 
     # Note: This implementation requires that A, B are polynomials over a field
     # (and not mereley over an integral domain), because some intermediate
     # calculations use divisons. For example, negative exponents of γ[i-1] 
@@ -191,6 +194,7 @@ function SubResultant(A::PolyElem{T}, B::PolyElem{T}) where T <: RingElement
 end
 
 function Squarefree_Musser(A::PolyElem{T}) where T <: RingElement
+    # See Bronstein's book, Section 1.7, p. 29 
     c = content(A)
     S = divexact(A, c)
     Sminus = gcd(S, derivative(S))
@@ -210,6 +214,7 @@ function Squarefree_Musser(A::PolyElem{T}) where T <: RingElement
 end
 
 function Squarefree(A::PolyElem{T}) where T <: RingElement    
+    # See Bronstein's book, Section 1.7, p. 32 
     c = content(A)
     S = divexact(A, c)
     Sprime = derivative(S)

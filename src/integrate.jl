@@ -1,33 +1,13 @@
 export integrate
 
-using Nemo
-
-rationalize(x) = x
-
-function rationalize(x::qqbar)
-    if degree(x)==1
-        return fmpq(x)
-    else
-        return x
-    end
-end
-
-function rationalize(f::PolyElem{qqbar})
-    if maximum(degree.(coefficients(f)))==1
-        return polynomial(Nemo.QQ, fmpq.(coefficients(f)))
-    else
-        return f
-    end
-end
-
 function positive_constant_coefficient(f::PolyElem)
+
     if constant_coefficient(f)<0
         return -f
     else
         return f
     end
 end
-    
 
 function Eval(t::SumOfLogTerms; real_output::Bool=true)
     var = string(symbols(parent(t.S))[1])
@@ -66,7 +46,6 @@ function Eval(t::SumOfLogTerms; real_output::Bool=true)
     end
     result
 end
-
 
 function integrate(f::FracElem{P}; real_output::Bool=true) where {T<:FieldElement, P<:PolyElem{T}}
     h = SymbolicIntegration.IntegrateRationalFunction(f)

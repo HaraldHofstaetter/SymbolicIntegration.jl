@@ -1,5 +1,6 @@
 module SymbolicIntegration
 
+include("general.jl")
 include("result_types.jl")
 include("rational_functions.jl")
 include("derivations.jl")

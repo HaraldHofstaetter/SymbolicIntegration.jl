@@ -1,46 +1,9 @@
-using Nemo
-
-isrational(x::fmpq) = true # Nemo rational type
-
-isrational(x::T) where T<:Integer = true
-
-isrational(x::T) where T<:Rational = true
-
-function isrational(x::P) where {T<:RingElement, P<:PolyElem{T}}
-    if degree(x)>1 
-        return false
-    else
-        return isrational(constant_coefficient(x))
-    end
-end
-
-function isrational(x::F) where 
-    {T<:RingElement, P<:PolyElem{T}, F<:FracElem{P}}
-    return isrational(numerator(x)) && isrational(denominator(x))
-end
-
-rationalize(x::fmpq) = convert(Rational{BigInt}, x) # Nemo rational type
-
-rationalize(x::T) where T<:Integer = convert(Rational{BigInt}, x)
-
-rationalize(x::T) where T<:Rational = convert(Rational{BigInt}, x)
-
-function rationalize(x::P) where {T<:RingElement, P<:PolyElem{T}}
-    if degree(x)>0 
-        error("not rational")
-    else
-        return rationalize(constant_coefficient(x))
-    end
-end
-
-function rationalize(x::F) where 
-    {T<:RingElement, P<:PolyElem{T}, F<:FracElem{P}}
-    return rationalize(numerator(x))//rationalize(denominator(x))
-end
-
-rationalize_over_Int(x) = convert(Rational{Int}, rationalize(x)) 
-
-
+# This file contains algorithms needed for the solution of 
+# the Risch differential equation from chapter 6 of the book
+#
+#    Manuel Bronstein, Symbolic Integration I: Transcendental Functions,
+#    2nd ed., Springer 2005. 
+#
 
 
 function WeakNormalizer(f::F, D::Derivation) where 
@@ -74,14 +37,6 @@ function RdeNormalDenominator(f::F, g::F, D::Derivation) where
         return zero(h), zero(f), zero(f), zero(h), 0
     end
     dn*h, dn*h*f-dn*D(h), dn*h^2*g, h, 1
-end
-
-
-function Remainder(x::FracElem{T}, a::T) where T<:RingElement
-    # See Bronstein's book, Section 4.2, p. 115
-    b, c = gcdx(a, denominator(x), one(a))
-    q, r = divrem(numerator(x)*c, a)
-    r
 end
 
 function one_times_n_solve(A::Vector{T}, B::Vector{T}) where T<:RingElement

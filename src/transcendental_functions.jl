@@ -1,3 +1,11 @@
+# This file contains algorithms needed for the integratiorn of 
+# transcendental functions from chapter 5 of the book
+#
+#    Manuel Bronstein, Symbolic Integration I: Transcendental Functions,
+#    2nd ed., Springer 2005. 
+#
+
+
 function HermiteReduce(f::FracElem{P}, D::Derivation) where {T<:FieldElement, P<:PolyElem{T}}
     # See Bronstein's book, Section 5.3, p. 139
     fp, fs, fn = CanonicalRepresentation(f, D)
@@ -77,10 +85,6 @@ function ResidueReduce(f::F, D::Derivation; symbol=:α) where
     b = degree(prod(ns))==0
     ss, Ss, b
 end
-
-valuation_infinity(f::F) where {T<:RingElement, P<:PolyElem{T}, F<:FracElem{P}} = 
-    # See Bronstein's book, Definition 4.3.1, p. 115
-    degree(denominator(f)) - degree(numarator(f))
 
 function IntegrateHyperexponentialPolynomial(p::F, D::Derivation) where 
     {T<:RingElement, P<:PolyElem{T}, F<:FracElem{P}}

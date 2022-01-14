@@ -6,6 +6,9 @@
 #
 
 
+using Logging
+
+
 function HermiteReduce(f::FracElem{P}, D::Derivation) where {T<:FieldElement, P<:PolyElem{T}}
     # See Bronstein's book, Section 5.3, p. 139
     iscompatible(f, D) || error("rational function f must be in the domain of derivation D")
@@ -29,7 +32,6 @@ function HermiteReduce(f::FracElem{P}, D::Derivation) where {T<:FieldElement, P<
     q, r = divrem(a, d)
     g, r//d, q+fp+fs
 end
-
 
 function PolynomialReduce(p::P, D::Derivation) where {T<:FieldElement, P<:PolyElem{T}}
     # See Bronstein's book, Section 5.4, p. 141
@@ -89,6 +91,29 @@ function ResidueReduce(f::F, D::Derivation; symbol=:α) where
     ss, Ss, b
 end
 
+function IntegratePrimitivePolynomial(p::P, D::Derivation) where 
+    {T<:RingElement, P<:PolyElem{T}}
+    # See Bronstein's book, Section 5.9, p. 158 
+    iscompatible(p, D) || error("rational function p must be in the domain of derivation D")
+    isprimitive(D) || error("monomial of derivation D must be primitive")
+    if degree(p)<=0
+        return zero(p), 1
+    end
+    a = leading_coefficient(p)
+    b, c, β = LimitedIntegrate(a, MonomialDerivative(D), D)
+    if β<=0 
+        @info "IntegratePrimitivePolynomial: no solution, LimitedIntegrate returned no solution"
+        return zero(p, 0)
+    end
+    m = degree(p)
+    q0 = c*t^(m+1)//((m+1) + b*t^m)
+    q, β = IntegratePrimitivePolynomial(p-D(q0), D)
+    if β<=0 
+        @info "IntegratePrimitivePolynomial: no solution, recursive call of itself returned no solution"
+    end
+    return q+q0, β
+end
+
 function IntegrateHyperexponentialPolynomial(p::F, D::Derivation) where 
     {T<:RingElement, P<:PolyElem{T}, F<:FracElem{P}}
     # See Bronstein's book, Section 5.9, p. 162
@@ -103,6 +128,7 @@ function IntegrateHyperexponentialPolynomial(p::F, D::Derivation) where
             a = coeff(p, i)
             v, β1 = RischDE(i*w, a, BaseDerivation(D))
             if β1==0
+                @info "IntegrateHyperexponentialPolynomial: no solution, RischDE returned no solution"
                 β = 0
             else 
                 q += v*t^i
@@ -111,9 +137,6 @@ function IntegrateHyperexponentialPolynomial(p::F, D::Derivation) where
     end
     q, β
 end
-
-using Logging
-
 
 function InFieldDerivative(f::F, D::Derivation) where 
     {T<:RingElement, P<:PolyElem{T}, F<:FracElem{P}}
@@ -126,39 +149,62 @@ function InFieldDerivative(f::F, D::Derivation) where
         return Z, 0 # no solution
     end
     p = h + r # reduced 
-    H = MonomialDerivative(D)
-    δ = degree(H)
-    if δ==0 # primitive case
+    @assert isreduced(p, D)
+    if isprimitive(D)
         # p reduced => polynomial in this case
         p = numerator(p)
         q, β = IntegratePrimitivePolynomial(p, D)
-        β>=1 || return Z, β
+        if β<=0
+            @info "InFieldDerivative: no solution, IntegratePrimitivePolynomialial returned no solution"
+            return Z, β
+        end
         a = constant_coefficient(p - D(q)) # p-D(q) \in k
-        v, c = LimitedIntegrate(a, constant_coefficient(H), BaseDerivation(D)) # not yet implemented
-        return g + q + v +c*H, 1
-    else # δ>=1 
-        q, β = IntegrateHyperexponentialPolynomial(p, D)
-        β>=1 || return Z, β
+        v, c, β = LimitedIntegrate(a, constant_coefficient(D), BaseDerivation(D)) # not yet implemented
+        if β<=0
+            @info "InFieldDerivative: no solution, LimitedIntegrate returned no solution"
+            return Z, β
+        end
+        return g + q + v + c*H, 1
+    else # nonlinear case  # TODO: minor modification mentioned near the top of p.176
+        if ishyperexponential(D)
+            q, β = IntegrateHyperexponentialPolynomial(p, D)
+            β>=1 || return Z, β
+            if β<=0
+                @info "InFieldDerivative: no solution, IntegrateHyperexponentialPolynomialial returned no solution"
+                return Z, β
+            end
+        else
+            @error "InFieldLogarithmicDerivativeOfRadical: something not implemented for given monomial"
+            return Z, -1
+        end
         a = constant_coefficient(numerator(p - D(q))) # p-D(q) \in k
         v, β = InFieldDerivative(a, BaseDerivation(B))
-        β>=1 || return Z, β
+        if β<=0
+            @info "InFieldDerivative: no solution, recurisve call of itself returned no solution"
+            return Z, β
+        end
         return g + q + v, 1
     end
-
 end
 
-function InFieldLogarithmicDerivativeOfRadical(f::F, D::Derivation) where F<:FieldElement
+function InFieldLogarithmicDerivative(f::F, D::Derivation) where F<:FieldElement 
+    n, v, β =InFieldLogarithmicDerivativeOfRadical(f, D, expect_one=true)
+    @assert n==1
+    v, β
+end
+
+function InFieldLogarithmicDerivativeOfRadical(f::F, D::Derivation; expect_one::Bool=false) where F<:FieldElement
     # base case f \in constant field, D must be the null derivation
     iscompatible(f, D) || error("field element f must be in the domain of derivation D")
     if iszero(f)
         return 1, one(f), 1
     else
-        @info "InFieldLogarithmicDerivativeOfRadical: no solution, f was nonzero in basecase (D=Null derivation)"
+        @info "InFieldLogarithmicDerivativeOfRadical (basecase): no solution, f was nonzero in basecase (where D=Null derivation)"
         return 0, zero(f), 0 # no solution (n must be !=0)
     end
 end
 
-function InFieldLogarithmicDerivativeOfRadical(f::F, D::Derivation) where 
+function InFieldLogarithmicDerivativeOfRadical(f::F, D::Derivation; expect_one::Bool=false) where 
     {T<:RingElement, P<:PolyElem{T}, F<:FracElem{P}}
     # See Bronstein's book, Section 5.12, p. 177
     iscompatible(f, D) || error("rational function f must be in the domain of derivation D")
@@ -189,11 +235,19 @@ function InFieldLogarithmicDerivativeOfRadical(f::F, D::Derivation) where
             As1 = [roots(R) for R in Rs1]
             if !(all([length(As1[i])==degree(Rs1[i]) for i=1:length(As1)]) &&
                 all([all(isrational.(As1[i])) for i=1:length(As1)]) )
-                @info "InFieldLogarithmicDerivativeOfRadical: no solution, not all roots of the the Rothstein-Trager were rational"
+                @info "InFieldLogarithmicDerivativeOfRadical: no solution, not all roots of the Rothstein-Trager resultant were rational"
                 return 0, Z, 0
             end
             As = [[rationalize_over_Int(a) for a in as] for as in As1]
-            m = gcd([gcd(denominator.(as)) for as in As])
+            if expect_one 
+                if !all([all([isone(denominator(a)) for a in as]) for as in As])
+                    @info "InFieldLogarithmicDerivativeOfRadical(...,expect_one=1): no solution, not all roots of the Rothstein-Trager resultant were integers"
+                    return 0, Z, 0
+                end
+                m = 1
+            else
+                m = gcd([gcd(denominator.(as)) for as in As])
+            end
             Dg = Z
             v = one(f)
             for i=1:length(As)
@@ -208,9 +262,12 @@ function InFieldLogarithmicDerivativeOfRadical(f::F, D::Derivation) where
             end
         end
     end
-    @info "InFieldLogarithmicDerivativeOfRadical: m=$m, Dg=$Dg, v=$v"
     p = f - Dg
     if iszero(p)
+        if expect_one && m!=1
+            @info "InFieldLogarithmicDerivativeOfRadical(...,expect_one=1): no solution, m!=1"
+            return 0, Z, 0
+        end
         return m, v, 1
     end
     if !(isone(denominator(p)))
@@ -229,6 +286,10 @@ function InFieldLogarithmicDerivativeOfRadical(f::F, D::Derivation) where
             @info "InFieldLogarithmicDerivativeOfRadical: no solution, recursive call of itself returned success=$(success)"
             return 0, Z, success
         end
+        if expect_one && n!=1
+            @info "InFieldLogarithmicDerivativeOfRadical(...,expect_one=1): no solution, m!=1"
+            return 0, Z, 0
+        end
         N = lcm(n, m)
         # Make u = u + Z an element of the field k(t),
         # otherwise exponentiation with negative numbers would not work.
@@ -243,15 +304,20 @@ function InFieldLogarithmicDerivativeOfRadical(f::F, D::Derivation) where
  with p0=$p0, w=$w returned success=$(success)"
             return 0, Z, success
         end
+        if expect_one && n!=1
+            @info "InFieldLogarithmicDerivativeOfRadical(...,expect_one=1): no solution, m!=1"
+            return 0, Z, 0
+        end
         N = lcm(n, m)
         t = gen(parent(numerator(f)))
         # Make u = u + Z, t = t + Z elements of the field k(t),
         # otherwise exponentiation with negative numbers would not work.
         U = v^div(N, m)*(u+Z)^div(N, n)*(t+Z)^div(e*N, n)
         return N, U, 1
+    else
+        # TODO: hypertangent case 
+        @error "InFieldLogarithmicDerivativeOfRadical: something not implemented for given monomial"
+        return 0, Z, -1 
     end
-    # TODO: hypertangent case 
-    @error "InFieldLogarithmicDerivativeOfRadical: Something not implemented"
-    0, Z, -1 # failure, not implemented for given monomial 
 end
 

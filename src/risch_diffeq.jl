@@ -250,23 +250,23 @@ function SPDE(a::P, b::P, c::P, D::Derivation, n::Int) where
     iscompatible(a, D) && iscompatible(b, D) && iscompatible(c, D) || 
         error("polynomials a, b, and c must be in the domain of derivation D")
     !iszero(a) || error("polynomial a must be nonzero")
-    ZP = zero(a)
+    Z = zero(a)
     if n<0
         if iszero(c)
-            return ZP, ZP, 0, ZP, ZP, 1 
+            return Z, Z, 0, Z, Z, 1 
         else
-            return ZP, ZP, 0, ZP, ZP, 0 # no solution
+            return Z, Z, 0, Z, Z, 0 # no solution
         end
     end
     g = gcd(a, b)
     if !iszero(rem(c, g))
-        return ZP, ZP, ZP, 0, ZP, 0 # no solution
+        return Z, Z, Z, 0, Z, 0 # no solution
     end
     a = divexact(a, g)
     b = divexact(b, g)
     c = divexact(c, g)
     if degree(a)==0
-        return divexact(b, a), divexact(c, a), n, one(a), zero(a), 1
+        return divexact(b, a), divexact(c, a), n, one(a), Z, 1
     end
     r, z = gcdx(b, a, c)
     u = SPDE(a, b + D(a), z - D(r), D, n - degree(a))
@@ -285,12 +285,13 @@ function PolyRischDENoCancel1(b::P, c::P, D::Derivation, n::Int=typemax(Int)) wh
     !iszero(b) || error("polynomial b must be nonzero")
     isbasic(D) || degree(b)>max(0, degree(D)-1) || 
         error("either derivation D must be basic or degree(b)>max(0, degree(D)-1)")
+    Z  = zero(b)
     t = gen(parent(b))
-    q = zero(b)
+    q = Z 
     while !iszero(c)
         m = degree(c)-degree(b)
         if n<0 || m<0 || m>n 
-            return zero(b), 0 # no solution
+            return Z, 0 # no solution
         end
         p = (leading_coefficient(c)//leading_coefficient(b))*t^m
         q += p
@@ -314,7 +315,9 @@ function PolyRischDENoCancel2(b::P, c::P, D::Derivation, n::Int=typemax(Int)) wh
         error("either derivation D must be basic or degree(D)>=2")
     t = gen(parent(b))
     λ = leading_coefficient(D)
-    q = zero(b)
+    Z  = zero(b)
+    Z0 = zero(λ)
+    q = Z
     while !iszero(c)
         if n==0
             m=0
@@ -322,24 +325,24 @@ function PolyRischDENoCancel2(b::P, c::P, D::Derivation, n::Int=typemax(Int)) wh
             m = degree(c) - δ + 1
         end
         if n<0 || m<0 || m>n 
-            return zero(b), zero(λ), zero(λ), 0 # no solution
+            return Z, Z0, Z0, 0 # no solution
         end
         if m>0
             p = (leading_coefficient(c)//(m*λ))*t^m
         else
             if degree(b)!=degree(c)
-                return zero(b), zero(λ), zero(λ), 0 # no solution
+                return Z, Z0, Z0, 0 # no solution
             end
             if degree(b)==0
                 return q, constant_coefficient(b), constant_coefficient(c), 2  
             end
-            p = (leading_coefficient(c)//leading_coefficient(b)) + zero(b) #make p\in k an element of k(t)
+            p = (leading_coefficient(c)//leading_coefficient(b)) + Z #make p\in k an element of k(t)
         end
         q += p
         n = m - 1
         c -= D(p)+b*p
     end
-    q, zero(λ), zero(λ), 1
+    q, Z0, Z0, 1
 end
 
 function PolyRischDENoCancel3(b::P, c::P, D::Derivation, n::Int=typemax(Int)) where
@@ -350,6 +353,7 @@ function PolyRischDENoCancel3(b::P, c::P, D::Derivation, n::Int=typemax(Int)) wh
     δ = degree(D)
     δ>=2 || error("degree(D) must be >= 2")
     degree(b)==δ-1 || error("degree(b)==degree(D)-1 must hold")
+    Z = zero(b)
     t = gen(parent(b))
     λ = leading_coefficient(D)
     M = -1
@@ -360,11 +364,11 @@ function PolyRischDENoCancel3(b::P, c::P, D::Derivation, n::Int=typemax(Int)) wh
             M = numerator(h)
         end
     end
-    q = zero(b)
+    q = Z
     while !iszero(c)
         m = max(M, degree(c)-δ+1)
         if n<0 || m<0 || m>n
-            return zero(b), 0, zero(b), 0 # no solution
+            return Z, 0, Z, 0 # no solution
         end
         u = m*λ + leading_coefficient(b)
         if iszero(u)
@@ -374,15 +378,15 @@ function PolyRischDENoCancel3(b::P, c::P, D::Derivation, n::Int=typemax(Int)) wh
             p = (leading_coefficient(c)//u)*t^m
         else
             if degree(c)!=δ-1
-                return zero(b), 0, zero(b), 0 # no solution
+                return Z, 0, Z, 0 # no solution
             end
-            p = (leading_coefficient(c)//leading_coefficient(b)) + zero(b) #make p\in k an element of k(t)
+            p = (leading_coefficient(c)//leading_coefficient(b)) + Z #make p\in k an element of k[t]
         end
         q += p
         n = m - 1
         c -= D(p)+b*p
     end
-    q, 0, zero(b), 1
+    q, 0, Z, 1
 end
 
 function PolyRischDECancelPrim(b::T, c::P, D::Derivation, n::Int=typemax(Int)) where
@@ -392,41 +396,40 @@ function PolyRischDECancelPrim(b::T, c::P, D::Derivation, n::Int=typemax(Int)) w
         error("monomial of derivation D must be primitive")
     iscompatible(b, D) && iscompatible(c, D) || 
         error("polynomials b and c must be in the domain of derivation D")
+    Z = zero(c)
     if b==0
         q0, β = InFieldDerivative(c//one(c), D) # make poly c a rational function
         q = numerator(p0)
-        if β>0 && isone(denominator(q0)) && degree(q)<=n
-            return q, 1
-        else
-            return zero(q), 0 # no solution
+        if β<=0 || !isone(denominator(q0)) || degree(q)>n
+            return Z, 0 # no solution
         end
+        return q, 1
     end
     t = gen(parent(b))
-    z, β = InFieldLogarithmicDerivative(b, BaseDerivation(D)) # not yet implemented
+    z, β = InFieldLogarithmicDerivative(b, BaseDerivation(D)) 
     if β>0
         p0, β = InFieldDerivative(z*c, D)
         p = numerator(p0)
-        if β>0 && isone(denominator(p0)) && degree(p)<=n
-            return p//z, 1
-        else
-            return zero(c), 0 # no solution
+        if β<=0 || !isone(denominator(p0)) || degree(p)>n
+            return Z, 0 # no solution
         end
+        return p//z, 1
     end
     if iszero(c)
-        return zero(c), 1 # zero is solution
+        return Z, 1 # zero is solution
     end
     if n<degree(c)
-        return zero(c), 0 # no solution
+        return Z, 0 # no solution
     end
-    q = zero(c)
+    q = Z
     while !iszero(c)
         m = degree(c)
         if n<m
-            return zero(c), 0 # no solution
+            return Z, 0 # no solution
         end
         s, β = RischDE(b, leading_coefficient(c), BaseDerivation(D))
         if β<=0
-            return zero(c), 0 # no solution
+            return Z, 0 # no solution
         end
         q += s*t^m
         n = m - 1
@@ -442,14 +445,14 @@ function PolyRischDECancelExp(b::T, c::P, D::Derivation, n::Int=typemax(Int)) wh
         error("monomial of derivation D must be hyperexponential")
     iscompatible(b, D) && iscompatible(c, D) || 
         error("polynomials b and c must be in the domain of derivation D")
+    Z = zero(c)
     if b==0
         q0, β = InFieldDerivative(c//one(c), D) # make poly c a rational function
-        q = numerator(p0)
-        if β>0 && isone(denominator(q0)) && degree(q)<=n
-            return q, 1
-        else
-            return zero(q), 0 # no solution
+        q = numerator(q0)
+        if β<=0 || !isone(denominator(q0)) || degree(q)>n
+            return Z, 0 # no solution
         end
+        return q, 1
     end
     t = gen(parent(b))
     H = MonomialDerivative(D)
@@ -461,35 +464,34 @@ function PolyRischDECancelExp(b::T, c::P, D::Derivation, n::Int=typemax(Int)) wh
     if  β>0 && n==1
         p, β = InFieldDerivative(c*z*t^m, D)
         if β<=0
-            return zero(c), 0 # no solution
+            return Z, 0 # no solution
         end
-        if !(degree(p)==0 || (degree(p)==1 && iszero(constant_coefficient(p))))
-            # p not reduced
-            return zero(c), 0 # no solution
+        if !isreduced(p)
+            return Z, 0 # no solution
         end
         q0 = p//(z*t^m)
         q = numerator(q0)
         if isone(denominator(q0)) && degree(q)<=n
             return q, 1
         else
-            return zero(c), 0
+            return Z, 0
         end
     end
     if iszero(c)
-        return zero(c), 1 # zero is solution
+        return Z, 1 # zero is solution
     end
     if n<degree(c)
-        return zero(c), 0 # no solution
+        return Z, 0 # no solution
     end
-    q = zero(c)
+    q = Z
     while !iszero(c)
         m = degree(c)
         if n<m
-            return zero(c), 0 # no solution
+            return Z, 0 # no solution
         end
         s, β = RischDE(b+m*w, leading_coefficient(c), BaseDerivation(D))
         if β<=0
-            return zero(c), 0 # no solution
+            return Z, 0 # no solution
         end
         q += s*t^m
         n = m - 1

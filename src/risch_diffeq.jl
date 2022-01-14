@@ -36,7 +36,7 @@ function RdeNormalDenominator(f::F, g::F, D::Derivation) where
     iscompatible(f, D) && iscompatible(g, D) || 
         error("rational functions f and g must be in the domain of derivation D")
     # Note: f must be weakly normalized which we do not check. It is recommended
-    # to use this function only for ratinal functions f which were computed by WeakNormalizer. 
+    # to use this function only for rational functions f which were computed by WeakNormalizer. 
     (dn, ds) = SplitFactor(denominator(f), D)
     (en, es) = SplitFactor(denominator(g), D)
     p = gcd(dn, en)
@@ -167,10 +167,11 @@ function RdeSpecialDenomExp(a::P, b::F, c::F, D::Derivation) where
     isreduced(b, D) && isreduced(c, D) || 
         error("rational functions b and c must be reduced with respect to derivation D")
     t = gen(parent(a))
+    degree(gcd(t, a))==0 || error("gcd(a, t) must be == 1")
     p = t
     nb = valuation(b, p)
     nc = valuation(c, p)
-    n = min(0, nc - min(0,nb))
+    n = min(0, nc - min(0, nb))
     if nb==0 
         α = Remainder(-b//a, p)
         w = coeff(MonomialDerivative(D), 1)
@@ -178,12 +179,13 @@ function RdeSpecialDenomExp(a::P, b::F, c::F, D::Derivation) where
         if β<0
             error("ParametricLogarithmicDerivative failed")
         end
-        if  β>0 && n0==1
-            n = min(n,m)
+        if  β>0 && n0==1 && !iszero(z)
+            n = min(n, m)
         end
     end
     N = max(0, -nb, n-nc)
-    a*p^N, (b+n*a*divexact(D(p), p))*p^N, c*p^(N-n), p^(-n)
+    p_power_N = p^N
+    a*p_power_N, (b+n*a*divexact(D(p), p))*p_power_N, c*p^(N-n), p^(-n)
 end
 
 function RdeBoundDegreePrim(a::P, b::P, c::P, D::Derivation) where
@@ -206,18 +208,19 @@ function RdeBoundDegreePrim(a::P, b::P, c::P, D::Derivation) where
         α = -leading_coefficient(b)//leading_coefficient(a)
         z, m0, ρ = LimitedIntegrate(α, leading_coefficient(D), BaseDerivative(D)) # not yet implemented
         if ρ>0 && is_rational(m0)
-            m = rationalize_over_Int(m)
+            m = rationalize_over_Int(m0)
             if denominator(m)==1
                 n = max(n, numerator(m))
             end
         end
     end
+    D0 = BaseDerivative(D)
     if db==da
         α = -leading_coefficient(b)//leading_coefficient(a)
         z, ρ = InFieldDerivative(α)
         if ρ>0 && !iszero(z)
             β = -leading_coefficient(a*D0(z)+b*z)//(z*leading_coefficient(a))
-            w, m0, ρ = LimitedIntegrate(β, leading_coefficient(D), BaseDerivative(D)) # not yet implemented
+            w, m0, ρ = LimitedIntegrate(β, leading_coefficient(D), D0) # not yet implemented
             if ρ>0 && is_rational(m0)
                 m = rationalize_over_Int(m0)
                 if denominator(m)==1
@@ -231,18 +234,17 @@ end
 
 function RdeBoundDegreeBase(a::P, b::P, c::P) where P<:PolyElem
     # See Bronstein's book, Section 6.3, p. 199
-    !iszero(a) ||
-        error("polynomial a must be nonzero")
+    !iszero(a) || error("polynomial a must be nonzero")
     da = degree(a)
     db = degree(b)
     dc = degree(c)
     n = max(0, dc - max(db, da - 1))
     if db==da-1
-        m = -leading_coefficient(b)//leading_coefficient(a)
-        if is_rational(m)
-            m = rationalize_over_Int(m)
+        m0 = -leading_coefficient(b)//leading_coefficient(a)
+        if is_rational(m0)
+            m = rationalize_over_Int(m0)
             if isone(denominator(m))
-                n = max(0, numerator(m), dc-db)
+                n = max(0, numerator(m), dc - db)
             end
         end
     end
@@ -264,12 +266,12 @@ function RdeBoundDegreeExp(a::P, b::P, c::P, D::Derivation) where
     if da==db
         α = -leading_coefficient(b)//leading_coefficient(a)
         w = coeff(MonomialDerivative(D), 1)
-        n0, m, z, β = ParametricLogarithmicDerivative(α, w, BaseDerivation(D))
-        if β<0
+        n0, m, z, ρ = ParametricLogarithmicDerivative(α, w, BaseDerivation(D))
+        if ρ<0
             error("ParametricLogarithmicDerivative failed")
         end
-        if  β>0 && n0==1
-            n = max(n,m)
+        if  ρ>0 && n0==1 && !iszero(z)
+            n = max(n, m)
         end
     end
     n
@@ -286,16 +288,15 @@ function RdeBoundDegreeNonLinear(a::P, b::P, c::P, D::Derivation) where
     da = degree(a)
     db = degree(b)
     dc = degree(c)
-    H = MonomialDerivative(D)
-    δ = degree(H)
-    λ = leading_coefficient(H)
+    δ = degree(D)
+    λ = leading_coefficient(D)
     n = max(0, dc - max(da + δ - 1, db))
     if db==da+δ-1
-        m = -leading_coefficient(b)/(λ*leading_coefficient(a))
-        if is_rational(m)
-            m = rationalize_over_Int(m)
+        m0 = -leading_coefficient(b)/(λ*leading_coefficient(a))
+        if is_rational(m0)
+            m = rationalize_over_Int(m0)
             if isone(denominator(m))
-                n = max(0, numerator(m), dc-db)
+                n = max(0, numerator(m), dc - db)
             end
         end
     end
@@ -539,7 +540,7 @@ function PolyRischDECancelExp(b::T, c::P, D::Derivation, n::Int=typemax(Int)) wh
             @info "PolyRischDECancelExp: no solution"
             return Z, 0 
         end
-        if !isreduced(p)
+        if !isreduced(p, D)
             @info "PolyRischDECancelExp: no solution"
             return Z, 0 
         end

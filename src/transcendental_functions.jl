@@ -158,8 +158,10 @@ function InFieldDerivative(f::F, D::Derivation) where
             @info "InFieldDerivative: no solution, IntegratePrimitivePolynomialial returned no solution"
             return Z, β
         end
-        a = constant_coefficient(p - D(q)) # p-D(q) \in k
-        v, c, β = LimitedIntegrate(a, constant_coefficient(D), BaseDerivation(D)) # not yet implemented
+        a0 = p-D(q)
+        @assert(degree(a0)<=0) # p-D(q) \in k
+        a = constant_coefficient(a0) 
+        v, c, β = LimitedIntegrate(a, leading_coefficient(D), BaseDerivation(D)) # not yet implemented
         if β<=0
             @info "InFieldDerivative: no solution, LimitedIntegrate returned no solution"
             return Z, β
@@ -177,7 +179,9 @@ function InFieldDerivative(f::F, D::Derivation) where
             @error "InFieldLogarithmicDerivativeOfRadical: something not implemented for given monomial"
             return Z, -1
         end
-        a = constant_coefficient(numerator(p - D(q))) # p-D(q) \in k
+        a0 = p-D(q)
+        @assert(degree(a0)<=0) # p-D(q) \in k
+        a = constant_coefficient(a0) 
         v, β = InFieldDerivative(a, BaseDerivation(B))
         if β<=0
             @info "InFieldDerivative: no solution, recurisve call of itself returned no solution"

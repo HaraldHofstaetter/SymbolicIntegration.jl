@@ -202,10 +202,9 @@ function RdeBoundDegreePrim(a::P, b::P, c::P, D::Derivation) where
     else
         n = max(0, dc-da+1)
     end
-    D0 = BaseDerivative(D)
     if db==da-1
         α = -leading_coefficient(b)//leading_coefficient(a)
-        z, m0, ρ = LimitedIntegrate(α, MonomialDerivative(D0), D0) # not yet implemented
+        z, m0, ρ = LimitedIntegrate(α, leading_coefficient(D), BaseDerivative(D)) # not yet implemented
         if ρ>0 && is_rational(m0)
             m = rationalize_over_Int(m)
             if denominator(m)==1
@@ -218,7 +217,7 @@ function RdeBoundDegreePrim(a::P, b::P, c::P, D::Derivation) where
         z, ρ = InFieldDerivative(α)
         if ρ>0 && !iszero(z)
             β = -leading_coefficient(a*D0(z)+b*z)//(z*leading_coefficient(a))
-            w, m0, ρ = LimitedIntegrate(β, MonomialDerivative(D0), D0) # not yet implemented
+            w, m0, ρ = LimitedIntegrate(β, leading_coefficient(D), BaseDerivative(D)) # not yet implemented
             if ρ>0 && is_rational(m0)
                 m = rationalize_over_Int(m0)
                 if denominator(m)==1

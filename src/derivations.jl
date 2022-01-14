@@ -1,6 +1,6 @@
 export Derivation, NullDerivation, BasicDerivation, ExtensionDerivation,
    CoefficientLiftingDerivation,
-   BaseDerivation, MonomialDerivative, domain,
+   BaseDerivation, MonomialDerivative, domain, constant_field,
    isbasic, isprimitive, ishyperexponential, isnonlinear, ishypertangent,
    iscompatible, isnormal, isspecial, issimple, isreduced
 
@@ -51,6 +51,7 @@ end
 
 BaseDerivation(D::BasicDerivation) = NullDerivation(base_ring(D.domain))
 MonomialDerivative(D::BasicDerivation) = one(D.domain)
+constant_field(D::BasicDerivation) = D.domain
 
 Base.show(io::IO, D::BasicDerivation) = print(io, "Basic derivation D=d/d", gen(domain(D)), " on ", domain(D))
 
@@ -117,6 +118,7 @@ end
 
 BaseDerivation(D::ExtensionDerivation) = D.D 
 MonomialDerivative(D::ExtensionDerivation) = D.H 
+constant_field(D::ExtensionDerivation) = constant_field(D.D)
 
 Base.show(io::IO, D::ExtensionDerivation) = print(io, "Extension by D", 
     gen(domain(D))," = ", MonomialDerivative(D),

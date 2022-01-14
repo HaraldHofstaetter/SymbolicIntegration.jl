@@ -228,7 +228,7 @@ function ParamPolyRischDENoCancel1(b::P, qs::Vector{P}, D::Derivation, n::Int) w
     end
     M = [coeffizient(q, i) for i=0:dc, q in qs]
     A, u = ConstantSystem(M, [zero(bd) for i=0:dc])
-    C = const_field(parent(b), D)
+    C = constant_field(D)
     neq = dim(A, 1)
     A = vcat(A, [zero(C) for i=1:m, i=1:2*m])
     for i=1:m
@@ -266,7 +266,7 @@ function PolyRischDENoCancel2(b::P,  qs::Vector{P}, D::Derivation, n::Int) where
         end
         n -= 1
     end
-    C = const_field(parent(b), D)
+    C = constant_field(D)
     if degree(b)>0
         for i=1:m
             ss[i] = coeff(qs[i], degree(b))//leading_coefficient(b)

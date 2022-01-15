@@ -69,6 +69,41 @@ function LinearConstraints(a::P, b::P, gs::Vector{F}, D::Derivation) where
     return qs, M
 end
 
+function RowEchelon!(A::Matrix{T}, u::Vector{T}) where T<:FieldElement
+    # based on https://github.com/blegat/RowEchelon.jl/blob/master/src/RowEchelon.jl
+    nr, nc = size(A)
+    i = j = 1
+    while i <= nr && j <= nc        
+        p = findfirst(x->!iszero(x), A[i:nr,j])
+        if p==nothing
+            j += 1
+        else
+            p = p + i - 1
+            for k=j:nc
+                A[i, k], A[p, k] = A[p, k], A[i, k]
+            end
+            u[i], u[p] = u[p], u[i]
+            d = A[i,j]
+            for k = j:nc
+                A[i,k] //= d
+            end
+            u[i] //= d
+            for k = 1:nr
+                if k != i
+                    d = A[k,j]
+                    for l = j:nc
+                        A[k,l] -= d*A[i,l]
+                    end
+                    u[k] -= d*u[i]
+                end
+            end
+            i += 1
+            j += 1
+        end
+    end
+    A, u
+end
+
 #TODO: ConstantSystem
 
 function ParamRdeBoundDegreePrim(a::P, b::P, qs::Vector{P}, D::Derivation) where

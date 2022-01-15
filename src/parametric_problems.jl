@@ -10,7 +10,7 @@ using Logging
 
 
 function ParamRdeNormalDenominator(f::F, gs::Vector{F}, D::Derivation) where 
-    {T<:RingElement, P<:PolyElem{T}, F<:FracElem{P}}
+    {P<:PolyElem, F<:FracElem{P}}
     # See Bronstein's book, Section 7.1, p. 219
     iscompatible(f, D) && all(iscompatible(g, D) for g in gs) || 
         error("rational functions f and g_i must be in the domain of derivation D")
@@ -25,7 +25,7 @@ function ParamRdeNormalDenominator(f::F, gs::Vector{F}, D::Derivation) where
 end
 
 function ParamRdeSpecialDenomExp(a::P, b::F, gs::Vector{F}, D::Derivation) where
-    {T<:RingElement, P<:PolyElem{T}, F<:FracElem{P}}
+    {P<:PolyElem, F<:FracElem{P}}
     # See Bronstein's book, Section 7.1, p. 221 
     ishyperexponential(D) ||
         error("monomial of derivation D must be hyperexponential")
@@ -57,7 +57,7 @@ function ParamRdeSpecialDenomExp(a::P, b::F, gs::Vector{F}, D::Derivation) where
 end
 
 function LinearConstraints(a::P, b::P, gs::Vector{F}, D::Derivation) where
-    {T<:RingElement, P<:PolyElem{T}, F<:FracElem{P}}
+    {P<:PolyElem, F<:FracElem{P}}
     # See Bronstein's book, Section 7.1, p. 223
     iscompatible(a, D) && iscompatible(b, D) && all([iscompatible(g, D) for g in gs]) || 
         error("polynomial a and rational functions b and g_i must be in the domain of derivation D")
@@ -140,8 +140,7 @@ function ConstantSystem(A::Matrix{T}, u::Vector{T}, D::Derivation) where T<:Fiel
     B, u
 end
 
-function ParamRdeBoundDegreePrim(a::P, b::P, qs::Vector{P}, D::Derivation) where
-    {T<:RingElement, P<:PolyElem{T}}
+function ParamRdeBoundDegreePrim(a::P, b::P, qs::Vector{P}, D::Derivation) where P<:PolyElem
     # See Bronstein's book, Section 7.1, p. 228
     isprimitive(D) ||
         error("monomial of derivation D must be primitive")
@@ -203,8 +202,7 @@ function ParamRdeBoundDegreeBase(a::P, b::P, qs::Vector{P}) where P<:PolyElem
     return n
 end
 
-function ParamRdeBoundDegreeExp(a::P, b::P, qs::Vector{P}, D::Derivation) where
-    {T<:RingElement, P<:PolyElem{T}}
+function ParamRdeBoundDegreeExp(a::P, b::P, qs::Vector{P}, D::Derivation) where P<:PolyElem
     # See Bronstein's book, Section 7.1, p. 229
     ishyperexponential(D) ||
         error("monomial of derivation D must be hyperexponential")
@@ -229,8 +227,7 @@ function ParamRdeBoundDegreeExp(a::P, b::P, qs::Vector{P}, D::Derivation) where
     n
 end
 
-function ParamRdeBoundDegreeNonLinear(a::P, b::P, qs::Vector{P}, D::Derivation) where
-    {T<:RingElement, P<:PolyElem{T}}
+function ParamRdeBoundDegreeNonLinear(a::P, b::P, qs::Vector{P}, D::Derivation) where P<:PolyElem
     # See Bronstein's book, Section 7.1, p. 231
     isnonlinear(D) ||
         error("monomial of derivation D must be nonlinear")
@@ -255,8 +252,7 @@ function ParamRdeBoundDegreeNonLinear(a::P, b::P, qs::Vector{P}, D::Derivation) 
     n
 end
 
-function ParSPDE(a::P, b::P, qs::Vector{P}, D::Derivation, n::Int) where
-    {T<:RingElement, P<:PolyElem{T}}
+function ParSPDE(a::P, b::P, qs::Vector{P}, D::Derivation, n::Int) where P<:PolyElem
     # See Bronstein's book, Section 7.1, p. 231
     iscompatible(a, D) && iscompatible(b, D) && all([iscompatible(q, D) for q in gs]) || 
         error("polynomial a and rational functions b and q_i must be in the domain of derivation D")
@@ -266,8 +262,7 @@ function ParSPDE(a::P, b::P, qs::Vector{P}, D::Derivation, n::Int) where
     a, b + D(a), [z-D(r) for (r, z) in rzs], [r for (r, z) in rzs], n-degree(a)
 end
 
-function ParamPolyRischDENoCancel1(b::P, qs::Vector{P}, D::Derivation, n::Int) where
-    {T<:RingElement, P<:PolyElem{T}} 
+function ParamPolyRischDENoCancel1(b::P, qs::Vector{P}, D::Derivation, n::Int) where P<:PolyElem 
     # See Bronstein's book, Section 7.1, p. 234
     # Note: this implementation changes the input parameters qs!
     iscompatible(b, D) && all([iscompatible(q, D) for q in gs]) || 
@@ -307,8 +302,7 @@ function ParamPolyRischDENoCancel1(b::P, qs::Vector{P}, D::Derivation, n::Int) w
     hs, A
 end
 
-function PolyRischDENoCancel2(b::P,  qs::Vector{P}, D::Derivation, n::Int) where
-    {T<:RingElement, P<:PolyElem{T}} 
+function PolyRischDENoCancel2(b::P,  qs::Vector{P}, D::Derivation, n::Int) where P<:PolyElem 
     # See Bronstein's book, Section 7.1, p. 238
     iscompatible(b, D) && all([iscompatible(q, D) for q in gs]) || 
         error("polynomials a and q_i must be in the domain of derivation D")
@@ -423,6 +417,12 @@ function ParamRischDE(f::F, gs::Vector{F}, D::Derivation) where
     else
         @assert false # never reach this point
     end
+    d = gcd(a, b)
+    if !isone(d)
+        a = divexact(a, d)
+        b = divexact(b, d)
+        gs = [q//d for q in gs]
+    end
     qs, M = LinearConstraint(a, b, gs, D)
     A, u = ConstantSystem(M, [Z for i=1:dim(M,2)], D)
     #TODO do something with qs (linear combs ...) , see bottom of p.226 
@@ -439,7 +439,37 @@ function ParamRischDE(f::F, gs::Vector{F}, D::Derivation) where
     else
         @assert false # never reach this point
     end
-    a, b, qs, rs, n = ParSPDE(a, b, qs, D, n)
+    while true
+        a, b, qs, rs, n = ParSPDE(a, b, qs, D, n)
+        if degree(a)==0
+            break
+        end
+        d = gcd(a, b)
+        if !isone(d)
+            a = divexact(a, d)
+            b = divexact(b, d)
+            gs = [q//d for q in gs]
+            qs, M = LinearConstraint(a, b, gs, D)
+            A, u = ConstantSystem(M, [Z for i=1:dim(M,2)], D)
+            #TODO do something with qs (linear combs ...) , see bottom of p.226 
+        end
+    end
+    b = divexact(b, a)
+    qs = [divexact(q, a) for q in qs]
+    if !iszero(b) && (basic_case || degree(b)>max(0, δ-1))
+        hs, A = ParamPolyRischDENoCancel1(b, qs, D, n)
+    elseif (iszero(b2) || degree(b2)<δ-1) && (basic_case || δ>=2)
+        fs , hs, A = ParamPolyRischDENoCancel2(b, qs, D, n)
+        if success==2
+            z1, success = RischDE(b, c, BaseDerivation(D))
+            success>=1 || return Z, Z, success
+            z = z1 - z
+        end
+    elseif δ>=2 && degree(b2)==δ-1
+    end
+
+ ####################
+# to be continued
 
 
 

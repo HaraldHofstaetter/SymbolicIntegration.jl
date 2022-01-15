@@ -51,7 +51,7 @@ end
 
 BaseDerivation(D::BasicDerivation) = NullDerivation(base_ring(D.domain))
 MonomialDerivative(D::BasicDerivation) = one(D.domain)
-constant_field(D::BasicDerivation) = D.domain
+constant_field(D::BasicDerivation) = base_ring(D.domain)
 
 Base.show(io::IO, D::BasicDerivation) = print(io, "Basic derivation D=d/d", gen(domain(D)), " on ", domain(D))
 
@@ -163,7 +163,55 @@ isreduced(f::FracElem{P}, D::Derivation) where P<:PolyElem =
     #see Def. 3.5.2.
     iscompatible(f, D) && isspecial(denominator(f), D)
 
+    
+function isconstant(x::F, D::Derivation) where F<:FieldElement 
+    @assert SI.iscompatible(x, D)
+    false
+end
 
+function isconstant(x::P, D::BasicDerivation) where P<:PolyElem 
+    @assert SI.iscompatible(x, D)
+    degree(x)==0
+end
+
+function isconstant(x::P, D::ExtensionDerivation) where P<:PolyElem
+    @assert SI.iscompatible(x, D)
+    if degree(x)>0 
+        return false
+    else
+        return isconstant(constant_coefficient(x), BaseDerivation(D))
+    end
+end
+
+function isconstant(x::F, D::Derivation) where {P<:PolyElem, F<:FracElem{P}}
+    @assert SI.iscompatible(x, D)
+    isone(denominator(x)) && isconstant(numerator(x), D) 
+end
+
+
+function constantize(x::F, D::Derivation) where F<:FieldElement 
+    @assert SI.iscompatible(x, D)
+    error("not a constant")
+end
+
+function constantize(x::P, D::BasicDerivation) where P<:PolyElem 
+    @assert SI.iscompatible(x, D)
+    degree(x)==0 || error("not a constant")
+    constant_coefficient(x)
+end
+
+function constantize(x::P, D::ExtensionDerivation) where P<:PolyElem
+    @assert SI.iscompatible(x, D)
+    degree(x)==0 || error("not a constant")
+    constantize(constant_coefficient(x), BaseDerivation(D))
+    
+end
+
+function constantize(x::F, D::Derivation) where {P<:PolyElem, F<:FracElem{P}}
+    @assert SI.iscompatible(x, D)
+    isone(denominator(x)) || error("not a constant")
+    constantize(numerator(x), D)
+end
     
 
 function SplitFactor(p::PolyElem{T}, D::Derivation) where T<:RingElement

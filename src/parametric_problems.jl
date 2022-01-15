@@ -69,8 +69,9 @@ function LinearConstraints(a::P, b::P, gs::Vector{F}, D::Derivation) where
     return qs, M
 end
 
-function RowEchelon!(A::Matrix{T}, u::Vector{T}) where T<:FieldElement
+function RowEchelon(A::Matrix{T}, u::Vector{T}) where T<:FieldElement
     # based on https://github.com/blegat/RowEchelon.jl/blob/master/src/RowEchelon.jl
+    # Note: input arguments A, u are changed on output
     nr, nc = size(A)
     i = j = 1
     while i <= nr && j <= nc        
@@ -104,11 +105,44 @@ function RowEchelon!(A::Matrix{T}, u::Vector{T}) where T<:FieldElement
     A, u
 end
 
-#TODO: ConstantSystem
+function ConstantSystem(A::Matrix{T}, u::Vector{T}, D::Derivation) where T<:FieldElement
+    # See Bronstein's book, Section 7.1, p. 225
+    # check compatibility
+    # check dimensions
+    # Note: input arguments A, u are changed on output
+    A, u = RowEchelon(A, u)
+    m, n = size(A)
+    j = 1 
+    while j<=n
+        i = findfirst(x->!isconstant(x, D), A[:,j])
+        if i==nothing
+            j += 1
+            continue
+        end       
+        # enlarge A by one row and u by one entry
+        A = vcat(A, [zero(A[1,1]) for l=1:1, k=1:n])
+        u = push!(u, zero(A[1,1]))
+        Daij = D(A[i,j])
+        for k=1:n
+            A[m+1, k] =  D(A[i, k])//Daij
+        end
+        u[m+1] = D(u[i])//Daij
+        for s=1:m
+            for k=1:n
+                A[s, k] -= A[s,j]*A[m+1, k]
+            end
+            u[s] -= A[s,j]*u[m+1]
+        end
+        j += 1
+        m += 1
+    end
+    B = [constantize(A[i,j], D) for i=1:m, j=1:n]
+    B, u
+end
 
 function ParamRdeBoundDegreePrim(a::P, b::P, qs::Vector{P}, D::Derivation) where
     {T<:RingElement, P<:PolyElem{T}}
-    # See Bronstein's book, Section 7.1, p. 2228
+    # See Bronstein's book, Section 7.1, p. 228
     isprimitive(D) ||
         error("monomial of derivation D must be primitive")
     iscompatible(a, D) && iscompatible(b, D) && all([iscompatible(q, D) for q in qs]) || 

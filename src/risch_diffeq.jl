@@ -10,7 +10,7 @@ using Logging
 
 
 function WeakNormalizer(f::F, D::Derivation) where 
-    {T<:RingElement, P<:PolyElem{T}, F<:FracElem{P}}
+    {P<:PolyElem, F<:FracElem{P}}
     # See Bronstein's book, Section 6.1, p. 183
     iscompatible(f, D) || error("rational function f must be in the domain of derivation D")
     dn, ds = SplitFactor(denominator(f), D)
@@ -31,7 +31,7 @@ function WeakNormalizer(f::F, D::Derivation) where
 end
 
 function RdeNormalDenominator(f::F, g::F, D::Derivation) where 
-    {T<:RingElement, P<:PolyElem{T}, F<:FracElem{P}}
+    {P<:PolyElem, F<:FracElem{P}}
     # See Bronstein's book, Section 6.1, p. 185
     iscompatible(f, D) && iscompatible(g, D) || 
         error("rational functions f and g must be in the domain of derivation D")
@@ -83,7 +83,7 @@ function ParametricLogarithmicDerivative(f::F, w::F, D::Derivation) where F<:Fie
 end
 
 function ParametricLogarithmicDerivative(f::F, w::F, D::Derivation) where 
-    {T<:RingElement, P<:PolyElem{T}, F<:FracElem{P}}
+    {P<:PolyElem, F<:FracElem{P}}
     # See Bronstein's book, Section 7.3, p. 253
     Z = zero(f)
     if degree(numerator(f))<=0 && degree(denominator(f))<=0 &&
@@ -158,7 +158,7 @@ function ParametricLogarithmicDerivative(f::F, w::F, D::Derivation) where
 end
 
 function RdeSpecialDenomExp(a::P, b::F, c::F, D::Derivation) where
-    {T<:RingElement, P<:PolyElem{T}, F<:FracElem{P}}
+    {P<:PolyElem, F<:FracElem{P}}
     # See Bronstein's book, Section 6.2, p. 190
     ishyperexponential(D) ||
         error("monomial of derivation D must be hyperexponential")
@@ -188,8 +188,7 @@ function RdeSpecialDenomExp(a::P, b::F, c::F, D::Derivation) where
     a*p_power_N, (b+n*a*divexact(D(p), p))*p_power_N, c*p^(N-n), p^(-n)
 end
 
-function RdeBoundDegreePrim(a::P, b::P, c::P, D::Derivation) where
-    {T<:RingElement, P<:PolyElem{T}}
+function RdeBoundDegreePrim(a::P, b::P, c::P, D::Derivation) where P<:PolyElem
     # See Bronstein's book, Section 6.3, p. 200
     isprimitive(D) ||
         error("monomial of derivation D must be primitive")
@@ -251,8 +250,7 @@ function RdeBoundDegreeBase(a::P, b::P, c::P) where P<:PolyElem
     return n
 end
 
-function RdeBoundDegreeExp(a::P, b::P, c::P, D::Derivation) where
-    {T<:RingElement, P<:PolyElem{T}}
+function RdeBoundDegreeExp(a::P, b::P, c::P, D::Derivation) where P<:PolyElem
     # See Bronstein's book, Section 6.3, p. 200
     ishyperexponential(D) ||
         error("monomial of derivation D must be hyperexponential")
@@ -277,8 +275,7 @@ function RdeBoundDegreeExp(a::P, b::P, c::P, D::Derivation) where
     n
 end
 
-function RdeBoundDegreeNonLinear(a::P, b::P, c::P, D::Derivation) where
-    {T<:RingElement, P<:PolyElem{T}}
+function RdeBoundDegreeNonLinear(a::P, b::P, c::P, D::Derivation) where P<:PolyElem
     # See Bronstein's book, Section 6.3, p. 201
     isnonlinear(D) ||
         error("monomial of derivation D must be nonlinear")
@@ -303,8 +300,7 @@ function RdeBoundDegreeNonLinear(a::P, b::P, c::P, D::Derivation) where
     n
 end
 
-function SPDE(a::P, b::P, c::P, D::Derivation, n::Int) where
-    {T<:RingElement, P<:PolyElem{T}}
+function SPDE(a::P, b::P, c::P, D::Derivation, n::Int) where P<:PolyElem
     # See Bronstein's book, Section 6.4, p. 203
     iscompatible(a, D) && iscompatible(b, D) && iscompatible(c, D) || 
         error("polynomials a, b, and c must be in the domain of derivation D")
@@ -340,7 +336,7 @@ function SPDE(a::P, b::P, c::P, D::Derivation, n::Int) where
 end
 
 function PolyRischDENoCancel1(b::P, c::P, D::Derivation, n::Int=typemax(Int)) where
-    {T<:RingElement, P<:PolyElem{T}} # here typemax(Int) represents +infinity
+    P<:PolyElem # here typemax(Int) represents +infinity
     # See Bronstein's book, Section 6.5, p. 208
     iscompatible(b, D) && iscompatible(c, D) || 
         error("polynomials b and c must be in the domain of derivation D")
@@ -365,7 +361,7 @@ function PolyRischDENoCancel1(b::P, c::P, D::Derivation, n::Int=typemax(Int)) wh
 end
 
 function PolyRischDENoCancel2(b::P, c::P, D::Derivation, n::Int=typemax(Int)) where
-    {T<:RingElement, P<:PolyElem{T}} # here typemax(Int) represents +infinity
+    P<:PolyElem # here typemax(Int) represents +infinity
     # See Bronstein's book, Section 6.5, p. 209
     iscompatible(b, D) && iscompatible(c, D) || 
         error("polynomials b and c must be in the domain of derivation D")
@@ -411,7 +407,7 @@ function PolyRischDENoCancel2(b::P, c::P, D::Derivation, n::Int=typemax(Int)) wh
 end
 
 function PolyRischDENoCancel3(b::P, c::P, D::Derivation, n::Int=typemax(Int)) where
-    {T<:RingElement, P<:PolyElem{T}} # here typemax(Int) represents +infinity
+    P<:PolyElem # here typemax(Int) represents +infinity
     # See Bronstein's book, Section 6.4, p. 210
     iscompatible(b, D) && iscompatible(c, D) || 
         error("polynomials b and c must be in the domain of derivation D")
@@ -583,7 +579,11 @@ end
 
 
 function RischDE(f::F, g::F, D::Derivation) where 
-    {T<:RingElement, P<:PolyElem{T}, F<:FracElem{P}}
+    {P<:PolyElem, F<:FracElem{P}}
+    iscompatible(f, D) && iscompatible(g, D) || 
+        error("rational functions f and g must be in the domain of derivation D")
+    t = gen(base_ring(parent(f)))
+    Z = zero(f)
     H = MonomialDerivative(D)
     δ = degree(D)
     basic_case = isbasic(D) 
@@ -595,42 +595,48 @@ function RischDE(f::F, g::F, D::Derivation) where
         error("RischDE not implemented for Dt=$H")
     end
     q = WeakNormalizer(f, D)
-    f1 = f - D(q)//q
-    g1 = q*g
-    a, b, c, h, success = RdeNormalDenominator(f1, g1, D)
-    success>=1 || return zero(f), zero(f), 0
+    f = f - D(q)//q
+    g = q*g
+    a, b, c, h, success = RdeNormalDenominator(f, g, D)
+    success>=1 || return Z, Z, 0
     if primitive_case
-        a1 = a
-        b1 = numerator(b)
-        c1 = numerator(c)
-        h1 = one(c1)
+        b = numerator(b)
+        c = numerator(c)
+        h1 = one(b)
         if basic_case
-            n = RdeBoundDegreeBase(a1, b1, c1) 
+            n = RdeBoundDegreeBase(a, b, c) 
         else
-            n = RdeBoundDegreePrim(a1, b1, c1, D)
+            n = RdeBoundDegreePrim(a, b, c, D)
         end
     elseif hyperexponential_case
-        a1, b1, c1, h1 =  RdeSpecialDenomExp(a, b, c, D)
-        n = RdeBoundDegreeExp(a1, b1, c1, D) 
+        d = gcd(a, t)
+        if !isone(d)
+            a = divexact(a, d)
+            b = b//d
+            c = c//d
+        end
+        a, b, c, h1 =  RdeSpecialDenomExp(a, b, c, D)
+        n = RdeBoundDegreeExp(a, b, c, D) 
     elseif hypertangent_case
-        a1, b1, c1, h1  =  RdeSpecialDenomTan(a, b, c, D) # not yet implemented
-        n = RdeBoundDegreeNonLinear(a1, b1, c1, D)
+        # TODO
+        a, b, c, h  =  RdeSpecialDenomTan(a, b, c, D) # not yet implemented
+        n = RdeBoundDegreeNonLinear(a, b, c, D)
     else
         @assert false # never reach this point
     end
-    b2, c2, α, β, success = SPDE(a1, b1, c1, D, n)
-    success>=1 || return zero(f), zero(f), 0
-    if !iszero(b2) && (basic_case || degree(b2)>max(0, δ-1))
-        z, success = PolyRischDENoCancel1(b2, c2, D, n)
-    elseif (iszero(b2) || degree(b2)<δ-1) && (basic_case || δ>=2)
-        z, b3, c3, success = PolyRischDENoCancel2(b2, c2, D, n)
+    b, c, α, β, success = SPDE(a, b, c, D, n)
+    success>=1 || return Z, Z, 0
+    if !iszero(b) && (basic_case || degree(b)>max(0, δ-1))
+        z, success = PolyRischDENoCancel1(b, c, D, n)
+    elseif (iszero(b) || degree(b)<δ-1) && (basic_case || δ>=2)
+        z, b, c, success = PolyRischDENoCancel2(b, c, D, n)
         if success==2
-            z1, success = RischDE(b3, c3, BaseDerivation(D))
-            success>=1 || return zero(f), zero(f), success
+            z1, success = RischDE(b, c, BaseDerivation(D))
+            success>=1 || return Z, Z, success
             z = z1 - z
         end
-    elseif δ>=2 && degree(b2)==δ-1
-        z, m, c3, success = PolyRischDENoCancel3(b2, c2, D, n) 
+    elseif δ>=2 && degree(b)==δ-1
+        z, m, c, success = PolyRischDENoCancel3(b, c, D, n) 
         if success==2
             if hypertangent_case
             #  ... = PolyRischDECancelTan(...) TODO!
@@ -641,13 +647,13 @@ function RischDE(f::F, g::F, D::Derivation) where
     # At this point only δ<=1, D!=d/dt is possible;
     # this is compatible with primitive and hyperexponential only.
     elseif primitive_case
-        z, success = PolyRischDECancelPrim(constant_coefficient(b2), c2, D, n)
+        z, success = PolyRischDECancelPrim(constant_coefficient(b), c, D, n)
     elseif hyperexponential_case
-        z, success = PolyRischDECancelExp(constant_coefficient(b2), c2, D, n) 
+        z, success = PolyRischDECancelExp(constant_coefficient(b), c, D, n) 
     else
         @assert false # never reach this point
     end
-    success>=1 || return zero(f), zero(f), success
+    success>=1 || return Z, Z, success
     (α*z+β)//(q*h*h1), 1
 end
 

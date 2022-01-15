@@ -386,6 +386,64 @@ function PolyRischDENoCancel2(b::P,  qs::Vector{P}, D::Derivation, n::Int) where
 end
 
 
+function ParamRischDE(f::F, gs::Vector{F}, D::Derivation) where 
+    {P<:PolyElem, F<:FracElem{P}}
+    iscompatible(f, D) && all(iscompatible(g, D) for g in gs) || 
+        error("rational functions f and g_i must be in the domain of derivation D")
+    t = gen(base_ring(parent(f)))
+    Z = zero(f)
+    H = MonomialDerivative(D)
+    δ = degree(D)
+    basic_case = isbasic(D) 
+    primitive_case = isprimitive(D)  
+    hyperexponential_case = ishyperexponential(D)
+    hypertangent_case = ishypertangent(D)  
+    #if !(primitive_case || hyperexponential_case || hypertangent_case )
+    if !(hyperexponential_case)
+        error("RischDE not implemented for Dt=$H")
+    end
+    q = WeakNormalizer(f, D)
+    f1 = f - D(q)//q
+    gs = [q*g for g in gs]
+    a, b, gs, h, = ParamdRdeNormalDenominator(f1, gs, D)
+    if primitive_case
+        b = numerator(b)
+        h1 = one(b)
+    elseif hyperexponential_case
+        d = gcd(a, t)
+        if !isone(d)
+            a = divexact(a, d)
+            b = b//d
+            gs = [g//d for g in gs]
+        end
+        a, b, gs, h1 =  ParamRdeSpecialDenomExp(a, b, gs, D)
+    elseif hypertangent_case
+        # TODO
+        a, b, gs, h1  =  ParamRdeSpecialDenomTan(a, b, gs, D) # not yet implemented
+    else
+        @assert false # never reach this point
+    end
+    qs, M = LinearConstraint(a, b, gs, D)
+    A, u = ConstantSystem(M, [Z for i=1:dim(M,2)], D)
+    #TODO do something with qs (linear combs ...) , see bottom of p.226 
+    if primitive_case
+        if basic_case
+            n = ParamRdeBoundDegreeBase(a, b, qs) 
+        else
+            n = ParamRdeBoundDegreePrim(a, b, qs, D)
+        end
+    elseif hyperexponential_case
+        n = ParamRdeBoundDegreeExp(a, b, qs, D) 
+    elseif hypertangent_case
+        n = ParamRdeBoundDegreeNonLinear(a, b, qs, D)
+    else
+        @assert false # never reach this point
+    end
+    a, b, qs, rs, n = ParSPDE(a, b, qs, D, n)
+
+
+
+end
     
 
 

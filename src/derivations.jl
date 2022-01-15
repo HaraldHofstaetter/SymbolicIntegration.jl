@@ -164,18 +164,18 @@ isreduced(f::FracElem{P}, D::Derivation) where P<:PolyElem =
     iscompatible(f, D) && isspecial(denominator(f), D)
 
     
-function isconstant(x::F, D::Derivation) where F<:FieldElement 
-    @assert SI.iscompatible(x, D)
+function isconstant(x::T, D::Derivation) where T<:RingElement 
+    @assert iscompatible(x, D)
     false
 end
 
 function isconstant(x::P, D::BasicDerivation) where P<:PolyElem 
-    @assert SI.iscompatible(x, D)
-    degree(x)==0
+    @assert iscompatible(x, D)
+    degree(x)<=0
 end
 
 function isconstant(x::P, D::ExtensionDerivation) where P<:PolyElem
-    @assert SI.iscompatible(x, D)
+    @assert iscompatible(x, D)
     if degree(x)>0 
         return false
     else
@@ -184,31 +184,31 @@ function isconstant(x::P, D::ExtensionDerivation) where P<:PolyElem
 end
 
 function isconstant(x::F, D::Derivation) where {P<:PolyElem, F<:FracElem{P}}
-    @assert SI.iscompatible(x, D)
+    @assert iscompatible(x, D)
     isone(denominator(x)) && isconstant(numerator(x), D) 
 end
 
 
-function constantize(x::F, D::Derivation) where F<:FieldElement 
-    @assert SI.iscompatible(x, D)
+function constantize(x::T, D::Derivation) where T<:RingElement 
+    @assert iscompatible(x, D)
     error("not a constant")
 end
 
 function constantize(x::P, D::BasicDerivation) where P<:PolyElem 
-    @assert SI.iscompatible(x, D)
-    degree(x)==0 || error("not a constant")
+    @assert iscompatible(x, D)
+    degree(x)<=0 || error("not a constant")
     constant_coefficient(x)
 end
 
 function constantize(x::P, D::ExtensionDerivation) where P<:PolyElem
-    @assert SI.iscompatible(x, D)
-    degree(x)==0 || error("not a constant")
+    @assert iscompatible(x, D)
+    degree(x)<=0 || error("not a constant")
     constantize(constant_coefficient(x), BaseDerivation(D))
     
 end
 
 function constantize(x::F, D::Derivation) where {P<:PolyElem, F<:FracElem{P}}
-    @assert SI.iscompatible(x, D)
+    @assert iscompatible(x, D)
     isone(denominator(x)) || error("not a constant")
     constantize(numerator(x), D)
 end

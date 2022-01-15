@@ -41,12 +41,12 @@ function rationalize(x::qqbar) #Nemo algebraic number type
 end
 
 function rationalize(x::P) where P<:PolyElem
-    degree(x)==0 || error("not rational")
+    degree(x)<=0 || error("not rational")
     rationalize(constant_coefficient(x))
 end
 
 function rationalize(x::F) where  {P<:PolyElem, F<:FracElem{P}}
-    isone(denominator(f)) || error("not rational")
+    isone(denominator(x)) || error("not rational")
     rationalize(numerator(x))
 end
 

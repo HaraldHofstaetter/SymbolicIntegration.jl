@@ -8,60 +8,48 @@
 using AbstractAlgebra
 using Nemo
 
-isrational(x::fmpq) = true # Nemo rational type
-
 isrational(x::T) where T<:Integer = true
 
 isrational(x::T) where T<:Rational = true
 
-function rationalize(x::qqbar) #Nemo algebraic number type
-    if degree(x)==1
-        return fmpq(x)
-    else
-        return x
-    end
-end
+isrational(x::fmpq) = true # Nemo rational type
 
+isrational(x::qqbar) = degree(x)==1 # Nemo algebraic number type
 
-function isrational(x::P) where {T<:RingElement, P<:PolyElem{T}}
-    if degree(x)>1 
+function isrational(x::P) where P<:PolyElem
+    if degree(x)>0
         return false
     else
         return isrational(constant_coefficient(x))
     end
 end
 
-function isrational(x::F) where 
-    {T<:RingElement, P<:PolyElem{T}, F<:FracElem{P}}
-    return isrational(numerator(x)) && isrational(denominator(x))
+function isrational(x::F) where {P<:PolyElem, F<:FracElem{P}}
+    isone(denominator(x)) && isrational(numerator(x)) 
 end
 
-rationalize(x::fmpq) = convert(Rational{BigInt}, x) # Nemo rational type
 
 rationalize(x::T) where T<:Integer = convert(Rational{BigInt}, x)
 
 rationalize(x::T) where T<:Rational = convert(Rational{BigInt}, x)
 
-function rationalize(x::P) where {T<:RingElement, P<:PolyElem{T}}
-    if degree(x)>0 
-        error("not rational")
-    else
-        return rationalize(constant_coefficient(x))
-    end
+rationalize(x::fmpq) = convert(Rational{BigInt}, x) # Nemo rational type
+
+function rationalize(x::qqbar) #Nemo algebraic number type
+    degree(x)==1 || error("not rational")
+    convert(Rational{BigInt}, fmpq(xx)) 
 end
 
-function rationalize(x::F) where 
-    {T<:RingElement, P<:PolyElem{T}, F<:FracElem{P}}
-    return rationalize(numerator(x))//rationalize(denominator(x))
+function rationalize(x::P) where P<:PolyElem
+    degree(x)==0 || error("not rational")
+    rationalize(constant_coefficient(x))
 end
 
-function rationalize(f::PolyElem{qqbar})
-    if maximum(degree.(coefficients(f)))==1
-        return polynomial(Nemo.QQ, fmpq.(coefficients(f)))
-    else
-        return f
-    end
+function rationalize(x::F) where  {P<:PolyElem, F<:FracElem{P}}
+    isone(denominator(f)) || error("not rational")
+    rationalize(numerator(x))
 end
+
 
 rationalize_over_Int(x) = convert(Rational{Int}, rationalize(x)) 
 
@@ -111,7 +99,8 @@ function PartialFraction(a::T, d::Vector{T}) where T <: RingElem
     # See Bronstein's book, Section 1.3, p. 15
     n = length(d)
     if n==1
-        return divrem(a, d[1]) # ???? , T[]
+        q, r = divrem(a, d[1])
+        return q, [r]
     end    
     prod_d2n = prod(d[2:n])
     a0, r = divrem(a, d[1]*prod_d2n)

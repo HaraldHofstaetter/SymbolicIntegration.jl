@@ -69,10 +69,13 @@ function LinearConstraints(a::P, b::P, gs::Vector{F}, D::Derivation) where
     return qs, M
 end
 
+RowEchelon(A::Matrix{T}) where T<:FieldElement = RowEchelon(A, T[])
+
 function RowEchelon(A::Matrix{T}, u::Vector{T}) where T<:FieldElement
     # based on https://github.com/blegat/RowEchelon.jl/blob/master/src/RowEchelon.jl
     # Note: input arguments A, u are changed on output
     nr, nc = size(A)
+    uzero = length(u)==0
     i = j = 1
     while i <= nr && j <= nc        
         p = findfirst(x->!iszero(x), A[i:nr,j])
@@ -83,34 +86,52 @@ function RowEchelon(A::Matrix{T}, u::Vector{T}) where T<:FieldElement
             for k=j:nc
                 A[i, k], A[p, k] = A[p, k], A[i, k]
             end
-            u[i], u[p] = u[p], u[i]
+            if !uzero
+                u[i], u[p] = u[p], u[i]
+            end
             d = A[i,j]
             for k = j:nc
                 A[i,k] //= d
             end
-            u[i] //= d
+            if !uzero
+                u[i] //= d
+            end
             for k = 1:nr
                 if k != i
                     d = A[k,j]
                     for l = j:nc
                         A[k,l] -= d*A[i,l]
                     end
-                    u[k] -= d*u[i]
+                    if !uzero
+                        u[k] -= d*u[i]
+                    end
                 end
             end
             i += 1
             j += 1
         end
     end
-    A, u
+    if uzero
+        return A
+    else
+        A, u
+    end
 end
+
+ConstantSystem(A::Matrix{T}, D::Derivation) where T<:FieldElement =
+    ConstantSystem(A, T[], D)
 
 function ConstantSystem(A::Matrix{T}, u::Vector{T}, D::Derivation) where T<:FieldElement
     # See Bronstein's book, Section 7.1, p. 225
     # check compatibility
     # check dimensions
     # Note: input arguments A, u are changed on output
-    A, u = RowEchelon(A, u)
+    uzero = length(u)==0
+    if uzero
+        A = RowEchelon(A)
+    else
+        A, u = RowEchelon(A, u)
+    end
     m, n = size(A)
     j = 1 
     while j<=n
@@ -121,23 +142,31 @@ function ConstantSystem(A::Matrix{T}, u::Vector{T}, D::Derivation) where T<:Fiel
         end       
         # enlarge A by one row and u by one entry
         A = vcat(A, [zero(A[1,1]) for l=1:1, k=1:n])
-        u = push!(u, zero(A[1,1]))
+        push!(u, zero(A[1,1]))
         Daij = D(A[i,j])
         for k=1:n
             A[m+1, k] =  D(A[i, k])//Daij
         end
-        u[m+1] = D(u[i])//Daij
+        if !uzero
+            u[m+1] = D(u[i])//Daij
+        end
         for s=1:m
             for k=1:n
                 A[s, k] -= A[s,j]*A[m+1, k]
             end
-            u[s] -= A[s,j]*u[m+1]
+            if !uzero
+                u[s] -= A[s,j]*u[m+1]
+            end
         end
         j += 1
         m += 1
     end
     B = [constantize(A[i,j], D) for i=1:m, j=1:n]
-    B, u
+    if uzero
+        return B
+    else
+        B, u
+    end
 end
 
 function ParamRdeBoundDegreePrim(a::P, b::P, qs::Vector{P}, D::Derivation) where P<:PolyElem

@@ -17,7 +17,7 @@ function ParamRdeNormalDenominator(f::F, gs::Vector{F}, D::Derivation) where
     # Note: f must be weakly normalized which we do not check. It is recommended
     # to use this function only for rational functions f which were computed by WeakNormalizer. 
     (dn, ds) = SplitFactor(denominator(f), D)
-    (en, es) = SplitFactor(lcm([denominator(g) for g in gs]), D)
+    (en, es) = SplitFactor(lcm([denominator(g) for g in gs]...), D)
     p = gcd(dn, en)
     h = divexact(gcd(en, derivative(en)), gcd(p, derivative(p)))
     dnh2 = dn*h^2
@@ -61,11 +61,16 @@ function LinearConstraints(a::P, b::P, gs::Vector{F}, D::Derivation) where
     # See Bronstein's book, Section 7.1, p. 223
     iscompatible(a, D) && iscompatible(b, D) && all([iscompatible(g, D) for g in gs]) || 
         error("polynomial a and rational functions b and g_i must be in the domain of derivation D")
-    d = lcm([denominator(g) for g in gs])
-    qrs = [divrem(numerator(d*gs[i]), d)]
+    d = lcm([denominator(g) for g in gs]...)
+    qrs = [divrem(numerator(d*g), d) for g in gs]
     qs = [q for (q, r) in qrs]
     rs = [r for (q, r) in qrs]
-    M = [coefficient(r, i) for i=0:N, r in rs]
+    if all([iszero(r) for r in rs])
+        N = -1
+    else
+        N = maximum([degree(r) for r in rs])
+    end
+    M = [coeff(r, i) for i=0:N, r in rs]
     return qs, M
 end
 
@@ -142,7 +147,9 @@ function ConstantSystem(A::Matrix{T}, u::Vector{T}, D::Derivation) where T<:Fiel
         end       
         # enlarge A by one row and u by one entry
         A = vcat(A, [zero(A[1,1]) for l=1:1, k=1:n])
-        push!(u, zero(A[1,1]))
+        if !uzero
+            push!(u, zero(A[1,1]))
+        end
         Daij = D(A[i,j])
         for k=1:n
             A[m+1, k] =  D(A[i, k])//Daij
@@ -161,11 +168,13 @@ function ConstantSystem(A::Matrix{T}, u::Vector{T}, D::Derivation) where T<:Fiel
         j += 1
         m += 1
     end
-    B = [constantize(A[i,j], D) for i=1:m, j=1:n]
+    # return only nonzero rows 
+    nz = [i for i=1:size(A,1) if !(all([iszero(A[i,j]) for j=1:size(A,2)]) && (uzero || iszero(u[i])))]
+    B = [constantize(A[i,j], D) for i in nz, j=1:n]
     if uzero
         return B
     else
-        B, u
+        B, u[nz]
     end
 end
 
@@ -187,7 +196,7 @@ function ParamRdeBoundDegreePrim(a::P, b::P, qs::Vector{P}, D::Derivation) where
     if db==da-1
         α = -leading_coefficient(b)//leading_coefficient(a)
         z, s0, ρ = LimitedIntegrate(α, leading_coefficient(D), BaseDerivative(D)) # not yet implemented
-        if ρ>0 && is_rational(s0)
+        if ρ>0 && isrational(s0)
             s = rationalize_over_Int(s0)
             if denominator(s)==1
                 n = max(n, numerator(s))
@@ -201,7 +210,7 @@ function ParamRdeBoundDegreePrim(a::P, b::P, qs::Vector{P}, D::Derivation) where
         if ρ>0 && !iszero(z)
             β = -leading_coefficient(a*D0(z)+b*z)//(z*leading_coefficient(a))
             w, s0, ρ = LimitedIntegrate(β, leading_coefficient(D), D0) # not yet implemented
-            if ρ>0 && is_rational(s0)
+            if ρ>0 && isrational(s0)
                 m = rationalize_over_Int(s0)
                 if denominator(s)==1
                     n = max(n, numerator(s))
@@ -221,7 +230,7 @@ function ParamRdeBoundDegreeBase(a::P, b::P, qs::Vector{P}) where P<:PolyElem
     n = max(0, dc - max(db, da - 1))
     if db==da-1
         s0 = -leading_coefficient(b)//leading_coefficient(a)
-        if is_rational(s0)
+        if isrational(s0)
             s = rationalize_over_Int(s0)
             if isone(denominator(s))
                 n = max(0, numerator(s), dc - db)
@@ -271,7 +280,7 @@ function ParamRdeBoundDegreeNonLinear(a::P, b::P, qs::Vector{P}, D::Derivation) 
     n = max(0, dc - max(da + δ - 1, db))
     if db==da+δ-1
         s0 = -leading_coefficient(b)/(λ*leading_coefficient(a))
-        if is_rational(s0)
+        if isrational(s0)
             s = rationalize_over_Int(s0)
             if isone(denominator(s))
                 n = max(0, numerator(s), dc - db)
@@ -283,18 +292,18 @@ end
 
 function ParSPDE(a::P, b::P, qs::Vector{P}, D::Derivation, n::Int) where P<:PolyElem
     # See Bronstein's book, Section 7.1, p. 231
-    iscompatible(a, D) && iscompatible(b, D) && all([iscompatible(q, D) for q in gs]) || 
+    iscompatible(a, D) && iscompatible(b, D) && all([iscompatible(q, D) for q in qs]) || 
         error("polynomial a and rational functions b and q_i must be in the domain of derivation D")
     degree(a)>0 || error("degree(a) must be > 0")
     degree(gcd(a, b))<=0 || error("gcd(a,b) must be 1")
-    rzs = [gcd(b, a, q) for q in qs]
+    rzs = [gcdx(b, a, q) for q in qs]
     a, b + D(a), [z-D(r) for (r, z) in rzs], [r for (r, z) in rzs], n-degree(a)
 end
 
 function ParamPolyRischDENoCancel1(b::P, qs::Vector{P}, D::Derivation, n::Int) where P<:PolyElem 
     # See Bronstein's book, Section 7.1, p. 234
     # Note: this implementation changes the input parameters qs!
-    iscompatible(b, D) && all([iscompatible(q, D) for q in gs]) || 
+    iscompatible(b, D) && all([iscompatible(q, D) for q in qs]) || 
         error("polynomials a and q_i must be in the domain of derivation D")
     !iszero(b) || error("polynomial b must be nonzero")
     isbasic(D) || degree(b)>max(0, degree(D)-1) || 
@@ -318,12 +327,12 @@ function ParamPolyRischDENoCancel1(b::P, qs::Vector{P}, D::Derivation, n::Int) w
         dc = -1
     else
         dc = maximum([degree(q) for q in qs])
-    end
-    M = [coeffizient(q, i) for i=0:dc, q in qs]
-    A, u = ConstantSystem(M, [zero(bd) for i=0:dc])
+    end    
+    M = [coeff(q, i) for i=0:dc, q in qs]
+    A = ConstantSystem(M, BaseDerivation(D))
     C = constant_field(D)
-    neq = dim(A, 1)
-    A = vcat(A, [zero(C) for i=1:m, i=1:2*m])
+    neq = size(A, 1)
+    A = vcat(hcat(A, zeros(C, neq, m)), zeros(C, m, 2*m))
     for i=1:m
         A[i+neq, i] = one(C)
         A[i+neq, m+i] = -one(C)
@@ -331,9 +340,9 @@ function ParamPolyRischDENoCancel1(b::P, qs::Vector{P}, D::Derivation, n::Int) w
     hs, A
 end
 
-function PolyRischDENoCancel2(b::P,  qs::Vector{P}, D::Derivation, n::Int) where P<:PolyElem 
+function ParamPolyRischDENoCancel2(b::P,  qs::Vector{P}, D::Derivation, n::Int) where P<:PolyElem 
     # See Bronstein's book, Section 7.1, p. 238
-    iscompatible(b, D) && all([iscompatible(q, D) for q in gs]) || 
+    iscompatible(b, D) && all([iscompatible(q, D) for q in qs]) || 
         error("polynomials a and q_i must be in the domain of derivation D")
     δ = degree(D)
     iszero(b) || degree(b)<δ-1 || error("degree(b)<degree(D)-1 must hold")
@@ -346,9 +355,10 @@ function PolyRischDENoCancel2(b::P,  qs::Vector{P}, D::Derivation, n::Int) where
     λ = leading_coefficient(D)
     Z  = zero(b)
     Z0 = zero(λ)
+    m = length(qs)
     hs = [zero(b) for i=1:m]
     ss = [zero(λ) for i=1:m]
-    while n>=0
+    while n>0
         nλ = n*λ
         for i=1:m
             ss[i] = coeff(qs[i], n + δ -1)//(nλ)
@@ -370,10 +380,10 @@ function PolyRischDENoCancel2(b::P,  qs::Vector{P}, D::Derivation, n::Int) where
         else
             dc = maximum([degree(q) for q in qs])
         end
-        M = [coeffizient(q, i) for i=0:dc, q in qs]
-        A, u = ConstantSystem(M, [zero(λ) for i=0:dc], D)
-        neq = dim(A, 1)
-        A = vcat(A, [zero(C) for i=1:m, i=1:2*m])
+        M = [coeff(q, i) for i=0:dc, q in qs]
+        A = ConstantSystem(M, BaseDerivation(D))
+        neq = size(A, 1)
+        A = vcat(hcat(A, zeros(C, neq, m)), zeros(C, m, 2*m))
         for i=1:m
             A[i+neq, i] = one(C)
             A[i+neq, m+i] = -one(C)
@@ -392,17 +402,25 @@ function PolyRischDENoCancel2(b::P,  qs::Vector{P}, D::Derivation, n::Int) where
         else
             dc = maximum([degree(q) for q in qs])
         end
-        M = [coeffizient(q, i) for i=0:dc, q in qs]
-        for j=1:length(f)
-            M[1,j+m] = -D0(f[j]) - b0*f[j]
+        r = length(fs)
+        M = zeros(b0, dc+1, m+r)
+        for i=0:dc
+            for j = 1:m
+                M[i+1,j] = coeff(qs[j], i)
+            end
         end
-        A, u = ConstantSystem(M, [zero(C) for i=0:dc])
+        if dc>=0
+            for j=1:r
+                M[1,j+m] = -D0(fs[j]) - b0*fs[j]
+            end
+        end
+        A = ConstantSystem(M, D0)
         A = vcat(A, B)
-        neq = dim(A, 1)
-        A = vcat(A, [zero(C) for i=1:m, i=1:2*m])
+        neq = size(A, 1)
+        A = vcat(hcat(A, zeros(C, neq, m)), zeros(C, m, 2*m+r))
         for i=1:m
             A[i+neq, i] = one(C)
-            A[i+neq, m+i] = -one(C)
+            A[i+neq, m+r+i] = -one(C)
         end
         return vcat(fs .+ zero(b), hs), A
     end
@@ -453,8 +471,7 @@ function ParamRischDE(f::F, gs::Vector{F}, D::Derivation) where
         gs = [q//d for q in gs]
     end
     qs, M = LinearConstraint(a, b, gs, D)
-    A, u = ConstantSystem(M, [Z for i=1:dim(M,2)], D)
-    #TODO do something with qs (linear combs ...) , see bottom of p.226 
+    A = ConstantSystem(M, BaseDerivation(D))
     if primitive_case
         if basic_case
             n = ParamRdeBoundDegreeBase(a, b, qs) 
@@ -479,21 +496,18 @@ function ParamRischDE(f::F, gs::Vector{F}, D::Derivation) where
             b = divexact(b, d)
             gs = [q//d for q in gs]
             qs, M = LinearConstraint(a, b, gs, D)
-            A, u = ConstantSystem(M, [Z for i=1:dim(M,2)], D)
-            #TODO do something with qs (linear combs ...) , see bottom of p.226 
+            A = vcat(A, ConstantSystem(M, BaseDerivation(D)))
         end
     end
+    a = constant_term(a)
     b = divexact(b, a)
     qs = [divexact(q, a) for q in qs]
     if !iszero(b) && (basic_case || degree(b)>max(0, δ-1))
-        hs, A = ParamPolyRischDENoCancel1(b, qs, D, n)
+        hs, A1 = ParamPolyRischDENoCancel1(b, qs, D, n)
+        A = vcat(hcat(A, zeros(constant_field(D), size(A, 1), size(hs))), A1)
     elseif (iszero(b2) || degree(b2)<δ-1) && (basic_case || δ>=2)
-        fs , hs, A = ParamPolyRischDENoCancel2(b, qs, D, n)
-        if success==2
-            z1, success = RischDE(b, c, BaseDerivation(D))
-            success>=1 || return Z, Z, success
-            z = z1 - z
-        end
+        hs, A1 = ParamPolyRischDENoCancel2(b, qs, D, n)
+        A = vcat(hcat(A, zeros(constant_field(D), size(A, 1), size(hs))), A1)
     elseif δ>=2 && degree(b2)==δ-1
     end
 

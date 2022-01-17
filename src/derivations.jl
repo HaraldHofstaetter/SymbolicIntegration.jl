@@ -9,7 +9,7 @@ abstract type Derivation end
 
 domain(D::Derivation) = D.domain
 iscompatible(p::RingElement, D::Derivation) = parent(p)==domain(D)
-iscompatible(f::FracElem{P}, D::Derivation) where P<:PolyElem =
+iscompatible(f::FracElem, D::Derivation) =
     base_ring(parent(f))==D.domain
 
 
@@ -163,6 +163,11 @@ isreduced(f::FracElem{P}, D::Derivation) where P<:PolyElem =
     #see Def. 3.5.2.
     iscompatible(f, D) && isspecial(denominator(f), D)
 
+
+function isconstant(x::T, D::NullDerivation) where T<:RingElement 
+    @assert iscompatible(x, D)
+    true
+end
     
 function isconstant(x::T, D::Derivation) where T<:RingElement 
     @assert iscompatible(x, D)
@@ -188,6 +193,11 @@ function isconstant(x::F, D::Derivation) where {P<:PolyElem, F<:FracElem{P}}
     isone(denominator(x)) && isconstant(numerator(x), D) 
 end
 
+
+function constantize(x::T, D::NullDerivation) where T<:RingElement 
+    @assert iscompatible(x, D)
+    x
+end
 
 function constantize(x::T, D::Derivation) where T<:RingElement 
     @assert iscompatible(x, D)

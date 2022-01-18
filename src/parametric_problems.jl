@@ -9,6 +9,22 @@
 using Logging
 
 
+function Base.lcm(as::Vector{T}) where T<:RingElement
+    m = length(as)
+    if m==0
+        error("array as must not be empty")
+    elseif m==1
+        return as[1]
+    else
+        y = as[1]
+        for i=2:m
+            y = lcm(y, as[i])
+        end
+        return y
+    end
+end
+
+
 function ParamRdeNormalDenominator(f::F, gs::Vector{F}, D::Derivation) where 
     {P<:PolyElem, F<:FracElem{P}}
     # See Bronstein's book, Section 7.1, p. 219
@@ -17,7 +33,7 @@ function ParamRdeNormalDenominator(f::F, gs::Vector{F}, D::Derivation) where
     # Note: f must be weakly normalized which we do not check. It is recommended
     # to use this function only for rational functions f which were computed by WeakNormalizer. 
     (dn, ds) = SplitFactor(denominator(f), D)
-    (en, es) = SplitFactor(lcm([denominator(g) for g in gs]...), D)
+    (en, es) = SplitFactor(lcm([denominator(g) for g in gs]), D)
     p = gcd(dn, en)
     h = divexact(gcd(en, derivative(en)), gcd(p, derivative(p)))
     dnh2 = dn*h^2
@@ -61,7 +77,7 @@ function LinearConstraints(a::P, b::P, gs::Vector{F}, D::Derivation) where
     # See Bronstein's book, Section 7.1, p. 223
     iscompatible(a, D) && iscompatible(b, D) && all([iscompatible(g, D) for g in gs]) || 
         error("polynomial a and rational functions b and g_i must be in the domain of derivation D")
-    d = lcm([denominator(g) for g in gs]...)
+    d = lcm([denominator(g) for g in gs])
     qrs = [divrem(numerator(d*g), d) for g in gs]
     qs = [q for (q, r) in qrs]
     rs = [r for (q, r) in qrs]
@@ -195,7 +211,7 @@ function ParamRdeBoundDegreePrim(a::P, b::P, qs::Vector{P}, D::Derivation) where
     end
     if db==da-1
         α = -leading_coefficient(b)//leading_coefficient(a)
-        z, s0, ρ = LimitedIntegrate(α, leading_coefficient(D), BaseDerivative(D)) # not yet implemented
+        z, s0, ρ = LimitedIntegrate(α, leading_coefficient(D), BaseDerivation(D)) # not yet implemented
         if ρ>0 && isrational(s0)
             s = rationalize_over_Int(s0)
             if denominator(s)==1
@@ -203,7 +219,7 @@ function ParamRdeBoundDegreePrim(a::P, b::P, qs::Vector{P}, D::Derivation) where
             end
         end
     end
-    D0 = BaseDerivative(D)
+    D0 = BaseDerivation(D)
     if db==da
         α = -leading_coefficient(b)//leading_coefficient(a)
         z, ρ = InFieldDerivative(α)
@@ -394,7 +410,7 @@ function ParamPolyRischDENoCancel2(b::P,  qs::Vector{P}, D::Derivation, n::Int) 
         b0 = constant_coefficient(b) # b \in k
         fs, B = ParamRischDE(b0, [constant_coefficient(q) for q in qs], D0)
         if all([iszero(q) for q in qs])
-            if all([iszero(D(f)+b0*f) for f in fs])
+            if all([iszero(D0(f)+b0*f) for f in fs])
                 dc = -1
             else
                 dc = 0
@@ -403,7 +419,7 @@ function ParamPolyRischDENoCancel2(b::P,  qs::Vector{P}, D::Derivation, n::Int) 
             dc = maximum([degree(q) for q in qs])
         end
         r = length(fs)
-        M = zeros(b0, dc+1, m+r)
+        M = zeros(parent(b0), dc+1, m+r)
         for i=0:dc
             for j = 1:m
                 M[i+1,j] = coeff(qs[j], i)
@@ -426,6 +442,98 @@ function ParamPolyRischDENoCancel2(b::P,  qs::Vector{P}, D::Derivation, n::Int) 
     end
 end
 
+function ParamPolyRischDECancelLiouvillian(b::T,  qs::Vector{P}, D::Derivation, n::Int) where 
+    {T<:RingElement, P<:PolyElem{T}} 
+    # See Bronstein's book, Section 7.1, p. 241
+    isprimitive(D) || ishyperexponential(D) ||
+    error("monomial of derivation D must be primitive or hyperexponential")
+    D0 = BaseDerivation(D)
+    iscompatible(b, D0) || 
+        error("coefficient b must be in the domain of the base derivation of D") 
+    all([iscompatible(q, D) for q in qs]) || 
+        error("polynomials q_i must be in the domain of derivation D")
+    H = MonomialDerivative(D)
+    C = constant_field(D)
+    if ishyperexponential(D)
+        w = coeff(H, 1)
+    else
+        w = zero(parent(b))
+    end
+    t = gen(parent(H))
+    m = length(qs)
+    first = true
+    qns = copy(qs)
+    while n>=0
+        fns, An = ParamRischDE(b + n*w, [coeff(q, n) for q in qns], D0) 
+        hns = [f*t^n for f in fns]
+        qns = vcat(qns, [D(h) - b*h for h in hns])
+        r = length(fns)
+        if first
+            A = An
+            hs = hns
+            first = false
+        else
+            A = vcat(hcat(An,                               zeros(C, size(An,1), size(A,2)-m)), 
+                     hcat(A[:,1:m], zeros(C, size(A,1), r), A[:,(m+1):end]))
+            hs = vcat(hns, hs, hns)
+        end
+        n -= 1
+    end
+    r = length(hs)
+    Dhbhs = [D0(h)+b*h for h in hs]
+    if all([iszero(q) for q in qs]) && all([iszero(Dhbh) for Dhbh in Dhbhs])        
+        dc = -1
+    else
+        dc = max( maximum([degree(q) for q in qs]), [degree(Dhbh) for Dhbh in Dhbhs])
+    end
+    M = zeros(parent(b), dc+1, m+r)
+    for i=0:dc
+        for j = 1:m
+            M[i+1,j] = coeff(qs[j], i)
+        end
+        for j=1:r
+            M[i,j+m] = -coeff(Dhbhs[j], i)
+        end
+    end
+    A0 = ConstantSystem(M, D0)
+    A = vcat(A0, A)
+    hs, A
+end
+
+function ParamRischDE(f::F, gs::Vector{F}, D::NullDerivation) where F<:FieldElem
+    #base case => pure (linear) algebra problem ...
+    iscompatible(f, D) && all(iscompatible(g, D) for g in gs) || 
+        error("rational functions f and g_i must be in the domain of derivation D")
+    m = length(gs)
+    C = parent(f)
+    if iszero(f)
+        qz = [i for i=1:m if iszero(gs[i])]
+        r = length(qz)
+        A = zeros(C, r + (r<m ? 1 : 0) , m+r) 
+        for i=1:r
+            A[i, qz[i]] = one(C)
+            A[i, m+i] = -one(C)
+        end
+        h = [one(C) for i=1:r]
+        if r<m
+            qnz = [i for i=1:m if !iszero(gs[i])]
+            for i=1:m
+                if !iszero(gs[i])
+                    A[r+1, i] = gs[i]
+                end
+            end
+        end
+    else
+        A = zeros(C, m , 2*m) 
+        for i=1:m
+            A[i, i] = one(C)
+            A[i, m+i] = -one(C)
+        end
+        h = [qs[i]//f for i=1:m]
+    end
+    h, A
+end
+
 
 function ParamRischDE(f::F, gs::Vector{F}, D::Derivation) where 
     {P<:PolyElem, F<:FracElem{P}}
@@ -435,21 +543,21 @@ function ParamRischDE(f::F, gs::Vector{F}, D::Derivation) where
     Z = zero(f)
     H = MonomialDerivative(D)
     δ = degree(D)
+    m = length(gs)
     basic_case = isbasic(D) 
     primitive_case = isprimitive(D)  
     hyperexponential_case = ishyperexponential(D)
     hypertangent_case = ishypertangent(D)  
-    #if !(primitive_case || hyperexponential_case || hypertangent_case )
-    if !(hyperexponential_case)
+    if !(primitive_case || hyperexponential_case) # || hypertangent_case )
         error("RischDE not implemented for Dt=$H")
     end
-    q = WeakNormalizer(f, D)
-    f1 = f - D(q)//q
-    gs = [q*g for g in gs]
-    a, b, gs, h, = ParamdRdeNormalDenominator(f1, gs, D)
+    h0 = WeakNormalizer(f, D)
+    f1 = f - D(h0)//h0
+    gs = [h0*g for g in gs]
+    a, b, gs, h1, = ParamRdeNormalDenominator(f1, gs, D)
     if primitive_case
         b = numerator(b)
-        h1 = one(b)
+        h2 = one(b)
     elseif hyperexponential_case
         d = gcd(a, t)
         if !isone(d)
@@ -457,10 +565,10 @@ function ParamRischDE(f::F, gs::Vector{F}, D::Derivation) where
             b = b//d
             gs = [g//d for g in gs]
         end
-        a, b, gs, h1 =  ParamRdeSpecialDenomExp(a, b, gs, D)
+        a, b, gs, h2 =  ParamRdeSpecialDenomExp(a, b, gs, D)
     elseif hypertangent_case
         # TODO
-        a, b, gs, h1  =  ParamRdeSpecialDenomTan(a, b, gs, D) # not yet implemented
+        a, b, gs, h2  =  ParamRdeSpecialDenomTan(a, b, gs, D) # not yet implemented
     else
         @assert false # never reach this point
     end
@@ -470,7 +578,7 @@ function ParamRischDE(f::F, gs::Vector{F}, D::Derivation) where
         b = divexact(b, d)
         gs = [q//d for q in gs]
     end
-    qs, M = LinearConstraint(a, b, gs, D)
+    qs, M = LinearConstraints(a, b, gs, D)
     A = ConstantSystem(M, BaseDerivation(D))
     if primitive_case
         if basic_case
@@ -485,37 +593,61 @@ function ParamRischDE(f::F, gs::Vector{F}, D::Derivation) where
     else
         @assert false # never reach this point
     end
+    aprod = one(parent(a))
+    Rs = zeros(parent(a), m)
+    println("a=$a")
+    println("b=$b")
+    println("qs=$qs")
+    println("D=$D")
+    println("n=$n")
     while true
         a, b, qs, rs, n = ParSPDE(a, b, qs, D, n)
-        if degree(a)==0
+        for i=1:m
+            Rs[i] = a*Rs[i] + rs[i]
+        end
+        aprod *= a
+        println("a=$a degree=", degree(a))
+        if degree(a)<=0
             break
         end
         d = gcd(a, b)
         if !isone(d)
             a = divexact(a, d)
             b = divexact(b, d)
-            gs = [q//d for q in gs]
-            qs, M = LinearConstraint(a, b, gs, D)
+            gs = [q//d for q in qs]
+            qs, M = LinearConstraints(a, b, gs, D)
             A = vcat(A, ConstantSystem(M, BaseDerivation(D)))
         end
     end
+    C = constant_field(D)
     a = constant_term(a)
     b = divexact(b, a)
     qs = [divexact(q, a) for q in qs]
     if !iszero(b) && (basic_case || degree(b)>max(0, δ-1))
         hs, A1 = ParamPolyRischDENoCancel1(b, qs, D, n)
-        A = vcat(hcat(A, zeros(constant_field(D), size(A, 1), size(hs))), A1)
-    elseif (iszero(b2) || degree(b2)<δ-1) && (basic_case || δ>=2)
+        A = vcat(hcat(A, zeros(C, size(A, 1), size(hs))), A1)
+    elseif (iszero(b) || degree(b2)<δ-1) && (basic_case || δ>=2)
         hs, A1 = ParamPolyRischDENoCancel2(b, qs, D, n)
-        A = vcat(hcat(A, zeros(constant_field(D), size(A, 1), size(hs))), A1)
-    elseif δ>=2 && degree(b2)==δ-1
+        A = vcat(hcat(A, zeros(C, size(A, 1), size(hs))), A1)
+    elseif δ>=2 && degree(b)==δ-1
+        # TODO
+        @assert false 
+    elseif primitive_case || hyperexponential_case
+        hs, A1 = ParamPolyRischDECancelLiouvillian(constant_coefficient(b), qs, D, n)
+        A = vcat(hcat(A, zeros(C, size(A, 1), size(hs))), A1)
+    else
+        @assert false # never reach this point
     end
-
- ####################
-# to be continued
-
-
-
+    r = size(hs)
+    h012 = h0*h1*h2
+    hs = vcat([aprod*h//h012 for h in hs], [R//h012 for R in Rs])    
+    neq = size(A, 1)
+    A = vcat(hcat(A, zeros(C, neq, m)), zeros(C, m, 2*m+r))
+    for i=1:m
+        A[neq+i, i] = one(C)
+        A[neq+i, m+r+i] = -one(C)
+    end
+    hs, A
 end
     
 

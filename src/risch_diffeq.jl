@@ -457,8 +457,11 @@ function PolyRischDECancelPrim(b::T, c::P, D::Derivation, n::Int=typemax(Int)) w
     # See Bronstein's book, Section 6.6, p. 212
     isprimitive(D) ||
         error("monomial of derivation D must be primitive")
-    iscompatible(b, D) && iscompatible(c, D) || 
-        error("polynomials b and c must be in the domain of derivation D")
+    D0 = BaseDerivation(D)
+    iscompatible(b, D0) || 
+        error("coefficient b must be in the domain of the base derivation of D")
+    iscompatible(c, D) || 
+        error("polynomial c must be in the domain of derivation D")
     Z = zero(c)
     if b==0
         q0, β = InFieldDerivative(c//one(c), D) # make poly c a rational function
@@ -469,8 +472,8 @@ function PolyRischDECancelPrim(b::T, c::P, D::Derivation, n::Int=typemax(Int)) w
         end
         return q, 1
     end
-    t = gen(parent(b))
-    z, β = InFieldLogarithmicDerivative(b, BaseDerivation(D)) 
+    t = gen(parent(c))
+    z, β = InFieldLogarithmicDerivative(b, D0) 
     if β>0
         p0, β = InFieldDerivative(z*c, D)
         p = numerator(p0)
@@ -494,7 +497,7 @@ function PolyRischDECancelPrim(b::T, c::P, D::Derivation, n::Int=typemax(Int)) w
             @info "PolyRischDECancelPrim: no solution"
             return Z, 0 # no solution
         end
-        s, β = RischDE(b, leading_coefficient(c), BaseDerivation(D))
+        s, β = RischDE(b, leading_coefficient(c), D0)
         if β<=0
             @info "PolyRischDECancelPrim: no solution"
             return Z, 0 
@@ -511,8 +514,11 @@ function PolyRischDECancelExp(b::T, c::P, D::Derivation, n::Int=typemax(Int)) wh
     # See Bronstein's book, Section 6.6, p. 213
     ishyperexponential(D) ||
         error("monomial of derivation D must be hyperexponential")
-    iscompatible(b, D) && iscompatible(c, D) || 
-        error("polynomials b and c must be in the domain of derivation D")
+    D0 = BaseDerivation(D)
+    iscompatible(b, D0) || 
+        error("coefficient b must be in the domain of the base derivation of D")
+    iscompatible(c, D) || 
+        error("polynomial c must be in the domain of derivation D")
     Z = zero(c)
     if b==0
         q0, β = InFieldDerivative(c//one(c), D) # make poly c a rational function
@@ -523,10 +529,10 @@ function PolyRischDECancelExp(b::T, c::P, D::Derivation, n::Int=typemax(Int)) wh
         end
         return q, 1
     end
-    t = gen(parent(b))
+    t = gen(parent(c))
     H = MonomialDerivative(D)
     w = coeff(H,1) # = Dt/t for hyperexponentialm case
-    n, m, z, β = ParametricLogarithmicDerivative(b, w, BaseDerivation(D))
+    n, m, z, β = ParametricLogarithmicDerivative(b, w, D0)
     if β<0
         error("ParametricLogarithmicDerivative failed")
     end
@@ -563,7 +569,7 @@ function PolyRischDECancelExp(b::T, c::P, D::Derivation, n::Int=typemax(Int)) wh
             @info "PolyRischDECancelExp: no solution"
             return Z, 0 # no solution
         end
-        s, β = RischDE(b+m*w, leading_coefficient(c), BaseDerivation(D))
+        s, β = RischDE(b+m*w, leading_coefficient(c), D0)
         if β<=0
             @info "PolyRischDECancelExp: no solution"
             return Z, 0 # no solution
@@ -576,7 +582,21 @@ function PolyRischDECancelExp(b::T, c::P, D::Derivation, n::Int=typemax(Int)) wh
 end
 
 
-
+function RischDE(f::F, g::F, D::NullDerivation) where F<:FieldElem
+     #base case => pure algebra problem ...
+     iscompatible(f, D) && iscompatible(g,D) || 
+        error("coefficients f and g must be in the domain of the base derivation of D") 
+    if iszero(f)
+        if iszero(g)
+            return zero(parent(f)), 1
+        else
+            @info "RischDE, base case: no solution, f was == 0 and g != 0"
+            return zero(parent(f)), 0
+        end
+    else
+        return g//f, 1
+    end
+ end
 
 function RischDE(f::F, g::F, D::Derivation) where 
     {P<:PolyElem, F<:FracElem{P}}

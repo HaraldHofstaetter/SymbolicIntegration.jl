@@ -37,7 +37,7 @@ function ParamRdeNormalDenominator(f::F, gs::Vector{F}, D::Derivation) where
     p = gcd(dn, en)
     h = divexact(gcd(en, derivative(en)), gcd(p, derivative(p)))
     dnh2 = dn*h^2
-    dn*h, dn*h*f-dn*D(h), [dnh2*g for g in gs], h, 1
+    dn*h, dn*h*f-dn*D(h), [dnh2*g for g in gs], h
 end
 
 function ParamRdeSpecialDenomExp(a::P, b::F, gs::Vector{F}, D::Derivation) where
@@ -554,8 +554,9 @@ function ParamRischDE(f::F, gs::Vector{F}, D::Derivation) where
     h0 = WeakNormalizer(f, D)
     f1 = f - D(h0)//h0
     gs = [h0*g for g in gs]
-    a, b, gs, h1, = ParamRdeNormalDenominator(f1, gs, D)
+    a, b, gs, h1 = ParamRdeNormalDenominator(f1, gs, D)
     if primitive_case
+        @assert isone(denominator(b))
         b = numerator(b)
         h2 = one(b)
     elseif hyperexponential_case
@@ -595,19 +596,13 @@ function ParamRischDE(f::F, gs::Vector{F}, D::Derivation) where
     end
     aprod = one(parent(a))
     Rs = zeros(parent(a), m)
-    println("a=$a")
-    println("b=$b")
-    println("qs=$qs")
-    println("D=$D")
-    println("n=$n")
-    while true
+    while degree(a)>0
         a, b, qs, rs, n = ParSPDE(a, b, qs, D, n)
         for i=1:m
             Rs[i] = a*Rs[i] + rs[i]
         end
         aprod *= a
-        println("a=$a degree=", degree(a))
-        if degree(a)<=0
+        if degree(a)<=0 #|| all([iszero(q) for q in qs])
             break
         end
         d = gcd(a, b)
@@ -620,25 +615,25 @@ function ParamRischDE(f::F, gs::Vector{F}, D::Derivation) where
         end
     end
     C = constant_field(D)
-    a = constant_term(a)
+    a = constant_coefficient(a)
     b = divexact(b, a)
     qs = [divexact(q, a) for q in qs]
     if !iszero(b) && (basic_case || degree(b)>max(0, δ-1))
         hs, A1 = ParamPolyRischDENoCancel1(b, qs, D, n)
-        A = vcat(hcat(A, zeros(C, size(A, 1), size(hs))), A1)
+        A = vcat(hcat(A, zeros(C, size(A, 1), length(hs))), A1)
     elseif (iszero(b) || degree(b2)<δ-1) && (basic_case || δ>=2)
         hs, A1 = ParamPolyRischDENoCancel2(b, qs, D, n)
-        A = vcat(hcat(A, zeros(C, size(A, 1), size(hs))), A1)
+        A = vcat(hcat(A, zeros(C, size(A, 1), length(hs))), A1)
     elseif δ>=2 && degree(b)==δ-1
         # TODO
         @assert false 
     elseif primitive_case || hyperexponential_case
         hs, A1 = ParamPolyRischDECancelLiouvillian(constant_coefficient(b), qs, D, n)
-        A = vcat(hcat(A, zeros(C, size(A, 1), size(hs))), A1)
+        A = vcat(hcat(A, zeros(C, size(A, 1), length(hs))), A1)
     else
         @assert false # never reach this point
     end
-    r = size(hs)
+    r = length(hs)
     h012 = h0*h1*h2
     hs = vcat([aprod*h//h012 for h in hs], [R//h012 for R in Rs])    
     neq = size(A, 1)

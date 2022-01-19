@@ -186,7 +186,8 @@ function ConstantSystem(A::Matrix{T}, u::Vector{T}, D::Derivation) where T<:Fiel
     end
     # return only nonzero rows 
     nz = [i for i=1:size(A,1) if !(all([iszero(A[i,j]) for j=1:size(A,2)]) && (uzero || iszero(u[i])))]
-    B = [constantize(A[i,j], D) for i in nz, j=1:n]
+    CT = typeof(zero(constant_field(D))) # ensure B has eltype of constant field, even if it is empty
+    B = CT[constantize(A[i,j], D) for i in nz, j=1:n]
     if uzero
         return B
     else
@@ -552,9 +553,11 @@ function ParamRischDE(f::F, gs::Vector{F}, D::Derivation) where
         error("RischDE not implemented for Dt=$H")
     end
     h0 = WeakNormalizer(f, D)
+    @info "weak normalizer h0=$h0"
     f1 = f - D(h0)//h0
     gs = [h0*g for g in gs]
     a, b, gs, h1 = ParamRdeNormalDenominator(f1, gs, D)
+    @info "normal denominator h1=$h1"
     if primitive_case
         @assert isone(denominator(b))
         b = numerator(b)
@@ -595,47 +598,57 @@ function ParamRischDE(f::F, gs::Vector{F}, D::Derivation) where
         @assert false # never reach this point
     end
     aprod = one(parent(a))
-    Rs = zeros(parent(a), m)
-    while degree(a)>0
+    Rs = zeros(parent(f), m)
+    while n>=0 && degree(a)>0
         a, b, qs, rs, n = ParSPDE(a, b, qs, D, n)
-        for i=1:m
-            Rs[i] = a*Rs[i] + rs[i]
-        end
-        aprod *= a
-        if degree(a)<=0 #|| all([iszero(q) for q in qs])
-            break
-        end
         d = gcd(a, b)
-        if !isone(d)
+        #if !isone(d)
             a = divexact(a, d)
             b = divexact(b, d)
             gs = [q//d for q in qs]
             qs, M = LinearConstraints(a, b, gs, D)
             A = vcat(A, ConstantSystem(M, BaseDerivation(D)))
+        #end
+        aprod *= a
+        for i=1:m
+            Rs[i] = (Rs[i] + rs[i])//a
         end
     end
     C = constant_field(D)
-    a = constant_coefficient(a)
-    b = divexact(b, a)
-    qs = [divexact(q, a) for q in qs]
-    if !iszero(b) && (basic_case || degree(b)>max(0, δ-1))
-        hs, A1 = ParamPolyRischDENoCancel1(b, qs, D, n)
-        A = vcat(hcat(A, zeros(C, size(A, 1), length(hs))), A1)
-    elseif (iszero(b) || degree(b2)<δ-1) && (basic_case || δ>=2)
-        hs, A1 = ParamPolyRischDENoCancel2(b, qs, D, n)
-        A = vcat(hcat(A, zeros(C, size(A, 1), length(hs))), A1)
-    elseif δ>=2 && degree(b)==δ-1
-        # TODO
-        @assert false 
-    elseif primitive_case || hyperexponential_case
-        hs, A1 = ParamPolyRischDECancelLiouvillian(constant_coefficient(b), qs, D, n)
-        A = vcat(hcat(A, zeros(C, size(A, 1), length(hs))), A1)
+    if n<0
+        if all([iszero(q) for q in qs])
+            @info "Case: n<0, q=0"
+            hs = F[]
+        else
+            @info "Case: n<0, q!=0"
+            @assert false "TODO"
+        end
     else
-        @assert false # never reach this point
+        a = constant_coefficient(a)
+        b = divexact(b, a)
+        qs = [divexact(q, a) for q in qs]
+        if !iszero(b) && (basic_case || degree(b)>max(0, δ-1))
+            @info "Case: NoCancel1"
+            hs, A1 = ParamPolyRischDENoCancel1(b, qs, D, n)
+            A = vcat(hcat(A, zeros(C, size(A, 1), length(hs))), A1)
+        elseif (iszero(b) || degree(b2)<δ-1) && (basic_case || δ>=2)
+            @info "Case: NoCancel2"
+            hs, A1 = ParamPolyRischDENoCancel2(b, qs, D, n)
+            A = vcat(hcat(A, zeros(C, size(A, 1), length(hs))), A1)
+        elseif δ>=2 && degree(b)==δ-1
+            # TODO
+            @assert false 
+        elseif primitive_case || hyperexponential_case
+            @info "Case: CancelLiouville"
+            hs, A1 = ParamPolyRischDECancelLiouvillian(constant_coefficient(b), qs, D, n)
+            A = vcat(hcat(A, zeros(C, size(A, 1), length(hs))), A1)
+        else
+            @assert false # never reach this point
+        end
     end
     r = length(hs)
     h012 = h0*h1*h2
-    hs = vcat([aprod*h//h012 for h in hs], [R//h012 for R in Rs])    
+    hs = vcat([aprod*h//h012 for h in hs], [aprod*R//h012 for R in Rs])    
     neq = size(A, 1)
     A = vcat(hcat(A, zeros(C, neq, m)), zeros(C, m, 2*m+r))
     for i=1:m

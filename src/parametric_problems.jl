@@ -56,20 +56,22 @@ function ParamRdeSpecialDenomExp(a::P, b::F, gs::Vector{F}, D::Derivation) where
     nc = minimum([valuation(g, p) for g in gs])
     n = min(0, nc - min(0, nb))
     if nb==0 
-        α = Remainder(-b//a, p)
+        α = constant_coefficient(Remainder(-b//a, p))
         w = coeff(MonomialDerivative(D), 1)
-        n0, s, z, β = ParametricLogarithmicDerivative(constant_coefficient(α), w, BaseDerivation(D))
-        if β<0
+        n0, s, z, ρ = ParametricLogarithmicDerivative(α, w, BaseDerivation(D))
+        if ρ<0
             error("ParametricLogarithmicDerivative failed")
         end
-        if  β>0 && n0==1 && !iszero(z)
+        if  ρ>0 && n0==1 && !iszero(z)
             n = min(n, s)
         end
     end
     N = max(0, -nb)
     p_power_N = p^N
     p_power_N_minus_n = p^(N-n)
-    a*p_power_N, (b+n*a*divexact(D(p), p))*p_power_N, [p_power_N_minus_n fot g in gs], p^(-n)
+    b1 = (b+n*a*divexact(D(p), p))*p_power_N
+    @assert isone(denominator(b1))
+    a*p_power_N, numerator(b1), [g*p_power_N_minus_n for g in gs], p^(-n) 
 end
 
 function LinearConstraints(a::P, b::P, gs::Vector{F}, D::Derivation) where
@@ -266,7 +268,7 @@ function ParamRdeBoundDegreeExp(a::P, b::P, qs::Vector{P}, D::Derivation) where 
     # See Bronstein's book, Section 7.1, p. 229
     ishyperexponential(D) ||
         error("monomial of derivation D must be hyperexponential")
-    iscompatible(a, D) && iscompatible(b, D) && all([iscompatible(q, D) for q in gs]) || 
+    iscompatible(a, D) && iscompatible(b, D) && all([iscompatible(q, D) for q in qs]) || 
         error("polynomial a and rational functions b and q_i must be in the domain of derivation D")
     !iszero(a) || error("polynomial a must be nonzero")
     da = degree(a)
@@ -481,7 +483,7 @@ function ParamPolyRischDECancelLiouvillian(b::T,  qs::Vector{P}, D::Derivation, 
         else
             A = vcat(hcat(An,                               zeros(C, size(An,1), size(A,2)-m)), 
                      hcat(A[:,1:m], zeros(C, size(A,1), r), A[:,(m+1):end]))
-            hs = vcat(hns, hs, hns)
+            hs = vcat(hns, hs)
         end
         n -= 1
     end
@@ -535,7 +537,7 @@ function ParamRischDE(f::F, gs::Vector{F}, D::NullDerivation) where F<:FieldElem
             A[i, i] = one(C)
             A[i, m+i] = -one(C)
         end
-        h = [qs[i]//f for i=1:m]
+        h = [gs[i]//f for i=1:m]
     end
     h, A
 end
@@ -550,7 +552,7 @@ function ParamRischDE(f::F, gs::Vector{F}, D::Derivation) where
     H = MonomialDerivative(D)
     δ = degree(D)
     m = length(gs)
-    basic_case = isbasic(D) 
+    basic_case = isbasic(D) || (isprimitive(D) && isone(H))
     primitive_case = isprimitive(D)  
     hyperexponential_case = ishyperexponential(D)
     hypertangent_case = ishypertangent(D)  
@@ -569,12 +571,11 @@ function ParamRischDE(f::F, gs::Vector{F}, D::Derivation) where
         h2 = one(b)
     elseif hyperexponential_case
         d = gcd(a, t)
-        if !isone(d)
-            a = divexact(a, d)
-            b = b//d
-            gs = [g//d for g in gs]
-        end
+        a = divexact(a, d)
+        b = b//d
+        gs = [g//d for g in gs]
         a, b, gs, h2 =  ParamRdeSpecialDenomExp(a, b, gs, D)
+        @info "special denominator h2=$h2"
     elseif hypertangent_case
         # TODO
         a, b, gs, h2  =  ParamRdeSpecialDenomTan(a, b, gs, D) # not yet implemented
@@ -582,11 +583,9 @@ function ParamRischDE(f::F, gs::Vector{F}, D::Derivation) where
         @assert false # never reach this point
     end
     d = gcd(a, b)
-    if !isone(d)
-        a = divexact(a, d)
-        b = divexact(b, d)
-        gs = [q//d for q in gs]
-    end
+    a = divexact(a, d)
+    b = divexact(b, d)
+    gs = [g//d for g in gs]
     qs, M = LinearConstraints(a, b, gs, D)
     A = ConstantSystem(M, BaseDerivation(D))
     if primitive_case
@@ -617,28 +616,28 @@ function ParamRischDE(f::F, gs::Vector{F}, D::Derivation) where
             Rs[i] = (Rs[i] + rs[i])//a
         end
     end
-    @info "A=$A\nRs=$Rs"
     C = constant_field(D)
     if n<0
+        @info "case: n<0"
         hs = F[]
-        @info "Case: n<0\na=$a\nb=$b\nqs=$qs"
         A = vcat(A, ConstantSystem(RowEchelon([q//1 for i=1:1, q in qs]), D))
     else
         a = constant_coefficient(a)
         b = divexact(b, a)
         qs = [divexact(q, a) for q in qs]
         if !iszero(b) && (basic_case || degree(b)>max(0, δ-1))
+            @info "case: NoCancel1"
             hs, A1 = ParamPolyRischDENoCancel1(b, qs, D, n)
-            @info "Case: NoCancel1\nA=$A\nhs=$hs"
             A = vcat(hcat(A, zeros(C, size(A, 1), length(hs))), A1)
-        elseif (iszero(b) || degree(b2)<δ-1) && (basic_case || δ>=2)
-            @info "Case: NoCancel2\nA=$A\nhs=$h"
+        elseif (iszero(b) || degree(b)<δ-1) && (basic_case || δ>=2)
+            @info "case: NoCancel2"
             hs, A1 = ParamPolyRischDENoCancel2(b, qs, D, n)
             A = vcat(hcat(A, zeros(C, size(A, 1), length(hs))), A1)
         elseif δ>=2 && degree(b)==δ-1
             @assert false "TODO"
         elseif primitive_case || hyperexponential_case
-            @info "Case: CancelLiouville\nA=$A\nhs=$h"
+            @info "case: CancelLiouville"
+            @assert δ<=1 && degree(b)<=0 && !basic_case
             hs, A1 = ParamPolyRischDECancelLiouvillian(constant_coefficient(b), qs, D, n)
             A = vcat(hcat(A, zeros(C, size(A, 1), length(hs))), A1)
         else

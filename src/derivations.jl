@@ -29,7 +29,15 @@ function (D::NullDerivation)(f::FracElem{T}) where {T<:RingElement}
     zero(f)
 end
 
-constant_field(D::NullDerivation) = D.domain
+function constant_field(D::NullDerivation) 
+    R = D.domain
+    if isa(R, AbstractAlgebra.Field)
+        return R
+    else
+        return FractionField(R)
+    end
+end
+
 
 Base.show(io::IO, D::NullDerivation) = print(io, "Null derivation D=0 on ", domain(D))
 
@@ -53,7 +61,14 @@ end
 
 BaseDerivation(D::BasicDerivation) = NullDerivation(base_ring(D.domain))
 MonomialDerivative(D::BasicDerivation) = one(D.domain)
-constant_field(D::BasicDerivation) = base_ring(D.domain)
+function constant_field(D::BasicDerivation) 
+    R = base_ring(D.domain)
+    if isa(R, AbstractAlgebra.Field)
+        return R
+    else
+        return FractionField(R)
+    end
+end
 
 Base.show(io::IO, D::BasicDerivation) = print(io, "Basic derivation D=d/d", gen(domain(D)), " on ", domain(D))
 
@@ -170,6 +185,12 @@ function isconstant(x::T, D::NullDerivation) where T<:RingElement
     @assert iscompatible(x, D)
     true
 end
+
+function isconstant(x::F, D::NullDerivation) where {P<:PolyElem, F<:FracElem{P}}
+    #this version for disambiguation
+    @assert iscompatible(x, D)
+    true
+end
     
 function isconstant(x::T, D::Derivation) where T<:RingElement 
     @assert iscompatible(x, D)
@@ -197,6 +218,12 @@ end
 
 
 function constantize(x::T, D::NullDerivation) where T<:RingElement 
+    @assert iscompatible(x, D)
+    x
+end
+
+function constantize(x::F, D::NullDerivation) where {P<:PolyElem, F<:FracElem{P}}
+    #this version for disambiguation
     @assert iscompatible(x, D)
     x
 end

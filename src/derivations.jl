@@ -29,6 +29,8 @@ function (D::NullDerivation)(f::FracElem{T}) where {T<:RingElement}
     zero(f)
 end
 
+constant_field(D::NullDerivation) = D.domain
+
 Base.show(io::IO, D::NullDerivation) = print(io, "Null derivation D=0 on ", domain(D))
 
 

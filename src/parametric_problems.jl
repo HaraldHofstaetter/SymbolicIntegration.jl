@@ -90,14 +90,15 @@ function LinearConstraints(a::P, b::P, gs::Vector{F}, D::Derivation) where
     return qs, M
 end
 
-RowEchelon(A::Matrix{T}) where T<:FieldElement = RowEchelon(A, T[])
+RowEchelon(A::Matrix{T}; cut_zero_rows::Bool=true) where T<:FieldElement = RowEchelon(A, T[], cut_zero_rows=cut_zero_rows)
 
-function RowEchelon(A::Matrix{T}, u::Vector{T}) where T<:FieldElement
+function RowEchelon(A::Matrix{T}, u::Vector{T}; cut_zero_rows::Bool=true) where T<:FieldElement
     # based on https://github.com/blegat/RowEchelon.jl/blob/master/src/RowEchelon.jl
     # Note: input arguments A, u are changed on output
     nr, nc = size(A)
     uzero = length(u)==0
-    i = j = 1
+    i = 1
+    j = 1
     while i <= nr && j <= nc        
         p = findfirst(x->!iszero(x), A[i:nr,j])
         if p==nothing
@@ -131,6 +132,9 @@ function RowEchelon(A::Matrix{T}, u::Vector{T}) where T<:FieldElement
             i += 1
             j += 1
         end
+    end
+    if cut_zero_rows
+        A = A[1:i-1,:]
     end
     if uzero
         return A
@@ -174,11 +178,12 @@ function ConstantSystem(A::Matrix{T}, u::Vector{T}, D::Derivation) where T<:Fiel
             u[m+1] = D(u[i])//Daij
         end
         for s=1:m
+            asj = A[s,j]
             for k=1:n
-                A[s, k] -= A[s,j]*A[m+1, k]
+                A[s, k] -= asj*A[m+1, k]
             end
             if !uzero
-                u[s] -= A[s,j]*u[m+1]
+                u[s] -= asj*u[m+1]
             end
         end
         j += 1
@@ -602,44 +607,38 @@ function ParamRischDE(f::F, gs::Vector{F}, D::Derivation) where
     while n>=0 && degree(a)>0
         a, b, qs, rs, n = ParSPDE(a, b, qs, D, n)
         d = gcd(a, b)
-        #if !isone(d)
-            a = divexact(a, d)
-            b = divexact(b, d)
-            gs = [q//d for q in qs]
-            qs, M = LinearConstraints(a, b, gs, D)
-            A = vcat(A, ConstantSystem(M, BaseDerivation(D)))
-        #end
+        a = divexact(a, d)
+        b = divexact(b, d)
+        gs = [q//d for q in qs]
+        qs, M = LinearConstraints(a, b, gs, D)
+        A = vcat(A, ConstantSystem(M, BaseDerivation(D)))
         aprod *= a
         for i=1:m
             Rs[i] = (Rs[i] + rs[i])//a
         end
     end
+    @info "A=$A\nRs=$Rs"
     C = constant_field(D)
     if n<0
-        if all([iszero(q) for q in qs])
-            @info "Case: n<0, q=0"
-            hs = F[]
-        else
-            @info "Case: n<0, q!=0"
-            @assert false "TODO"
-        end
+        hs = F[]
+        @info "Case: n<0\na=$a\nb=$b\nqs=$qs"
+        A = vcat(A, ConstantSystem(RowEchelon([q//1 for i=1:1, q in qs]), D))
     else
         a = constant_coefficient(a)
         b = divexact(b, a)
         qs = [divexact(q, a) for q in qs]
         if !iszero(b) && (basic_case || degree(b)>max(0, δ-1))
-            @info "Case: NoCancel1"
             hs, A1 = ParamPolyRischDENoCancel1(b, qs, D, n)
+            @info "Case: NoCancel1\nA=$A\nhs=$hs"
             A = vcat(hcat(A, zeros(C, size(A, 1), length(hs))), A1)
         elseif (iszero(b) || degree(b2)<δ-1) && (basic_case || δ>=2)
-            @info "Case: NoCancel2"
+            @info "Case: NoCancel2\nA=$A\nhs=$h"
             hs, A1 = ParamPolyRischDENoCancel2(b, qs, D, n)
             A = vcat(hcat(A, zeros(C, size(A, 1), length(hs))), A1)
         elseif δ>=2 && degree(b)==δ-1
-            # TODO
-            @assert false 
+            @assert false "TODO"
         elseif primitive_case || hyperexponential_case
-            @info "Case: CancelLiouville"
+            @info "Case: CancelLiouville\nA=$A\nhs=$h"
             hs, A1 = ParamPolyRischDECancelLiouvillian(constant_coefficient(b), qs, D, n)
             A = vcat(hcat(A, zeros(C, size(A, 1), length(hs))), A1)
         else
@@ -647,15 +646,20 @@ function ParamRischDE(f::F, gs::Vector{F}, D::Derivation) where
         end
     end
     r = length(hs)
+    s = sum([1 for R in Rs if !iszero(R)])
     h012 = h0*h1*h2
-    hs = vcat([aprod*h//h012 for h in hs], [aprod*R//h012 for R in Rs])    
+    hs = vcat([aprod*h//h012 for h in hs], [aprod*R//h012 for R in Rs if !iszero(R)])    
     neq = size(A, 1)
-    A = vcat(hcat(A, zeros(C, neq, m)), zeros(C, m, 2*m+r))
+    A = vcat(hcat(A, zeros(C, neq, s)), zeros(C, s, m+r+s))
+    i1 = 0
     for i=1:m
-        A[neq+i, i] = one(C)
-        A[neq+i, m+r+i] = -one(C)
+        if !iszero(Rs[i])
+            i1 += 1
+            A[neq+i1, i] = one(C)
+            A[neq+i1, m+r+i1] = -one(C)
+        end
     end
-    hs, A
+    hs, RowEchelon(A)
 end
     
 

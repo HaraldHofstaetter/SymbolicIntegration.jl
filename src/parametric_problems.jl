@@ -29,7 +29,7 @@ end
 
 Normal part of the denominator.
 
-Given a derivation `D` on `k[t]`, `f` in `k(t)`, `gs=[g₁,...,gₘ]`, `g₁`,...,`gₘ` in `k(t)`
+Given a field `k`, a derivation `D` on `k[t]`, `f` in `k(t)`, `gs=[g₁,...,gₘ]`, `g₁`,...,`gₘ` in `k(t)`
 with `f` weakly normalized with respect to `t`, return `a`, `b`, `Gs=[G₁,...,Gₘ]`, `h` 
 such that `a`, `h` in `k[t]`, `b` in `k⟨t⟩`, `G₁`,...,`Gₘ` in `k(t)`, 
 and for any solution `c₁`,...,`cₘ` in `Const(k)` and `y` in `k(t)`
@@ -58,7 +58,7 @@ end
 
 Special part of the denominator - hyperexponential case.
 
-Given a derivation `D` on `k[t]`, `a` in `k[t]`, `b` in `k⟨t⟩`, `gs=[g₁,...,gₘ]`,
+Given a field `k`, a derivation `D` on `k[t]`, `a` in `k[t]`, `b` in `k⟨t⟩`, `gs=[g₁,...,gₘ]`,
 `g₁`,...,`gₘ` in `k(t)` with `D(t)/t` in `k`, `a!=0` and `gcd(a,b)==1`, return  
 `A`, `B`, `Gs=[G₁,...,Gₘ]`, `h` such that `A`, `B`, `h` in `k[t]`,
 `G₁`,...,`Gₘ` in `k(t)`, and for any solution `c₁`,...,`cₘ` in `Const(k)` and `q` in `k⟨t⟩`
@@ -106,7 +106,7 @@ end
 
 Generate linear constraints on the constants.
 
-Given a derivation `D` on `k[t]`, `a`, `b` in `k[t]` and `gs=[g₁,...,gₘ]`,
+Given a field `k`, a derivation `D` on `k[t]`, `a`, `b` in `k[t]` and `gs=[g₁,...,gₘ]`,
 `g₁`,...,`gₘ` in `k(t)`, return `qs=[q₁,...,qₘ]`, `q₁`,...,`qₘ` in `k[t]`
 and a matrix `M` with entries in `k` sucht that for any solution 
 `c₁`,...,`cₘ` in `Const(k)` and `p` in `k[t]` of  `a*D(p)+b*p=∑ᵢcᵢ*gᵢ`,
@@ -190,7 +190,7 @@ end
 
 Generate a system for the constant solutions
 
-Given a differential field `(K, D)` with constant field `C`, a matrix `A`
+Given a field `K`, a derivation `D` on `K` with constant field `C`, a matrix `A`
 with entries in `K` and optionally a vector `u` with coefficients in `K`,
 return a matrix `B` with entries in `C` and, in the case that `u` is provided,
 a vector `v` with coefficients in `K`. If no `u` is provided, or all entries
@@ -262,7 +262,7 @@ end
 
 Bound on polynomial solutions - primitive case.
 
-Given a derivation `D` on `k[t]`, `a`, `b` in `k[t]` and `qs=[q₁,...,qₘ]`,
+Given a field `k`, a derivation `D` on `k[t]`, `a`, `b` in `k[t]` and `qs=[q₁,...,qₘ]`,
 `q₁`,...,`qₘ` in `k[t]` with `D(t)` in `k` and `a!=0`, return integer `n`
 such that `degree(q)<=n` for any solution  `c₁`,...,`cₘ` in `Const(k)` 
 and `q` in `k[t]` of  `a*D(q)+b*q=∑ᵢcᵢ*qᵢ`.
@@ -316,7 +316,7 @@ end
 
 Bound on polynomial solutions - base case.
 
-Given `a`, `b` in `k[t]` and `qs=[q₁,...,qₘ]`,
+Given a field `k`, `a`, `b` in `k[t]` and `qs=[q₁,...,qₘ]`,
 `q₁`,...,`qₘ` in `k[t]` with `a!=0`, return integer `n`
 such that `degree(q)<=n` for any solution  `c₁`,...,`cₘ` in `Const(k)` 
 and `q` in `k[t]` of `a*(d/dt)(q)+b*q=∑ᵢcᵢ*qᵢ`.
@@ -347,7 +347,7 @@ end
 
 Bound on polynomial solutions - hyperexponential case.
 
-Given a derivation `D` on `k[t]`, `a`, `b` in `k[t]` and `qs=[q₁,...,qₘ]`,
+Given a field `k`, a derivation `D` on `k[t]`, `a`, `b` in `k[t]` and `qs=[q₁,...,qₘ]`,
 `q₁`,...,`qₘ` in `k[t]` with `D(t)/t` in `k` and `a!=0`, return integer `n`
 such that `degree(q)<=n` for any solution  `c₁`,...,`cₘ` in `Const(k)` 
 and `q` in `k[t]` of  `a*D(q)+b*q=∑ᵢcᵢ*qᵢ`.
@@ -383,7 +383,7 @@ end
 
 Bound on polynomial solutions - nonlinear case.
 
-Given a derivation `D` on `k[t]`, `a`, `b` in `k[t]` and `qs=[q₁,...,qₘ]`,
+Given a  field `k`, a derivation `D` on `k[t]`, `a`, `b` in `k[t]` and `qs=[q₁,...,qₘ]`,
 `q₁`,...,`qₘ` in `k[t]` with `degree(D(t))>=2`  and `a!=0`, return integer `n`
 such that `degree(q)<=n` for any solution `c₁`,...,`cₘ` in `Const(k)` 
 and `q` in `k[t]` of  `a*D(q)+b*q=∑ᵢcᵢ*qᵢ`.
@@ -420,7 +420,7 @@ end
 
 Parametric Special Polynomial Differential Equation algorithm.
 
-Given a derivation `D` on `k[t]`, `a`, `b` in `k[t]`, `qs=[q₁,...,qₘ]`,
+Given a field `k`, a derivation `D` on `k[t]`, `a`, `b` in `k[t]`, `qs=[q₁,...,qₘ]`,
 `q₁`,...,`qₘ` in `k[t]` and an integer `n` with `degree(a)>0` and `gcd(a,b)==1`, return `A`, `B`,
 `Qs=[Q₁,...,Qₘ]` and `N` such that for any solution `c₁`,...,`cₘ` in `Const(k)` 
 and `q` in `k[t]` of degree at most `n` of `a*D(q)+b*q=∑ᵢcᵢ*qᵢ`, `p=(q-∑ᵢcᵢ*rᵢ)/a`
@@ -442,7 +442,7 @@ end
 
 Parametric polynomial Risch differential equation - no cancellation.
 
-Given a derivation `D` on `k[t]`, `b` in `k[t]`, `qs=[q₁,...,qₘ]`,
+Given a field `k`, a derivation `D` on `k[t]`, `b` in `k[t]`, `qs=[q₁,...,qₘ]`,
 `q₁`,...,`qₘ` in `k[t]` and an integer `n` with `b!=0` and either
 `D=d/dt` or `degree(b)>max(0, degree(D(t))-1)`, return `hs=[h₁,...,hᵣ]`,
 `h₁`,...,`hᵣ` in `k[t]` and  a matrix `A` with entries in `Const(k)` such that
@@ -496,7 +496,7 @@ end
 
 Parametric polynomial Risch differential equation - no cancellation.
 
-Given a derivation `D` on `k[t]`, `b` in `k[t]`, `qs=[q₁,...,qₘ]`,
+Given a field `k`, a derivation `D` on `k[t]`, `b` in `k[t]`, `qs=[q₁,...,qₘ]`,
 `q₁`,...,`qₘ` in `k[t]` and an integer `n` with `degree(b)<degree(D(t)-1)` and either
 `D=d/dt` or `degree(D(t))>=2`, return `hs=[h₁,...,hᵣ]`,
 `h₁`,...,`hᵣ` in `k[t]` and  a matrix `A` with entries in `Const(k)` such that
@@ -596,7 +596,7 @@ end
 
 Parametric polynomial Risch differential equation - no cancellation.
 
-Given a derivation `D` on `k[t]`, `b` in `k`, `qs=[q₁,...,qₘ]`,
+Given a field `k`, a derivation `D` on `k[t]`, `b` in `k`, `qs=[q₁,...,qₘ]`,
 `q₁`,...,`qₘ` in `k[t]` and an integer `n` with `D!=d/dt` and `D(t)` in `k`
 or `D(t)/t` in `k`, return `hs=[h₁,...,hᵣ]`,
 `h₁`,...,`hᵣ` in `k[t]` and  a matrix `A` with entries in `Const(k)` such that
@@ -674,7 +674,7 @@ end
 
 Parametric Risch differential equation.
 
-Given a derivation `D` on `K`, `f` in `K`, `gs=[g₁,...,gₘ]`,
+Given a field `K`, a derivation `D` on `K`, `f` in `K`, `gs=[g₁,...,gₘ]`,
 `g₁`,...,`gₘ` in `K`, return `hs=[h₁,...,hᵣ]`,
 `h₁`,...,`hᵣ` in `K` and  a matrix `A` with entries in `Const(K)` such that
  `c₁`,...,`cₘ` in `Const(k)` and `y` in `K` is a solution of 

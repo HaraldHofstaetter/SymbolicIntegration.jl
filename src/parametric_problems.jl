@@ -25,7 +25,7 @@ function Base.lcm(as::Vector{T}) where T<:RingElement
 end
 
 """
-    a, b, Gs, h = ParamRdeNormalDenominator(f, gs, D)
+    ParamRdeNormalDenominator(f, gs, D) -> (a, b, Gs, h)
 
 Normal part of the denominator.
 
@@ -54,7 +54,7 @@ function ParamRdeNormalDenominator(f::F, gs::Vector{F}, D::Derivation) where
 end
 
 """
-    A, B, Gs, h = ParamRdeSpecialDenomExp(a, b, gs, D)
+    ParamRdeSpecialDenomExp(a, b, gs, D) -> (A, B, Gs, h)
 
 Special part of the denominator - hyperexponential case.
 
@@ -102,7 +102,7 @@ function ParamRdeSpecialDenomExp(a::P, b::F, gs::Vector{F}, D::Derivation) where
 end
 
 """
-    qs, M = LinearConstraints(a, b, gs, D)
+    LinearConstraints(a, b, gs, D) -> (qs, M)
 
 Generate linear constraints on the constants.
 
@@ -186,7 +186,7 @@ function RowEchelon(A::Matrix{T}, u::Vector{T}; cut_zero_rows::Bool=true) where 
 end
 
 """
-    B[, v] = ConstantSystem(A[, u], D)
+    ConstantSystem(A[, u], D) -> (B[, v])
 
 Generate a system for the constant solutions
 
@@ -258,7 +258,7 @@ function ConstantSystem(A::Matrix{T}, u::Vector{T}, D::Derivation) where T<:Fiel
 end
 
 """
-    n = ParamRdeBoundDegreePrim(a, b, qs, D)
+    ParamRdeBoundDegreePrim(a, b, qs, D) -> n
 
 Bound on polynomial solutions - primitive case.
 
@@ -312,7 +312,7 @@ function ParamRdeBoundDegreePrim(a::P, b::P, qs::Vector{P}, D::Derivation) where
 end
 
 """
-    n = ParamRdeBoundDegreeBase(a, b, qs)
+    ParamRdeBoundDegreeBase(a, b, qs) -> n
 
 Bound on polynomial solutions - base case.
 
@@ -343,7 +343,7 @@ function ParamRdeBoundDegreeBase(a::P, b::P, qs::Vector{P}) where P<:PolyElem
 end
 
 """
-    n = ParamRdeBoundDegreeExp(a, b, qs, D)
+    ParamRdeBoundDegreeExp(a, b, qs, D) -> n
 
 Bound on polynomial solutions - hyperexponential case.
 
@@ -379,7 +379,7 @@ function ParamRdeBoundDegreeExp(a::P, b::P, qs::Vector{P}, D::Derivation) where 
 end
 
 """
-    n = ParamRdeBoundDegreeNonLinear(a, b, qs, D)
+    ParamRdeBoundDegreeNonLinear(a, b, qs, D) -> n
 
 Bound on polynomial solutions - nonlinear case.
 
@@ -416,7 +416,7 @@ function ParamRdeBoundDegreeNonLinear(a::P, b::P, qs::Vector{P}, D::Derivation) 
 end
 
 """
-    A, B, Qs, rs, N = ParSPDE(a, b, qs, D, n)
+    ParSPDE(a, b, qs, D, n) -> (A, B, Qs, rs, N)
 
 Parametric Special Polynomial Differential Equation algorithm.
 
@@ -438,7 +438,7 @@ function ParSPDE(a::P, b::P, qs::Vector{P}, D::Derivation, n::Int) where P<:Poly
 end
 
 """
-    hs, A = ParamPolyRischDENoCancel1(b, qs, D, n)
+    ParamPolyRischDENoCancel1(b, qs, D, n) -> (hs, A)
 
 Parametric polynomial Risch differential equation - no cancellation.
 
@@ -492,7 +492,7 @@ function ParamPolyRischDENoCancel1(b::P, qs::Vector{P}, D::Derivation, n::Int) w
 end
 
 """
-    hs, A = ParamPolyRischDENoCancel2(b, qs, D, n)
+    ParamPolyRischDENoCancel2(b, qs, D, n) -> (hs, A)
 
 Parametric polynomial Risch differential equation - no cancellation.
 
@@ -592,7 +592,7 @@ function ParamPolyRischDENoCancel2(b::P,  qs::Vector{P}, D::Derivation, n::Int) 
 end
 
 """
-    hs, A = ParamPolyRischDECancelLiouvillian(b, qs, D, n)
+    ParamPolyRischDECancelLiouvillian(b, qs, D, n) -> (hs, A)
 
 Parametric polynomial Risch differential equation - no cancellation.
 
@@ -670,15 +670,15 @@ function ParamPolyRischDECancelLiouvillian(b::T,  qs::Vector{P}, D::Derivation, 
 end
 
 """
-    hs, A = ParamRischDE(f, gs, D)
+    ParamRischDE(f, gs, D) -> (hs, A)
 
 Parametric Risch differential equation.
 
-Given a derivation `D` on `k[t]`, `f` in `k(t)`, `gs=[g₁,...,gₘ]`,
-`g₁`,...,`gₘ` in `k(t)`, return `hs=[h₁,...,hᵣ]`,
-`h₁`,...,`hᵣ` in `k(t)` and  a matrix `A` with entries in `Const(k)` such that
- `c₁`,...,`cₘ` in `Const(k)` and `y` in `k(t)` is a solution of 
-`D(y)+f*y=∑ᵢcᵢ*gᵢ` if and only if `y=∑ⱼdⱼ*hⱼ` for `d₁`,...,`dᵣ` in `Const(k)` with
+Given a derivation `D` on `K`, `f` in `K`, `gs=[g₁,...,gₘ]`,
+`g₁`,...,`gₘ` in `K`, return `hs=[h₁,...,hᵣ]`,
+`h₁`,...,`hᵣ` in `K` and  a matrix `A` with entries in `Const(K)` such that
+ `c₁`,...,`cₘ` in `Const(k)` and `y` in `K` is a solution of 
+`D(y)+f*y=∑ᵢcᵢ*gᵢ` if and only if `y=∑ⱼdⱼ*hⱼ` for `d₁`,...,`dᵣ` in `Const(K)` with
 `A*[c₁,...,cₘ,d₁,...,dᵣ]=0`.
 
 See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 7.1, p. 217.

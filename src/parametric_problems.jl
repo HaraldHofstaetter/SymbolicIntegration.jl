@@ -24,10 +24,23 @@ function Base.lcm(as::Vector{T}) where T<:RingElement
     end
 end
 
+"""
+    a, b, Gs, h = ParamRdeNormalDenominator(f, gs, D)
 
+Normal part of the denominator.
+
+Given a derivation `D` on `k[t]`, `f` in `k(t)`, `gs=[g₁,...,gₘ]`, `g₁`,...,`gₘ` in `k(t)`
+with `f` weakly normalized with respect to `t`, return `a`, `b`, `Gs=[G₁,...,Gₘ]`, `h` 
+such that `a`, `h` in `k[t]`, `b` in `k⟨t⟩`, `G₁`,...,`Gₘ` in `k(t)`, 
+and for any solution `c₁`,...,`cₘ` in `Const(k)` and `y` in `k(t)`
+of `D(y)+f*y=∑ᵢcᵢ*gᵢ`, `q=y*h` in `k⟨t⟩` satisfies `a*D(q)+b*q=∑ᵢcᵢ*Gᵢ`.     
+
+(Here, `k⟨t⟩` denotes the elements of `k(t)` which are reduced w.r.t. `D`.)
+
+See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 7.1, p. 219.
+"""
 function ParamRdeNormalDenominator(f::F, gs::Vector{F}, D::Derivation) where 
     {P<:PolyElem, F<:FracElem{P}}
-    # See Bronstein's book, Section 7.1, p. 219
     iscompatible(f, D) && all(iscompatible(g, D) for g in gs) || 
         error("rational functions f and g_i must be in the domain of derivation D")
     # Note: f must be weakly normalized which we do not check. It is recommended
@@ -40,9 +53,23 @@ function ParamRdeNormalDenominator(f::F, gs::Vector{F}, D::Derivation) where
     dn*h, dn*h*f-dn*D(h), [dnh2*g for g in gs], h
 end
 
+"""
+    A, B, Gs, h = ParamRdeSpecialDenomExp(a, b, gs, D)
+
+Special part of the denominator - hyperexponential case.
+
+Given a derivation `D` on `k[t]`, `a` in `k[t]`, `b` in `k⟨t⟩`, `gs=[g₁,...,gₘ]`,
+`g₁`,...,`gₘ` in `k(t)` with `D(t)/t` in `k`, `a!=0` and `gcd(a,b)==1`, return  
+`A`, `B`, `Gs=[G₁,...,Gₘ]`, `h` such that `A`, `B`, `h` in `k[t]`,
+`G₁`,...,`Gₘ` in `k(t)`, and for any solution `c₁`,...,`cₘ` in `Const(k)` and `q` in `k⟨t⟩`
+of `a*D(q)+b*q=∑ᵢcᵢ*gᵢ`, `r=q*h` in `k[t]` satisfies `A*D(r)+B*r=∑ᵢcᵢ*Gᵢ`.     
+
+(Here, `k⟨t⟩` denotes the elements of `k(t)` which are reduced w.r.t. `D`.)
+
+See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 7.1, p. 221.
+"""
 function ParamRdeSpecialDenomExp(a::P, b::F, gs::Vector{F}, D::Derivation) where
     {P<:PolyElem, F<:FracElem{P}}
-    # See Bronstein's book, Section 7.1, p. 221 
     ishyperexponential(D) ||
         error("monomial of derivation D must be hyperexponential")
     iscompatible(a, D) && iscompatible(b, D) && all([iscompatible(g, D) for g in gs]) || 
@@ -74,9 +101,22 @@ function ParamRdeSpecialDenomExp(a::P, b::F, gs::Vector{F}, D::Derivation) where
     a*p_power_N, numerator(b1), [g*p_power_N_minus_n for g in gs], p^(-n) 
 end
 
+"""
+    qs, M = LinearConstraints(a, b, gs, D)
+
+Generate linear constraints on the constants.
+
+Given a derivation `D` on `k[t]`, `a`, `b` in `k[t]` and `gs=[g₁,...,gₘ]`,
+`g₁`,...,`gₘ` in `k(t)`, return `qs=[q₁,...,qₘ]`, `q₁`,...,`qₘ` in `k[t]`
+and a matrix `M` with entries in `k` sucht that for any solution 
+`c₁`,...,`cₘ` in `Const(k)` and `p` in `k[t]` of  `a*D(p)+b*p=∑ᵢcᵢ*gᵢ`,
+`x=[c₁,...,cₘ]` is a solution of `M*x==0`, and `p` and the `cᵢ` satisfy
+ `a*D(p)+b*p=∑ᵢcᵢ*qᵢ`.
+
+See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 7.1, p. 223.
+"""
 function LinearConstraints(a::P, b::P, gs::Vector{F}, D::Derivation) where
     {P<:PolyElem, F<:FracElem{P}}
-    # See Bronstein's book, Section 7.1, p. 223
     iscompatible(a, D) && iscompatible(b, D) && all([iscompatible(g, D) for g in gs]) || 
         error("polynomial a and rational functions b and g_i must be in the domain of derivation D")
     d = lcm([denominator(g) for g in gs])
@@ -145,11 +185,26 @@ function RowEchelon(A::Matrix{T}, u::Vector{T}; cut_zero_rows::Bool=true) where 
     end
 end
 
+"""
+    B[, v] = ConstantSystem(A[, u], D)
+
+Generate a system for the constant solutions
+
+Given a differential field `(K, D)` with constant field `C`, a matrix `A`
+with entries in `K` and optionally a vector `u` with coefficients in `K`,
+return a matrix `B` with entries in `C` and, in the case that `u` is provided,
+a vector `v` with coefficients in `K`. If no `u` is provided, or all entries
+of the returned `v` are actually elements of `C`, then the solutions in `C`
+of `A*x=u` (resp. `A*x=0` if no `u` is provided) are exactly all the solutions
+of `B*x=v` (resp. `B*x=0`). Otherwise, if `v` has a nonconstant coefficient,
+`A*x=u` has no constant solution.
+
+See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 7.1, p. 225.
+"""
 ConstantSystem(A::Matrix{T}, D::Derivation) where T<:FieldElement =
     ConstantSystem(A, T[], D)
 
 function ConstantSystem(A::Matrix{T}, u::Vector{T}, D::Derivation) where T<:FieldElement
-    # See Bronstein's book, Section 7.1, p. 225
     # check compatibility
     # check dimensions
     # Note: input arguments A, u are changed on output
@@ -202,8 +257,19 @@ function ConstantSystem(A::Matrix{T}, u::Vector{T}, D::Derivation) where T<:Fiel
     end
 end
 
+"""
+    n = ParamRdeBoundDegreePrim(a, b, qs, D)
+
+Bound on polynomial solutions - primitive case.
+
+Given a derivation `D` on `k[t]`, `a`, `b` in `k[t]` and `qs=[q₁,...,qₘ]`,
+`q₁`,...,`qₘ` in `k[t]` with `D(t)` in `k` and `a!=0`, return integer `n`
+such that `degree(q)<=n` for any solution  `c₁`,...,`cₘ` in `Const(k)` 
+and `q` in `k[t]` of  `a*D(q)+b*q=∑ᵢcᵢ*qᵢ`.
+
+See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 7.1, p. 228.
+"""
 function ParamRdeBoundDegreePrim(a::P, b::P, qs::Vector{P}, D::Derivation) where P<:PolyElem
-    # See Bronstein's book, Section 7.1, p. 228
     isprimitive(D) ||
         error("monomial of derivation D must be primitive")
     iscompatible(a, D) && iscompatible(b, D) && all([iscompatible(q, D) for q in qs]) || 
@@ -245,6 +311,18 @@ function ParamRdeBoundDegreePrim(a::P, b::P, qs::Vector{P}, D::Derivation) where
     n
 end
 
+"""
+    n = ParamRdeBoundDegreeBase(a, b, qs)
+
+Bound on polynomial solutions - base case.
+
+Given `a`, `b` in `k[t]` and `qs=[q₁,...,qₘ]`,
+`q₁`,...,`qₘ` in `k[t]` with `a!=0`, return integer `n`
+such that `degree(q)<=n` for any solution  `c₁`,...,`cₘ` in `Const(k)` 
+and `q` in `k[t]` of `a*(d/dt)(q)+b*q=∑ᵢcᵢ*qᵢ`.
+
+See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 7.1, p. 228.
+"""
 function ParamRdeBoundDegreeBase(a::P, b::P, qs::Vector{P}) where P<:PolyElem
     # See Bronstein's book, Section 7.1, p. 228
     !iszero(a) || error("polynomial a must be nonzero")
@@ -264,8 +342,19 @@ function ParamRdeBoundDegreeBase(a::P, b::P, qs::Vector{P}) where P<:PolyElem
     return n
 end
 
+"""
+    n = ParamRdeBoundDegreeExp(a, b, qs, D)
+
+Bound on polynomial solutions - hyperexponential case.
+
+Given a derivation `D` on `k[t]`, `a`, `b` in `k[t]` and `qs=[q₁,...,qₘ]`,
+`q₁`,...,`qₘ` in `k[t]` with `D(t)/t` in `k` and `a!=0`, return integer `n`
+such that `degree(q)<=n` for any solution  `c₁`,...,`cₘ` in `Const(k)` 
+and `q` in `k[t]` of  `a*D(q)+b*q=∑ᵢcᵢ*qᵢ`.
+
+See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 7.1, p. 229.
+"""
 function ParamRdeBoundDegreeExp(a::P, b::P, qs::Vector{P}, D::Derivation) where P<:PolyElem
-    # See Bronstein's book, Section 7.1, p. 229
     ishyperexponential(D) ||
         error("monomial of derivation D must be hyperexponential")
     iscompatible(a, D) && iscompatible(b, D) && all([iscompatible(q, D) for q in qs]) || 
@@ -289,6 +378,18 @@ function ParamRdeBoundDegreeExp(a::P, b::P, qs::Vector{P}, D::Derivation) where 
     n
 end
 
+"""
+    n = ParamRdeBoundDegreeNonLinear(a, b, qs, D)
+
+Bound on polynomial solutions - nonlinear case.
+
+Given a derivation `D` on `k[t]`, `a`, `b` in `k[t]` and `qs=[q₁,...,qₘ]`,
+`q₁`,...,`qₘ` in `k[t]` with `degree(D(t))>=2`  and `a!=0`, return integer `n`
+such that `degree(q)<=n` for any solution `c₁`,...,`cₘ` in `Const(k)` 
+and `q` in `k[t]` of  `a*D(q)+b*q=∑ᵢcᵢ*qᵢ`.
+
+See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 7.1, p. 229.
+"""
 function ParamRdeBoundDegreeNonLinear(a::P, b::P, qs::Vector{P}, D::Derivation) where P<:PolyElem
     # See Bronstein's book, Section 7.1, p. 231
     isnonlinear(D) ||
@@ -314,8 +415,20 @@ function ParamRdeBoundDegreeNonLinear(a::P, b::P, qs::Vector{P}, D::Derivation) 
     n
 end
 
+"""
+    A, B, Qs, rs, N = ParSPDE(a, b, qs, D, n)
+
+Parametric Special Polynomial Differential Equation algorithm.
+
+Given a derivation `D` on `k[t]`, `a`, `b` in `k[t]`, `qs=[q₁,...,qₘ]`,
+`q₁`,...,`qₘ` in `k[t]` and an integer `n` with `degree(a)>0` and `gcd(a,b)==1`, return `A`, `B`,
+`Qs=[Q₁,...,Qₘ]` and `N` such that for any solution `c₁`,...,`cₘ` in `Const(k)` 
+and `q` in `k[t]` of degree at most `n` of `a*D(q)+b*q=∑ᵢcᵢ*qᵢ`, `p=(q-∑ᵢcᵢ*rᵢ)/a`
+has degree at most `N` and satisfies `A*D(p)+B*p=∑ᵢcᵢ*Qᵢ`.
+
+See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 7.1, p. 231.
+"""
 function ParSPDE(a::P, b::P, qs::Vector{P}, D::Derivation, n::Int) where P<:PolyElem
-    # See Bronstein's book, Section 7.1, p. 231
     iscompatible(a, D) && iscompatible(b, D) && all([iscompatible(q, D) for q in qs]) || 
         error("polynomial a and rational functions b and q_i must be in the domain of derivation D")
     degree(a)>0 || error("degree(a) must be > 0")
@@ -324,8 +437,22 @@ function ParSPDE(a::P, b::P, qs::Vector{P}, D::Derivation, n::Int) where P<:Poly
     a, b + D(a), [z-D(r) for (r, z) in rzs], [r for (r, z) in rzs], n-degree(a)
 end
 
+"""
+    hs, A = ParamPolyRischDENoCancel1(b, qs, D, n)
+
+Parametric polynomial Risch differential equation - no cancellation.
+
+Given a derivation `D` on `k[t]`, `b` in `k[t]`, `qs=[q₁,...,qₘ]`,
+`q₁`,...,`qₘ` in `k[t]` and an integer `n` with `b!=0` and either
+`D=d/dt` or `degree(b)>max(0, degree(D(t))-1)`, return `hs=[h₁,...,hᵣ]`,
+`h₁`,...,`hᵣ` in `k[t]` and  a matrix `A` with entries in `Const(k)` such that
+if `c₁`,...,`cₘ` in `Const(k)` and `q` in `k[t]` satisfy `degree(q)<=n` and
+`D(q)+b*q=∑ᵢcᵢ*qᵢ` then `q=∑ⱼdⱼ*hⱼ` where `d₁`,...,`dᵣ` are in `Const(k)` and
+`A*[c₁,...,cₘ,d₁,...,dᵣ]=0`.
+
+See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 7.1, p. 234.
+"""
 function ParamPolyRischDENoCancel1(b::P, qs::Vector{P}, D::Derivation, n::Int) where P<:PolyElem 
-    # See Bronstein's book, Section 7.1, p. 234
     # Note: this implementation changes the input parameters qs!
     iscompatible(b, D) && all([iscompatible(q, D) for q in qs]) || 
         error("polynomials a and q_i must be in the domain of derivation D")
@@ -364,8 +491,22 @@ function ParamPolyRischDENoCancel1(b::P, qs::Vector{P}, D::Derivation, n::Int) w
     hs, A
 end
 
+"""
+    hs, A = ParamPolyRischDENoCancel2(b, qs, D, n)
+
+Parametric polynomial Risch differential equation - no cancellation.
+
+Given a derivation `D` on `k[t]`, `b` in `k[t]`, `qs=[q₁,...,qₘ]`,
+`q₁`,...,`qₘ` in `k[t]` and an integer `n` with `degree(b)<degree(D(t)-1)` and either
+`D=d/dt` or `degree(D(t))>=2`, return `hs=[h₁,...,hᵣ]`,
+`h₁`,...,`hᵣ` in `k[t]` and  a matrix `A` with entries in `Const(k)` such that
+if `c₁`,...,`cₘ` in `Const(k)` and `q` in `k[t]` satisfy `degree(q)<=n` and
+`D(q)+b*q=∑ᵢcᵢ*qᵢ` then `q=∑ⱼdⱼ*hⱼ` where `d₁`,...,`dᵣ` are in `Const(k)` and
+`A*[c₁,...,cₘ,d₁,...,dᵣ]=0`.
+
+See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 7.1, p. 238.
+"""
 function ParamPolyRischDENoCancel2(b::P,  qs::Vector{P}, D::Derivation, n::Int) where P<:PolyElem 
-    # See Bronstein's book, Section 7.1, p. 238
     iscompatible(b, D) && all([iscompatible(q, D) for q in qs]) || 
         error("polynomials a and q_i must be in the domain of derivation D")
     δ = degree(D)
@@ -450,9 +591,23 @@ function ParamPolyRischDENoCancel2(b::P,  qs::Vector{P}, D::Derivation, n::Int) 
     end
 end
 
+"""
+    hs, A = ParamPolyRischDECancelLiouvillian(b, qs, D, n)
+
+Parametric polynomial Risch differential equation - no cancellation.
+
+Given a derivation `D` on `k[t]`, `b` in `k`, `qs=[q₁,...,qₘ]`,
+`q₁`,...,`qₘ` in `k[t]` and an integer `n` with `D!=d/dt` and `D(t)` in `k`
+or `D(t)/t` in `k`, return `hs=[h₁,...,hᵣ]`,
+`h₁`,...,`hᵣ` in `k[t]` and  a matrix `A` with entries in `Const(k)` such that
+if `c₁`,...,`cₘ` in `Const(k)` and `q` in `k[t]` satisfy `degree(q)<=n` and
+`D(q)+b*q=∑ᵢcᵢ*qᵢ` then `q=∑ⱼdⱼ*hⱼ` where `d₁`,...,`dᵣ` are in `Const(k)` and
+`A*[c₁,...,cₘ,d₁,...,dᵣ]=0`.
+
+See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 7.1, p. 241.
+"""
 function ParamPolyRischDECancelLiouvillian(b::T,  qs::Vector{P}, D::Derivation, n::Int) where 
     {T<:RingElement, P<:PolyElem{T}} 
-    # See Bronstein's book, Section 7.1, p. 241
     isprimitive(D) || ishyperexponential(D) ||
     error("monomial of derivation D must be primitive or hyperexponential")
     D0 = BaseDerivation(D)
@@ -471,8 +626,12 @@ function ParamPolyRischDECancelLiouvillian(b::T,  qs::Vector{P}, D::Derivation, 
     m = length(qs)
     first = true
     qns = copy(qs)
+    hs = []
     while n>=0
+        @info "m=$m\nlength(qns)=$(length(qns))"
+        @assert length(qns)==m
         fns, An = ParamRischDE(b + n*w, [coeff(q, n) for q in qns], D0) 
+        @assert length(fns)+m==size(An,2)
         hns = [f*t^n for f in fns]
         qns = vcat(qns, [D(h) - b*h for h in hns])
         r = length(fns)
@@ -481,18 +640,20 @@ function ParamPolyRischDECancelLiouvillian(b::T,  qs::Vector{P}, D::Derivation, 
             hs = hns
             first = false
         else
+            @info "m=$m\nr=$r\nsize(A)=$(size(A))\nsize(An)=$(size(An))"
             A = vcat(hcat(An,                               zeros(C, size(An,1), size(A,2)-m)), 
                      hcat(A[:,1:m], zeros(C, size(A,1), r), A[:,(m+1):end]))
             hs = vcat(hns, hs)
         end
+        m = m + r
         n -= 1
     end
     r = length(hs)
-    Dhbhs = [D0(h)+b*h for h in hs]
+    Dhbhs = [D(h)+b*h for h in hs]
     if all([iszero(q) for q in qs]) && all([iszero(Dhbh) for Dhbh in Dhbhs])        
         dc = -1
     else
-        dc = max( maximum([degree(q) for q in qs]), [degree(Dhbh) for Dhbh in Dhbhs])
+        dc = max( maximum([degree(q) for q in qs]), maximum([degree(Dhbh) for Dhbh in Dhbhs]))
     end
     M = zeros(parent(b), dc+1, m+r)
     for i=0:dc
@@ -508,6 +669,20 @@ function ParamPolyRischDECancelLiouvillian(b::T,  qs::Vector{P}, D::Derivation, 
     hs, A
 end
 
+"""
+    hs, A = ParamRischDE(f, gs, D)
+
+Parametric Risch differential equation.
+
+Given a derivation `D` on `k[t]`, `f` in `k(t)`, `gs=[g₁,...,gₘ]`,
+`g₁`,...,`gₘ` in `k(t)`, return `hs=[h₁,...,hᵣ]`,
+`h₁`,...,`hᵣ` in `k(t)` and  a matrix `A` with entries in `Const(k)` such that
+ `c₁`,...,`cₘ` in `Const(k)` and `y` in `k(t)` is a solution of 
+`D(y)+f*y=∑ᵢcᵢ*gᵢ` if and only if `y=∑ⱼdⱼ*hⱼ` for `d₁`,...,`dᵣ` in `Const(k)` with
+`A*[c₁,...,cₘ,d₁,...,dᵣ]=0`.
+
+See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 7.1, p. 217.
+"""
 function ParamRischDE(f::F, gs::Vector{F}, D::NullDerivation) where F<:FieldElem
     #base case => pure (linear) algebra problem ...
     iscompatible(f, D) && all(iscompatible(g, D) for g in gs) || 
@@ -522,7 +697,7 @@ function ParamRischDE(f::F, gs::Vector{F}, D::NullDerivation) where F<:FieldElem
             A[i, qz[i]] = one(C)
             A[i, m+i] = -one(C)
         end
-        h = [one(C) for i=1:r]
+        hs = [one(C) for i=1:r]
         if r<m
             qnz = [i for i=1:m if !iszero(gs[i])]
             for i=1:m
@@ -537,9 +712,9 @@ function ParamRischDE(f::F, gs::Vector{F}, D::NullDerivation) where F<:FieldElem
             A[i, i] = one(C)
             A[i, m+i] = -one(C)
         end
-        h = [gs[i]//f for i=1:m]
+        hs = [gs[i]//f for i=1:m]
     end
-    h, A
+    hs, A
 end
 
 

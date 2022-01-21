@@ -919,19 +919,6 @@ function RischDE(f::F, g::F, D::Derivation) where
     {P<:PolyElem, F<:FracElem{P}}
     iscompatible(f, D) && iscompatible(g, D) || 
         error("rational functions f and g must be in the domain of derivation D")
-    #t = gen(base_ring(parent(f)))
-    #Z = zero(f)
-    #H = MonomialDerivative(D)
-    #δ = degree(D)
-    #basic_case = isbasic(D) 
-    #primitive_case = isprimitive(D)  
-    #hyperexponential_case = ishyperexponential(D)
-    #hypertangent_case = ishypertangent(D)  
-    ##if !(primitive_case || hyperexponential_case || hypertangent_case )
-    #if !(hyperexponential_case)
-    #    error("RischDE not implemented for Dt=$H")
-    #end
-
     Z = zero(f)
 
     h0 = WeakNormalizer(f, D)
@@ -949,69 +936,12 @@ function RischDE(f::F, g::F, D::Derivation) where
     n = RdeBoundDegree(a, b, c, D)
     @info "degree bound n=$n"
 
-    #if primitive_case
-    #    b = numerator(b)
-    #    c = numerator(c)
-    #    h1 = one(b)
-    #    if basic_case
-    #        n = RdeBoundDegreeBase(a, b, c) 
-    #    else
-    #        n = RdeBoundDegreePrim(a, b, c, D)
-    #    end
-    #elseif hyperexponential_case
-    #    d = gcd(a, t)
-    #    if !isone(d)
-    #        a = divexact(a, d)
-    #        b = b//d
-    #        c = c//d
-    #    end
-    #    a, b, c, h1 =  RdeSpecialDenomExp(a, b, c, D)
-    #    n = RdeBoundDegreeExp(a, b, c, D) 
-    #elseif hypertangent_case
-    #    # TODO
-    #    a, b, c, h  =  RdeSpecialDenomTan(a, b, c, D) # not yet implemented
-    #    n = RdeBoundDegreeNonLinear(a, b, c, D)
-    #else
-    #    @assert false # never reach this point
-    #end
-
     b, c, n, α, β, ρ = SPDE(a, b, c, D, n)
     ρ>=1 || return Z, ρ
 
     z, ρ = PolyRischDE(b, c, D, n)
     ρ>=1 || return Z, ρ
 
-    return (α*z+β)//(h0*h1*h2), 1
-
-    #if !iszero(b) && (basic_case || degree(b)>max(0, δ-1))
-    #    z, success = PolyRischDENoCancel1(b, c, D, n)
-    #elseif (iszero(b) || degree(b)<δ-1) && (basic_case || δ>=2)
-    #    z, b, c, success = PolyRischDENoCancel2(b, c, D, n)
-    #    if success==2
-    #        z1, success = RischDE(b, c, BaseDerivation(D))
-    #        success>=1 || return Z, Z, success
-    #        z = z1 - z
-    #    end
-    #elseif δ>=2 && degree(b)==δ-1
-    #    z, m, c, success = PolyRischDENoCancel3(b, c, D, n) 
-    #    if success==2
-    #        if hypertangent_case
-    #        #  ... = PolyRischDECancelTan(...) TODO!
-    #        end
-    #    else
-    #        @assert false # never reach this point
-    #    end 
-    ## At this point only δ<=1, D!=d/dt is possible;
-    ## this is compatible with primitive and hyperexponential only.
-    #elseif primitive_case
-    #    z, success = PolyRischDECancelPrim(constant_coefficient(b), c, D, n)
-    #elseif hyperexponential_case
-    #    z, success = PolyRischDECancelExp(constant_coefficient(b), c, D, n) 
-    #else
-    #    @assert false # never reach this point
-    #end
-
-    #success>=1 || return Z, Z, success
-    #(α*z+β)//(q*h*h1), 1
+    (α*z+β)//(h0*h1*h2), 1
 end
 

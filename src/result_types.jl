@@ -25,7 +25,7 @@ function show_function_term(io::IO, coeff, fun::String, arg)
         print(io, "-")
     elseif !isone(coeff)
         s = string(coeff)
-        if findnext("+", s, 2)!=nothing || findnext("-", s, 2)!=nothing        
+        if findnext("+", s, 2)!==nothing || findnext("-", s, 2)!==nothing        
             print(io, "(", s, ")")
         else
             print(io, s)

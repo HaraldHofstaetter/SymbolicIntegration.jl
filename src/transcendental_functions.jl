@@ -13,8 +13,8 @@ function HermiteReduce(f::FracElem{P}, D::Derivation) where {T<:FieldElement, P<
     # See Bronstein's book, Section 5.3, p. 139
     iscompatible(f, D) || error("rational function f must be in the domain of derivation D")
     fp, fs, fn = CanonicalRepresentation(f, D)
-    a = numerator(f)
-    d = denominator(f)
+    a = numerator(fn)
+    d = denominator(fn)
     ds = Squarefree(d)
     g = zero(f)
     for i=2:length(ds)
@@ -24,13 +24,13 @@ function HermiteReduce(f::FracElem{P}, D::Derivation) where {T<:FieldElement, P<
             for j=i-1:-1:1
                 b, c = gcdx(u*D(v), v, -1//j*a)
                 g += b//v^j
-                a = -j*c-u*D(b)
+                a = -j*c - u*D(b)
             end
             d = u*v
         end
     end
     q, r = divrem(a, d)
-    g, r//d, q+fp+fs
+    g, r//d, q + fp + fs
 end
 
 function PolynomialReduce(p::P, D::Derivation) where {T<:FieldElement, P<:PolyElem{T}}
@@ -45,8 +45,8 @@ function PolynomialReduce(p::P, D::Derivation) where {T<:FieldElement, P<:PolyEl
     end
     m = degree(p) - δ +1
     q0 = (leading_coefficient(p)//(m*λ))*t^m
-    q, r = PolynomialReduce(p-D(q0), D)
-    q0+q, r
+    q, r = PolynomialReduce(p - D(q0), D)
+    q0 + q, r
 end
 
 function ResidueReduce(f::F, D::Derivation; symbol=:α) where 
@@ -61,9 +61,9 @@ function ResidueReduce(f::F, D::Derivation; symbol=:α) where
     kz, z = PolynomialRing(base_ring(d), symbol)
     kzt, t = PolynomialRing(kz, var(parent(d)))
     if degree(D(d))<=degree(d)
-        r, Rs = SubResultant(d(t), a(t)-z*D(d)(t))
+        r, Rs = SubResultant(d(t), a(t) - z*D(d)(t))
     else
-        r, Rs = SubResultant(a(t)-z*D(d)(t), d(t))
+        r, Rs = SubResultant(a(t) - z*D(d)(t), d(t))
     end
     κD = CoefficientLiftingDerivation(kz, BaseDerivation(D))
     ns, ss = SplitSquarefreeFactor(r, κD)    
@@ -119,20 +119,19 @@ function IntegrateHyperexponentialPolynomial(p::F, D::Derivation) where
     # See Bronstein's book, Section 5.9, p. 162
     iscompatible(p, D) || error("rational function p must be in the domain of derivation D")
     ishyperexponential(D) || error("monomial of derivation D must be hyperexponential")
-    @info "p=$p"
     q = zero(p)
     β = 1
     if iszero(p) 
         # Note: with the conventions in Bronstein's book the for loop below would
         # run from i=+infinity to i=-infinity for p=0, i.e., not at all.
-        # But it's cleaner to handle the case p=0 separartely.
+        # But it's cleaner to handle the case p=0 separately.
         return q, β
     end
     t = gen(base_ring(parent(p)))
     w = coeff(MonomialDerivative(D), 1) # Dt/t
     for i=valuation(p, t):-valuation_infinity(p)
         if i!=0
-            a = coeff(p, i)
+            a = coeff(numerator(p), i) - coeff(denominator(p), i)
             v, β1 = RischDE(i*w, a, BaseDerivation(D))
             if β1==0
                 @info "IntegrateHyperexponentialPolynomial: no solution, RischDE returned no solution"
@@ -149,7 +148,7 @@ function InFieldDerivative(f::F, D::Derivation) where F<:FieldElement
     # base case f \in constant field, D must be the null derivation
     iscompatible(f, D) || error("field element f must be in the domain of derivation D")
     if iszero(f)
-        return one(f), 1
+        return zero(f), 1
     else
         @info "InFieldDerivative (basecase): no solution, f was nonzero in basecase (where D=Null derivation)"
         return zero(f), 0 

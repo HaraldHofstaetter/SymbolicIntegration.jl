@@ -100,6 +100,18 @@ function one_times_n_solve(A::Vector{T}, B::Vector{T}) where T<:RingElement
     eqfound ? [c] : T[]
 end
 
+"""
+    ParametricLogarithmicDerivative(f, w, D) -> (n, m, v, ρ)
+
+Parametric logarithmic derivative heuristic.
+
+Given a field `k`, a derivation `D` on `k[t]`, `f` in `k(t)` and `w=D(θ)/θ` in `k` such that `θ` 
+is a hyperexponential monomial over `k(t)`, return either `ρ=-1`, in which case the algoithm 
+failed, or `ρ=0`, in which case `n*f=D(v)/v+m*D(θ)/θ` has no solution `v≠0` in `k(t)` and 
+integers `n≠0` and `m`, or `ρ=1` and a solution `n`, `m`, `v` of that equation.
+
+See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 7.3, p. 253.
+"""
 function ParametricLogarithmicDerivative(f::F, w::F, D::Derivation) where F<:FieldElement
     # base case f,w \in constant field, D must be the null derivation
     v = one(parent(f))

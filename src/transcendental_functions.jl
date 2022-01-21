@@ -119,11 +119,18 @@ function IntegrateHyperexponentialPolynomial(p::F, D::Derivation) where
     # See Bronstein's book, Section 5.9, p. 162
     iscompatible(p, D) || error("rational function p must be in the domain of derivation D")
     ishyperexponential(D) || error("monomial of derivation D must be hyperexponential")
-    t = gen(base_ring(parent(p)))
-    w = coeff(MonomialDerivative(D), 1) # Dt/t
+    @info "p=$p"
     q = zero(p)
     β = 1
-    for i=valuation(p, i):-valuation_infinity(p)
+    if iszero(p) 
+        # Note: with the conventions in Bronstein's book the for loop below would
+        # run from i=+infinity to i=-infinity for p=0, i.e., not at all.
+        # But it's cleaner to handle the case p=0 separartely.
+        return q, β
+    end
+    t = gen(base_ring(parent(p)))
+    w = coeff(MonomialDerivative(D), 1) # Dt/t
+    for i=valuation(p, t):-valuation_infinity(p)
         if i!=0
             a = coeff(p, i)
             v, β1 = RischDE(i*w, a, BaseDerivation(D))
@@ -138,10 +145,21 @@ function IntegrateHyperexponentialPolynomial(p::F, D::Derivation) where
     q, β
 end
 
+function InFieldDerivative(f::F, D::Derivation) where F<:FieldElement
+    # base case f \in constant field, D must be the null derivation
+    iscompatible(f, D) || error("field element f must be in the domain of derivation D")
+    if iszero(f)
+        return one(f), 1
+    else
+        @info "InFieldDerivative (basecase): no solution, f was nonzero in basecase (where D=Null derivation)"
+        return zero(f), 0 
+    end
+end
+
 function InFieldDerivative(f::F, D::Derivation) where 
     {T<:RingElement, P<:PolyElem{T}, F<:FracElem{P}}
     # See Bronstein's book, Section 5.12, p. 175
-    iscompatible(p, D) || error("rational function f must be in the domain of derivation D")
+    iscompatible(f, D) || error("rational function f must be in the domain of derivation D")
     Z = zero(f)
     g, h, r = HermiteReduce(f, D)
     if !isone(denominator(h))
@@ -159,8 +177,8 @@ function InFieldDerivative(f::F, D::Derivation) where
             return Z, β
         end
         a0 = p-D(q)
-        @assert(degree(a0)<=0) # p-D(q) \in k
-        a = constant_coefficient(a0) 
+        @assert isone(denominator(a0)) && degree(numerator(a0))<=0 # p-D(q) ∈ k
+        a = constant_coefficient(numerator(a0))        
         v, c, β = LimitedIntegrate(a, leading_coefficient(D), BaseDerivation(D)) # not yet implemented
         if β<=0
             @info "InFieldDerivative: no solution, LimitedIntegrate returned no solution"
@@ -170,7 +188,6 @@ function InFieldDerivative(f::F, D::Derivation) where
     else # nonlinear case  # TODO: minor modification mentioned near the top of p.176
         if ishyperexponential(D)
             q, β = IntegrateHyperexponentialPolynomial(p, D)
-            β>=1 || return Z, β
             if β<=0
                 @info "InFieldDerivative: no solution, IntegrateHyperexponentialPolynomialial returned no solution"
                 return Z, β
@@ -180,9 +197,9 @@ function InFieldDerivative(f::F, D::Derivation) where
             return Z, -1
         end
         a0 = p-D(q)
-        @assert(degree(a0)<=0) # p-D(q) \in k
-        a = constant_coefficient(a0) 
-        v, β = InFieldDerivative(a, BaseDerivation(B))
+        @assert isone(denominator(a0)) && degree(numerator(a0))<=0 # p-D(q) ∈ k
+        a = constant_coefficient(numerator(a0))
+        v, β = InFieldDerivative(a, BaseDerivation(D))
         if β<=0
             @info "InFieldDerivative: no solution, recurisve call of itself returned no solution"
             return Z, β
@@ -192,8 +209,8 @@ function InFieldDerivative(f::F, D::Derivation) where
 end
 
 function InFieldLogarithmicDerivative(f::F, D::Derivation) where F<:FieldElement 
-    n, v, β =InFieldLogarithmicDerivativeOfRadical(f, D, expect_one=true)
-    @assert n==1
+    n, v, β = InFieldLogarithmicDerivativeOfRadical(f, D, expect_one=true)
+    @assert β<=0 || n==1
     v, β
 end
 

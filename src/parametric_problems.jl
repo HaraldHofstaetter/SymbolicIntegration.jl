@@ -59,7 +59,7 @@ end
 Special part of the denominator - hyperexponential case.
 
 Given a field `k`, a derivation `D` on `k[t]`, `a` in `k[t]`, `b` in `k⟨t⟩`, `gs=[g₁,...,gₘ]`,
-`g₁`,...,`gₘ` in `k(t)` with `D(t)/t` in `k`, `a!=0` and `gcd(a,t)==1`, return  
+`g₁`,...,`gₘ` in `k(t)` with `D(t)/t` in `k`, `a≠0` and `gcd(a,t)=1`, return  
 `A`, `B`, `Gs=[G₁,...,Gₘ]`, `h` such that `A`, `B`, `h` in `k[t]`,
 `G₁`,...,`Gₘ` in `k(t)`, and for any solution `c₁`,...,`cₘ` in `Const(k)` and `q` in `k⟨t⟩`
 of `a*D(q)+b*q=∑ᵢcᵢ*gᵢ`, `r=q*h` in `k[t]` satisfies `A*D(r)+B*r=∑ᵢcᵢ*Gᵢ`.     
@@ -108,7 +108,7 @@ end
 Special part of the denominator.
 
 Given a field `k`, a derivation `D` on `k[t]`, `a` in `k[t]`, `b` in `k⟨t⟩`, `gs=[g₁,...,gₘ]`,
-`g₁`,...,`gₘ` in `k(t)` with `a!=0`, return  
+`g₁`,...,`gₘ` in `k(t)` with `a≠0`, return  
 `A`, `B`, `Gs=[G₁,...,Gₘ]`, `h` such that `A`, `B`, `h` in `k[t]`,
 `G₁`,...,`Gₘ` in `k(t)`, and for any solution `c₁`,...,`cₘ` in `Const(k)` and `q` in `k⟨t⟩`
 of `a*D(q)+b*q=∑ᵢcᵢ*gᵢ`, `r=q*h` in `k[t]` satisfies `A*D(r)+B*r=∑ᵢcᵢ*Gᵢ`.     
@@ -134,7 +134,7 @@ function ParamRdeSpecialDenominator(a::P, b::F, gs::Vector{F}, D::Derivation) wh
         b = b//d
         gs = [g//d for g in gs]
         return ParamRdeSpecialDenomExp(a, b, gs, D)
-    elseif ishypertangent
+    elseif ishypertangent(D)
         error("not implemented")
         #return ParamRdeSpecialDenomTan(a, b, gs, D) # not yet implemented
     else
@@ -151,7 +151,7 @@ Given a field `k`, a derivation `D` on `k[t]`, `a`, `b` in `k[t]` and `gs=[g₁,
 `g₁`,...,`gₘ` in `k(t)`, return `qs=[q₁,...,qₘ]`, `q₁`,...,`qₘ` in `k[t]`
 and a matrix `M` with entries in `k` sucht that for any solution 
 `c₁`,...,`cₘ` in `Const(k)` and `p` in `k[t]` of  `a*D(p)+b*p=∑ᵢcᵢ*gᵢ`,
-`x=[c₁,...,cₘ]` is a solution of `M*x==0`, and `p` and the `cᵢ` satisfy
+`x=[c₁,...,cₘ]` is a solution of `M*x=0`, and `p` and the `cᵢ` satisfy
  `a*D(p)+b*p=∑ᵢcᵢ*qᵢ`.
 
 See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 7.1, p. 223.
@@ -304,8 +304,8 @@ end
 Bound on polynomial solutions - primitive case.
 
 Given a field `k`, a derivation `D` on `k[t]`, `a`, `b` in `k[t]` and `qs=[q₁,...,qₘ]`,
-`q₁`,...,`qₘ` in `k[t]` with `D(t)` in `k` and `a!=0`, return integer `n`
-such that `degree(q)<=n` for any solution  `c₁`,...,`cₘ` in `Const(k)` 
+`q₁`,...,`qₘ` in `k[t]` with `D(t)` in `k` and `a≠0`, return integer `n`
+such that `degree(q)≤n` for any solution  `c₁`,...,`cₘ` in `Const(k)` 
 and `q` in `k[t]` of  `a*D(q)+b*q=∑ᵢcᵢ*qᵢ`.
 
 See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 7.1, p. 228.
@@ -358,8 +358,8 @@ end
 Bound on polynomial solutions - base case.
 
 Given a field `k`, `a`, `b` in `k[t]` and `qs=[q₁,...,qₘ]`,
-`q₁`,...,`qₘ` in `k[t]` with `a!=0`, return integer `n`
-such that `degree(q)<=n` for any solution  `c₁`,...,`cₘ` in `Const(k)` 
+`q₁`,...,`qₘ` in `k[t]` with `a≠0`, return integer `n`
+such that `degree(q)≤n` for any solution  `c₁`,...,`cₘ` in `Const(k)` 
 and `q` in `k[t]` of `a*(d/dt)(q)+b*q=∑ᵢcᵢ*qᵢ`.
 
 See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 7.1, p. 228.
@@ -388,8 +388,8 @@ end
 Bound on polynomial solutions - hyperexponential case.
 
 Given a field `k`, a derivation `D` on `k[t]`, `a`, `b` in `k[t]` and `qs=[q₁,...,qₘ]`,
-`q₁`,...,`qₘ` in `k[t]` with `D(t)/t` in `k` and `a!=0`, return integer `n`
-such that `degree(q)<=n` for any solution  `c₁`,...,`cₘ` in `Const(k)` 
+`q₁`,...,`qₘ` in `k[t]` with `D(t)/t` in `k` and `a≠0`, return integer `n`
+such that `degree(q)≤n` for any solution  `c₁`,...,`cₘ` in `Const(k)` 
 and `q` in `k[t]` of  `a*D(q)+b*q=∑ᵢcᵢ*qᵢ`.
 
 See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 7.1, p. 229.
@@ -424,9 +424,9 @@ end
 Bound on polynomial solutions - nonlinear case.
 
 Given a  field `k`, a derivation `D` on `k[t]`, `a`, `b` in `k[t]` and `qs=[q₁,...,qₘ]`,
-`q₁`,...,`qₘ` in `k[t]` with `degree(D(t))>=2`  and `a!=0`, return integer `n`
-such that `degree(q)<=n` for any solution `c₁`,...,`cₘ` in `Const(k)` 
-and `q` in `k[t]` of  `a*D(q)+b*q=∑ᵢcᵢ*qᵢ`.
+`q₁`,...,`qₘ` in `k[t]` with `degree(D(t))≥2` and `a≠0`, return integer `n`
+such that `degree(q)≤n` for any solution `c₁`,...,`cₘ` in `Const(k)` 
+and `q` in `k[t]` of `a*D(q)+b*q=∑ᵢcᵢ*qᵢ`.
 
 See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 7.1, p. 230.
 """
@@ -460,8 +460,8 @@ end
 Bound on polynomial solutions.
 
 Given a  field `k`, a derivation `D` on `k[t]`, `a`, `b` in `k[t]` and `qs=[q₁,...,qₘ]`,
-`q₁`,...,`qₘ` in `k[t]` with `a!=0`, return integer `n`
-such that `degree(q)<=n` for any solution `c₁`,...,`cₘ` in `Const(k)` 
+`q₁`,...,`qₘ` in `k[t]` with `a≠0`, return integer `n`
+such that `degree(q)≤n` for any solution `c₁`,...,`cₘ` in `Const(k)` 
 and `q` in `k[t]` of  `a*D(q)+b*q=∑ᵢcᵢ*qᵢ`.
 
 See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 7.1, p. 227.
@@ -476,7 +476,7 @@ function ParamRdeBoundDegree(a::P, b::P, qs::Vector{P}, D::Derivation) where P<:
         return ParamRdeBoundDegreePrim(a, b, qs, D)
     elseif ishyperexponential(D)
         return ParamRdeBoundDegreeExp(a, b, qs, D) 
-    elseif ishypertangent(D)
+    elseif isnonlinear(D)
         return ParamRdeBoundDegreeNonLinear(a, b, qs, D)
     else
         error("not implemented")
@@ -489,7 +489,7 @@ end
 Parametric Special Polynomial Differential Equation algorithm.
 
 Given a field `k`, a derivation `D` on `k[t]`, `a`, `b` in `k[t]`, `qs=[q₁,...,qₘ]`,
-`q₁`,...,`qₘ` in `k[t]` and an integer `n` with `degree(a)>0` and `gcd(a,b)==1`, return `A`, `B`,
+`q₁`,...,`qₘ` in `k[t]` and an integer `n` with `degree(a)>0` and `gcd(a,b)=1`, return `A`, `B`,
 `Qs=[Q₁,...,Qₘ]` and `N` such that for any solution `c₁`,...,`cₘ` in `Const(k)` 
 and `q` in `k[t]` of degree at most `n` of `a*D(q)+b*q=∑ᵢcᵢ*qᵢ`, `p=(q-∑ᵢcᵢ*rᵢ)/a`
 has degree at most `N` and satisfies `A*D(p)+B*p=∑ᵢcᵢ*Qᵢ`.
@@ -511,7 +511,7 @@ end
 Parametric polynomial Risch differential equation - no cancellation.
 
 Given a field `k`, a derivation `D` on `k[t]`, `b` in `k[t]`, `qs=[q₁,...,qₘ]`,
-`q₁`,...,`qₘ` in `k[t]` and an integer `n` with `b!=0` and either
+`q₁`,...,`qₘ` in `k[t]` and an integer `n` with `b≠0` and either
 `D=d/dt` or `degree(b)>max(0, degree(D(t))-1)`, return `hs=[h₁,...,hᵣ]`,
 `h₁`,...,`hᵣ` in `k[t]` and  a matrix `A` with entries in `Const(k)` such that
 if `c₁`,...,`cₘ` in `Const(k)` and `q` in `k[t]` satisfy `degree(q)<=n` and
@@ -566,9 +566,9 @@ Parametric polynomial Risch differential equation - no cancellation.
 
 Given a field `k`, a derivation `D` on `k[t]`, `b` in `k[t]`, `qs=[q₁,...,qₘ]`,
 `q₁`,...,`qₘ` in `k[t]` and an integer `n` with `degree(b)<degree(D(t)-1)` and either
-`D=d/dt` or `degree(D(t))>=2`, return `hs=[h₁,...,hᵣ]`,
+`D=d/dt` or `degree(D(t))≥2`, return `hs=[h₁,...,hᵣ]`,
 `h₁`,...,`hᵣ` in `k[t]` and  a matrix `A` with entries in `Const(k)` such that
-if `c₁`,...,`cₘ` in `Const(k)` and `q` in `k[t]` satisfy `degree(q)<=n` and
+if `c₁`,...,`cₘ` in `Const(k)` and `q` in `k[t]` satisfy `degree(q)≤n` and
 `D(q)+b*q=∑ᵢcᵢ*qᵢ` then `q=∑ⱼdⱼ*hⱼ` where `d₁`,...,`dᵣ` are in `Const(k)` and
 `A*[c₁,...,cₘ,d₁,...,dᵣ]=0`.
 
@@ -665,10 +665,10 @@ end
 Parametric polynomial Risch differential equation - no cancellation.
 
 Given a field `k`, a derivation `D` on `k[t]`, `b` in `k`, `qs=[q₁,...,qₘ]`,
-`q₁`,...,`qₘ` in `k[t]` and an integer `n` with `D!=d/dt` and `D(t)` in `k`
+`q₁`,...,`qₘ` in `k[t]` and an integer `n` with `D≠d/dt` and `D(t)` in `k`
 or `D(t)/t` in `k`, return `hs=[h₁,...,hᵣ]`,
 `h₁`,...,`hᵣ` in `k[t]` and  a matrix `A` with entries in `Const(k)` such that
-if `c₁`,...,`cₘ` in `Const(k)` and `q` in `k[t]` satisfy `degree(q)<=n` and
+if `c₁`,...,`cₘ` in `Const(k)` and `q` in `k[t]` satisfy `degree(q)≤n` and
 `D(q)+b*q=∑ᵢcᵢ*qᵢ` then `q=∑ⱼdⱼ*hⱼ` where `d₁`,...,`dᵣ` are in `Const(k)` and
 `A*[c₁,...,cₘ,d₁,...,dᵣ]=0`.
 
@@ -745,7 +745,7 @@ Parametric polynomial Risch differential equation.
 Given a field `k`, a derivation `D` on `k[t]`, `b` in `k[t]`, `qs=[q₁,...,qₘ]`,
 `q₁`,...,`qₘ` in `k[t]` and an integer `n`, return `hs=[h₁,...,hᵣ]`,
 `h₁`,...,`hᵣ` in `k[t]` and  a matrix `A` with entries in `Const(k)` such that
-if `c₁`,...,`cₘ` in `Const(k)` and `q` in `k[t]` satisfy `degree(q)<=n` and
+if `c₁`,...,`cₘ` in `Const(k)` and `q` in `k[t]` satisfy `degree(q)≤n` and
 `D(q)+b*q=∑ᵢcᵢ*qᵢ` then `q=∑ⱼdⱼ*hⱼ` where `d₁`,...,`dᵣ` are in `Const(k)` and
 `A*[c₁,...,cₘ,d₁,...,dᵣ]=0`.
 
@@ -756,10 +756,10 @@ function ParamPolyRischDE(b::P,  qs::Vector{P}, D::Derivation, n::Int) where P<:
         error("coefficient b and polynomials q_i must be in the domain of derivation D")
     basic_case = isbasic(D) || (isprimitive(D) && isone(H))
     δ = degree(D)
-    if !iszero(b) && (basic_case || degree(b)>max(0, δ-1))
+    if !iszero(b) && (isbasic(D) || degree(b)>max(0, δ-1))
         @info "case: NoCancel1"
         return ParamPolyRischDENoCancel1(b, qs, D, n)
-    elseif (iszero(b) || degree(b)<δ-1) && (basic_case || δ>=2)
+    elseif (iszero(b) || degree(b)<δ-1) && (isbasic(D) || δ>=2)
         @info "case: NoCancel2"
         return ParamPolyRischDENoCancel2(b, qs, D, n)
     elseif δ>=2 && degree(b)==δ-1
@@ -916,6 +916,56 @@ function ParamRischDE(f::F, gs::Vector{F}, D::Derivation) where
     [h//h012 for h in hs], RowEchelon(A)
 end
     
+"""
+    LimitedIntegrateReduce(f, ws, D) -> (a, b, h, N, g, vs)
+
+Reduction to a polynomial problem.
+
+Given a field `k`, a derivation `D` on `k[t]`, `f` in `k(t)`, `ws=[w₁,...,wₘ]`,
+`w₁`,...,`wₘ` in `k(t)`, return `a`, `b`, `h`, `N`, `g`, `vs=[v₁,...,vₘ]` such that 
+`a`, `b`, `h` are in `k[t]`, `N` is an integer, `g`, `v₁`,...,`vₘ` are in `k(t)`
+and for any solution `v` in `k(t)`, `c_1`,...,`cₘ` in Const(k) of `f = D(v)+∑ᵢcᵢ*wᵢ`, 
+`p=v*h` is in `k⟨t⟩` and `p` and the `c_i` satisfy `a*D(p)+b*p=g+∑ᵢcᵢ*vᵢ`.
+(Here, `k⟨t⟩` denotes the elements of `k(t)` which are reduced w.r.t. `D`.)
+
+Furthermore, if `S₁ⁱʳʳ==Sⁱʳʳ`, which is indicated by `is_Sirr1_eq_Sirr(D)==true`,
+then `p` is in `k[t]`, and if `t` is nonlinear or Liouvillian over `k`, then `degree(p)<=N`.
+
+See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 7.1, p. 248.
+"""
+function LimitedIntegrateReduce(f::F, ws::Vector{F}, D::Derivation) where 
+    {P<:PolyElem, F<:FracElem{P}}
+    iscompatible(f, D) && all(iscompatible(w, D) for w in ws) || 
+        error("rational functions f and w_i must be in the domain of derivation D")
+    dn, ds = SplitFactor(denominator(f), D)
+    eness = [SplitFactor(denominator(w), D) for w in ws]
+    c = lcm(vcat(dn, [en for (en, es) in eness]))
+    hn = gcd(c, derivative(c))
+    a = hn
+    b = -D(hn)
+    N = 0
+    if is_Sirr1_eq_Sirr(D)
+       hn = lcm(vcat(ds, [es for (en, es) in eness]))
+       a = hn*hs
+       b = -D(hn)-divexact(hn*D(hs),hs)
+       μ = min(valuation_infinity(f), minimum([valuation(w) for w in ws]))
+       N = degree(hn) + degree(hs)+max(0, 1 - degree(D) - μ)
+    end
+    ahn = a*hn
+    a, b, a, N, ahn*f, [-ahn*w for w in ws] 
+end
+
+function LimitedIntegrate(f::F, ws::Vector{F}, D::Derivation) where 
+    {P<:PolyElem, F<:FracElem{P}}
+    iscompatible(f, D) && all(iscompatible(w, D) for w in ws) || 
+        error("rational functions f and w_i must be in the domain of derivation D")
+        (a, b, h, N, g, vs) = LimitedIntegrateReduce(f, ws, D)
+    if isSiir1_eq_Sirr(D)
+
+    else
+    end
+end
+
 
 
 

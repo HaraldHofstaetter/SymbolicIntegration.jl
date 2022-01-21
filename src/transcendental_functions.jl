@@ -8,9 +8,17 @@
 
 using Logging
 
+"""
+    HermiteReduce(f, D) -> (g, h, r)
 
-function HermiteReduce(f::FracElem{P}, D::Derivation) where {T<:FieldElement, P<:PolyElem{T}}
-    # See Bronstein's book, Section 5.3, p. 139
+Hermite reduction - quadratic version.
+
+Given a field `k`, a derivation `D` on `k(t)` and `f` in `k(t)`, return `g`, `h`, `r` in `k(t)`
+such that `f=D(g)+h+r`, `h` is simple and `r` is reduced.
+
+See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 5.4, p. 139.
+"""
+function HermiteReduce(f::FracElem{P}, D::Derivation) where {T<:FieldElement, P<:PolyElem{T}}    
     iscompatible(f, D) || error("rational function f must be in the domain of derivation D")
     fp, fs, fn = CanonicalRepresentation(f, D)
     a = numerator(fn)
@@ -33,8 +41,18 @@ function HermiteReduce(f::FracElem{P}, D::Derivation) where {T<:FieldElement, P<
     g, r//d, q + fp + fs
 end
 
+"""
+    PolynomialReduce(p, D) -> (q, r)
+
+Polynomial reduction.
+
+Given a field `k`, a derivation `D` on `k(t)` and `p` in `k[t]` where `t` is a nonlinear
+monomial over `k`, return `q`, `r` in `k[t]`
+such that `p=D(q)+r` and `degree(r)<degree(D(t))`. 
+
+See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 5.4, p. 141.
+"""
 function PolynomialReduce(p::P, D::Derivation) where {T<:FieldElement, P<:PolyElem{T}}
-    # See Bronstein's book, Section 5.4, p. 141
     iscompatible(p, D) || error("polynomial p must be in the domain of derivation D")
     isnonlinear(D) || error("monomial of derivation D must be nonlinear")
     δ = degree(D)
@@ -49,9 +67,24 @@ function PolynomialReduce(p::P, D::Derivation) where {T<:FieldElement, P<:PolyEl
     q0 + q, r
 end
 
+"""
+    ResidueReduce(f, D) -> (ss, Ss, ρ)
+
+Polynomial reduction.
+
+Given a field `k`, a derivation `D` on `k(t)` and `f` in `k(t)`, return either `ρ=1`
+and `ss=[s₁,...,sₘ]`, `s_i` in `k[z]`, `Ss=[S₁,...Sₘ]`, `S_i` in `k[z,t]` where
+`z` is a new indeterminate over `k` such that `f-D(g)` is in `k[t]` where
+`g=∑ᵢ∑_{α:sᵢ(α)=0}α*log(Sᵢ(α,t))`, or `ρ=0` and such `ss` and `Ss` such that
+`f+h` and `f+h-D(g)` do not have an elementary integral over `k(t)` for any
+`h` in `k⟨t⟩`.
+
+(Here, `k⟨t⟩` denotes the elements of `k(t)` which are reduced w.r.t. `D`.)
+
+See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 5.6, p. 153.
+"""
 function ResidueReduce(f::F, D::Derivation; symbol=:α) where 
     {T<:RingElement, P<:PolyElem{T}, F<:FracElem{P}}
-    # See Bronstein's book, Section 5.6, p. 151
     iscompatible(f, D) || error("rational function f must be in the domain of derivation D")
     issimple(f, D) || error("rational function f must be simple with respect to derivation D")
     d = denominator(f)
@@ -91,9 +124,20 @@ function ResidueReduce(f::F, D::Derivation; symbol=:α) where
     ss, Ss, b
 end
 
+"""
+    IntegratePrimitivePolynomial(p, D) -> (q, ρ)
+
+Integration of polynomials in a primitive extension.
+
+Given a field `k`, a derivation `D` on `k(t)` such that `t` is a primitive monomial over `k`
+and `p` in `k[t]`, return either `ρ=1` and `q` in `k[t]` such that `p-D(q)` is in `k`, or
+`ρ=0` and  `q` in `k[t]` such that `p-D(q)` does not have an elementary integral over
+`k(t)`.
+
+See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 5.8, p. 158.
+"""
 function IntegratePrimitivePolynomial(p::P, D::Derivation) where 
     {T<:RingElement, P<:PolyElem{T}}
-    # See Bronstein's book, Section 5.9, p. 158 
     iscompatible(p, D) || error("rational function p must be in the domain of derivation D")
     isprimitive(D) || error("monomial of derivation D must be primitive")
     if degree(p)<=0
@@ -114,9 +158,20 @@ function IntegratePrimitivePolynomial(p::P, D::Derivation) where
     return q+q0, β
 end
 
+"""
+    IntegrateHyperexponentialPolynomial(p, D) -> (q, ρ)
+
+Integration of hyperexponential polynomials.
+
+Given a field `k`, a derivation `D` on `k(t)` such that `t` is a hyperexponential monomial over `k`
+and `p` in `k⟨t⟩=k[t,t⁻¹]`, return either `ρ=1` and `q` in `k[t,t⁻¹]` such that `p-D(q)` is in `k`, or
+`ρ=0` and  `q` in `k[t,t⁻¹]` such that `p-D(q)` does not have an elementary integral over
+`k(t)`.
+
+See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 5.9, p. 162.
+"""
 function IntegrateHyperexponentialPolynomial(p::F, D::Derivation) where 
     {T<:RingElement, P<:PolyElem{T}, F<:FracElem{P}}
-    # See Bronstein's book, Section 5.9, p. 162
     iscompatible(p, D) || error("rational function p must be in the domain of derivation D")
     ishyperexponential(D) || error("monomial of derivation D must be hyperexponential")
     q = zero(p)
@@ -144,6 +199,15 @@ function IntegrateHyperexponentialPolynomial(p::F, D::Derivation) where
     q, β
 end
 
+"""
+    InFieldDerivative(f, D) -> (u, ρ)
+
+Given a field `K`, a derivation `D` on `K` and `f` in `K`, return either `ρ=0`, in which case
+the equation `D(u)=f` does not have a solution `u` in `K`, or `ρ=1` and a solution `u` in `K`
+of that equation.
+
+See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 5.12, p. 175.
+"""
 function InFieldDerivative(f::F, D::Derivation) where F<:FieldElement
     # base case f \in constant field, D must be the null derivation
     iscompatible(f, D) || error("field element f must be in the domain of derivation D")
@@ -207,12 +271,30 @@ function InFieldDerivative(f::F, D::Derivation) where
     end
 end
 
+"""
+    InFieldLogarithmicDerivative(f, D) -> (u, ρ)
+
+Given a field `K`, a derivation `D` on `K` and `f` in `K`, return either `ρ=0`, in which case
+the equation `D(u)/u=f` does not have a nonzero  solution `u` in `K`, or `ρ=1` and a nonzero 
+solution `u` in `K` of that equation.
+
+See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 5.12, p. 176.
+"""
 function InFieldLogarithmicDerivative(f::F, D::Derivation) where F<:FieldElement 
     n, v, β = InFieldLogarithmicDerivativeOfRadical(f, D, expect_one=true)
     @assert β<=0 || n==1
     v, β
 end
 
+"""
+    InFieldLogarithmicDerivativeOfRadical(f, D) -> (n, u, ρ)
+
+Given a field `K`, a derivation `D` on `K` and `f` in `K`, return either `ρ=0`, in which case
+the equation `D(u)/u=n*f` does not have a solution `u≠0` in `K` and integer `n≠0`, or `ρ=1` and a solution 
+`u` and `n` of that equation.
+
+See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 5.12, p. 177.
+"""
 function InFieldLogarithmicDerivativeOfRadical(f::F, D::Derivation; expect_one::Bool=false) where F<:FieldElement
     # base case f \in constant field, D must be the null derivation
     iscompatible(f, D) || error("field element f must be in the domain of derivation D")
@@ -226,7 +308,6 @@ end
 
 function InFieldLogarithmicDerivativeOfRadical(f::F, D::Derivation; expect_one::Bool=false) where 
     {T<:RingElement, P<:PolyElem{T}, F<:FracElem{P}}
-    # See Bronstein's book, Section 5.12, p. 177
     iscompatible(f, D) || error("rational function f must be in the domain of derivation D")
     if iszero(f)
         return 1, one(f), 1

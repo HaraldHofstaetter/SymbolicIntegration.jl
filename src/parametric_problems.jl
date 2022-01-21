@@ -184,7 +184,7 @@ function RowEchelon(A::Matrix{T}, u::Vector{T}; cut_zero_rows::Bool=true) where 
     j = 1
     while i <= nr && j <= nc        
         p = findfirst(x->!iszero(x), A[i:nr,j])
-        if p==nothing
+        if p===nothing
             j += 1
         else
             p = p + i - 1
@@ -259,7 +259,7 @@ function ConstantSystem(A::Matrix{T}, u::Vector{T}, D::Derivation) where T<:Fiel
     j = 1 
     while j<=n
         i = findfirst(x->!isconstant(x, D), A[:,j])
-        if i==nothing
+        if i===nothing
             j += 1
             continue
         end       
@@ -324,9 +324,10 @@ function ParamRdeBoundDegreePrim(a::P, b::P, qs::Vector{P}, D::Derivation) where
     else
         n = max(0, dc-da+1)
     end
+    D0 = BaseDerivation(D)
     if db==da-1
         α = -leading_coefficient(b)//leading_coefficient(a)
-        z, s0, ρ = LimitedIntegrate(α, leading_coefficient(D), BaseDerivation(D)) # not yet implemented
+        z, s0, ρ = LimitedIntegrate(α, leading_coefficient(D), D0) # not yet implemented
         if ρ>0 && isrational(s0)
             s = rationalize_over_Int(s0)
             if denominator(s)==1
@@ -334,10 +335,9 @@ function ParamRdeBoundDegreePrim(a::P, b::P, qs::Vector{P}, D::Derivation) where
             end
         end
     end
-    D0 = BaseDerivation(D)
     if db==da
         α = -leading_coefficient(b)//leading_coefficient(a)
-        z, ρ = InFieldDerivative(α)
+        z, ρ = InFieldDerivative(α, D0)
         if ρ>0 && !iszero(z)
             β = -leading_coefficient(a*D0(z)+b*z)//(z*leading_coefficient(a))
             w, s0, ρ = LimitedIntegrate(β, leading_coefficient(D), D0) # not yet implemented

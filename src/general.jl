@@ -56,7 +56,7 @@ rationalize_over_Int(x) = convert(Rational{Int}, rationalize(x))
 
 valuation_infinity(f::F) where {T<:RingElement, P<:PolyElem{T}, F<:FracElem{P}} = 
     # See Bronstein's book, Definition 4.3.1, p. 115
-    degree(denominator(f)) - degree(numarator(f))
+    degree(denominator(f)) - degree(numerator(f))
 
 function Remainder(x::FracElem{T}, a::T) where T<:RingElement
     # See Bronstein's book, Section 4.2, p. 115

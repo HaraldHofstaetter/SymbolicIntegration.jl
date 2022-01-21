@@ -2,7 +2,7 @@ export Derivation, NullDerivation, BasicDerivation, ExtensionDerivation,
    CoefficientLiftingDerivation,
    BaseDerivation, MonomialDerivative, domain, constant_field,
    isbasic, isprimitive, ishyperexponential, isnonlinear, ishypertangent,
-   iscompatible, isnormal, isspecial, issimple, isreduced
+   iscompatible, isnormal, isspecial, issimple, isreduced, is_Sirr1_eq_Sirr
 
 
 abstract type Derivation end
@@ -11,6 +11,11 @@ domain(D::Derivation) = D.domain
 iscompatible(p::RingElement, D::Derivation) = parent(p)==domain(D)
 iscompatible(f::FracElem, D::Derivation) =
     base_ring(parent(f))==D.domain
+
+is_Sirr1_eq_Sirr(D::Derivation) = true
+# For the time being it is assumed that S₁ⁱʳʳ==Sⁱʳʳ for all derivations
+# to be considered.
+# See Bronstein's book, Theorems 5.1.1, 5.1.2, 5.10.1 .
 
 
 struct NullDerivation <: Derivation

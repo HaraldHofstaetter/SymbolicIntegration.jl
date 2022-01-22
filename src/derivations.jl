@@ -248,13 +248,18 @@ function constantize(x::P, D::ExtensionDerivation) where P<:PolyElem
     @assert iscompatible(x, D)
     degree(x)<=0 || error("not a constant")
     constantize(constant_coefficient(x), BaseDerivation(D))
-    
 end
 
 function constantize(x::F, D::Derivation) where {P<:PolyElem, F<:FracElem{P}}
     @assert iscompatible(x, D)
     isone(denominator(x)) || error("not a constant")
     constantize(numerator(x), D)
+end
+
+function constant_roots(f::PolyElem{T}, D::Derivation) where T<:FieldElement
+    @assert iscompatible(f, D)
+    p = map_coefficients(c->constantize(c, BaseDerivation(D)), constant_factors(f)) 
+    roots(p) 
 end
     
 

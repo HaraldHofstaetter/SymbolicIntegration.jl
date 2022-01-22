@@ -5,8 +5,8 @@
 #    2nd ed., Springer 2005. 
 #
 
-
 using Logging
+
 
 """
     WeakNormalizer(f, D) -> q
@@ -29,14 +29,10 @@ function WeakNormalizer(f::F, D::Derivation) where
     kz, z = PolynomialRing(base_ring(a), :ζ)    
     kzt, t = PolynomialRing(kz, var(parent(a)))
     dd1 = D(d1)
-    r = resultant(d1(t), a(t)-z*dd1(t)) 
-    @info "parent(r)= $(parent(r)) r=$r"
-    if !all([isrational(c) for c in coefficients(r)])
-        return one(numerator(f))
-    end
-    r = map_coefficients(c->fmpq(rationalize(c)), r)    
-    ns = [numerator(rationalize_over_Int(x)) for x in roots(r) if 
-            isrational(x) && isone(denominator(x)) && x>0] # roots needs Nemo
+    r = resultant(d1(t), a(t)-z*dd1(t))
+        D1 = CoefficientLiftingDerivation(kz, BaseDerivation(D)) # dummy derivation compatible with r
+    ns = [numerator(rationalize_over_Int(x)) for x in constant_roots(r, D1) if
+            isrational(x) && isone(denominator(x)) && x>0]
     if isempty(ns)
         return one(numerator(f))
     end

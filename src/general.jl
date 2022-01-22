@@ -54,6 +54,29 @@ end
 rationalize_over_Int(x) = convert(Rational{Int}, rationalize(x)) 
 
 
+function common_leading_coeffs(fs::Vector{F}) where F<:FieldElem
+    fs
+end
+
+function common_leading_coeffs(fs::Vector{F}) where {T<:FieldElement, P<:PolyElem{T}, F<:FracElem{P}}
+    l = lcm([denominator(f) for f in fs])
+    Fs = [divexact(l*numerator(f), denominator(f)) for f in fs]
+    d = maximum([degree(F) for F in Fs])
+    l1 = leading_coefficient(l)
+    common_leading_coeffs([coeff(F, d)//l1 for F in Fs])
+end
+
+function constant_factors(f::PolyElem{T}) where T<:FieldElement
+    f0 = parent(f)(common_leading_coeffs(collect(coefficients(f))))
+    gcd(f, f0)
+end
+
+function rational_roots(f::PolyElem{T}) where T<:FieldElement
+    p = map_coefficients(c->fmpq(rationalize(c)), constant_factors(f)) # fmpq needs Nemo
+    roots(p) 
+end
+
+
 valuation_infinity(f::F) where {T<:RingElement, P<:PolyElem{T}, F<:FracElem{P}} = 
     # See Bronstein's book, Definition 4.3.1, p. 115
     degree(denominator(f)) - degree(numerator(f))

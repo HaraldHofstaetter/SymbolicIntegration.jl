@@ -788,8 +788,9 @@ Given a field `k`, a derivation `D` on `k[t]`, `a`, `b` in `k[t]` and `gs=[g₁,
 
 See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 7.1, p. 222.
 """
-function ParamPolyCoeffsRischDE(a::P, b::P, gs::Vector{F}, D::Derivation; n::Int=-123456789) where
-    {P<:PolyElem, F<:FracElem{P}}
+function ParamPolyCoeffsRischDE(a::P, b::P, gs::Vector{F}, D::Derivation; 
+                                n::Int=-123456789, exit_if_small_nullspace::Bool=false) where 
+                                {P<:PolyElem, F<:FracElem{P}}
     iscompatible(a, D) && iscompatible(b, D) && all([iscompatible(g, D) for g in gs]) || 
         error("polynomials a and b and rational functions g_i must be in the domain of derivation D")
         m = length(gs)
@@ -799,8 +800,15 @@ function ParamPolyCoeffsRischDE(a::P, b::P, gs::Vector{F}, D::Derivation; n::Int
     gs = [g//d for g in gs]
     qs, M = LinearConstraints(a, b, gs, D)
     A = ConstantSystem(M, BaseDerivation(D))
+    if exit_if_small_nullspace
+        A = RowEchelon(A)
+        if size(A, 2)-size(A, 1) <= 1
+            # rank(nullspace) <= 1
+            return F[], A
+        end
+    end
     if n==-123456789
-        n  = ParamRdeBoundDegree(a, b, qs, D)
+        n = ParamRdeBoundDegree(a, b, qs, D)
     end
     @info "degree bound n=$n"
     aprod = one(parent(a))
@@ -955,14 +963,73 @@ function LimitedIntegrateReduce(f::F, ws::Vector{F}, D::Derivation) where
     a, b, a, N, ahn*f, [-ahn*w for w in ws] 
 end
 
+function solve_x1_eq_1(A::Matrix{T}) where T<:FieldElement
+    # return solution x of A*x = 0 with x[1]==1 if it exists and x=0 otherwise.
+    # A must be in  reduced row echelon form
+    nr, nc = size(A)
+    @assert nr>0 && nc>0
+    Z = zero(A[1,1])
+    E = one(A[1,1])
+    x = fill(Z, nc)
+    if iszero(A[1,1])
+        x[1] = E
+        return x
+    elseif (isone(A[1,1]) && (all([iszero(a) for a in A[1,2:nr]])))
+        return x    
+    else 
+        # A[1,1]==1 && not all other elements in the first row are ==0
+        k = findfirst(a->!iszero(a), A[1, 2:nc])+1
+        p = [findfirst(a->isone(a), A[i,:]) for i=1:nr]
+        x[k] = E
+        x[p] = -A*x
+        x .//= x[1]
+        return x
+    end
+end
+
 function LimitedIntegrate(f::F, ws::Vector{F}, D::Derivation) where 
     {P<:PolyElem, F<:FracElem{P}}
     iscompatible(f, D) && all(iscompatible(w, D) for w in ws) || 
         error("rational functions f and w_i must be in the domain of derivation D")
-        (a, b, h, N, g, vs) = LimitedIntegrateReduce(f, ws, D)
+    Z = zero(f)
+    (a, b, h, n, g, vs) = LimitedIntegrateReduce(f, ws, D)
     if isSiir1_eq_Sirr(D)
-
+        gs = vcat(g, vs)
+        hs, A = ParamPolyCoeffsRischDE(a, b, gs, D, exit_if_small_nullspace=true)
+        if !isempty(hs) # regular exit 
+            cds = solve_x1_eq_1(A) # solution of A*(cs, ds)=0 with cs[1]==1
+            if iszero(cds[1])
+                return Z, [], 0
+            end
+            @assert isone(cds[1])
+            m = length(gs)
+            r = length(hs)
+            cs = cds[1:m]
+            ds = cds[m+1:m+r]
+            return sum([ds[j]*hs[j] for j=1:length(hs)])//h, cs[2:m], 1
+        end
+        # premature exit
+        rg = size(A, 2)-size(A, 1)        
+        if rg==0 # no soluion
+            return Z, [], 0
+        end
+        @assert rg==1
+        cs = solve_x1_eq_1(A) # solution of A*cs=0 with cs[1]==1
+        if iszero(cs[1])
+            return Z, [], 0
+        end
+        @assert isone(cs[1])
+        c = g
+        for i=1:length(gs)
+            c += cs[i]*gs[i]
+        end
+        b, c, n, α, β, ρ = SPDE(a, b, c, D, n)
+        ρ>=1 || return Z, [], ρ
+        z, ρ = PolyRischDE(b, c, D, n)
+        ρ>=1 || return Z, [], ρ
+        return (α*z+β)//h, cs[2:m], 1
     else
+        error("not implemented")
     end
 end
 

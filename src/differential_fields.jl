@@ -155,6 +155,8 @@ Base.iszero(D::Derivation) = false
 Base.iszero(D::NullDerivation) = true
 isbasic(D::Derivation) = false
 isbasic(D::BasicDerivation) = true
+isbasic(D::ExtensionDerivation) = 
+    iszero(BaseDerivation(D)) && isone(MonomialDerivative(D))
 isprimitive(D::Derivation) = degree(D)==0 # see Def. 5.1.1 
 ishyperexponential(D::Derivation) = # see Def, 5.1.1
     degree(D)==1 && iszero(constant_coefficient(MonomialDerivative(D)))

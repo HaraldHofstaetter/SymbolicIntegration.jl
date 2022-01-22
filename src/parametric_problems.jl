@@ -327,7 +327,7 @@ function ParamRdeBoundDegreePrim(a::P, b::P, qs::Vector{P}, D::Derivation) where
     D0 = BaseDerivation(D)
     if db==da-1
         α = -leading_coefficient(b)//leading_coefficient(a)
-        z, s0, ρ = LimitedIntegrate(α, leading_coefficient(D), D0) # not yet implemented
+        z, s0, ρ = LimitedIntegrate(α, [leading_coefficient(D)], D0) # not yet implemented
         if ρ>0 && isrational(s0)
             s = rationalize_over_Int(s0)
             if denominator(s)==1
@@ -470,7 +470,7 @@ function ParamRdeBoundDegree(a::P, b::P, qs::Vector{P}, D::Derivation) where P<:
     iscompatible(a, D) && iscompatible(b, D) && all([iscompatible(q, D) for q in qs]) || 
         error("polynomial a and rational functions b and q_i must be in the domain of derivation D")
     !iszero(a) || error("polynomial a must be nonzero")
-    if isbasic(D) || (isprimitive(D) && isone(MonomialDerivative(D)))
+    if isbasic(D)
         return ParamRdeBoundDegreeBase(a, b, qs) 
     elseif isprimitive(D)
         return ParamRdeBoundDegreePrim(a, b, qs, D)
@@ -683,18 +683,21 @@ function ParamPolyRischDECancelLiouvillian(b::T,  qs::Vector{P}, D::Derivation, 
         error("coefficient b must be in the domain of the base derivation of D") 
     all([iscompatible(q, D) for q in qs]) || 
         error("polynomials q_i must be in the domain of derivation D")
-    H = MonomialDerivative(D)
+    m = length(qs)
     C = constant_field(D)
+    if iszero(b) && all([iszero(q) for q in qs])
+        return P[], zeros(C, 0, m)
+    end
+    H = MonomialDerivative(D)
     if ishyperexponential(D)
         w = coeff(H, 1)
     else
         w = zero(parent(b))
     end
     t = gen(parent(H))
-    m = length(qs)
     first = true
     qns = copy(qs)
-    hs = []
+    hs = P[]
     while n>=0
         @info "m=$m\nlength(qns)=$(length(qns))"
         @assert length(qns)==m
@@ -754,8 +757,8 @@ See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 
 function ParamPolyRischDE(b::P,  qs::Vector{P}, D::Derivation, n::Int) where P<:PolyElem
     iscompatible(b, D) || all([iscompatible(q, D) for q in qs]) ||
         error("coefficient b and polynomials q_i must be in the domain of derivation D")
-    basic_case = isbasic(D) || (isprimitive(D) && isone(H))
     δ = degree(D)
+    @info "ParamPolyRischDE: b=$b qs =$qs Hₜ=$(MonomialDerivative(D)) n=$n)"
     if !iszero(b) && (isbasic(D) || degree(b)>max(0, δ-1))
         @info "case: NoCancel1"
         return ParamPolyRischDENoCancel1(b, qs, D, n)
@@ -767,7 +770,7 @@ function ParamPolyRischDE(b::P,  qs::Vector{P}, D::Derivation, n::Int) where P<:
         # TODO: implement this case
     elseif isprimitive(D) || ishyperexponential(D)
         @info "case: CancelLiouville"
-        @assert δ<=1 && degree(b)<=0 && !basic_case
+        @assert δ<=1 && degree(b)<=0 && !isbasic(D)
         return ParamPolyRischDECancelLiouvillian(constant_coefficient(b), qs, D, n)
     else
         error("not implemented")
@@ -781,7 +784,7 @@ Parametric Risch differential equation with polynomial coefficients.
 
 Given a field `k`, a derivation `D` on `k[t]`, `a`, `b` in `k[t]` and `gs=[g₁,...,gₘ]`,
 `g₁`,...,`gₘ` in `k(t)` with `a!=0`, return `hs=[h₁,...,hᵣ]`,
-`h₁`,...,`hᵣ` in `k(t)` and  a matrix `A` with entries in `Const(k)` such that
+`h₁`,...,`hᵣ` in `k(t)` and  a matrix `A` in reduced row echelon form with entries in `Const(k)` such that
 `c₁`,...,`cₘ` in `Const(k)` and `q` in `k[t]` is a solution of 
 `a*D(q)+b*q=∑ᵢcᵢ*gᵢ` if and only if `y=∑ⱼdⱼ*hⱼ` for `d₁`,...,`dᵣ` in `Const(k)` with
 `A*[c₁,...,cₘ,d₁,...,dᵣ]=0`.
@@ -802,9 +805,9 @@ function ParamPolyCoeffsRischDE(a::P, b::P, gs::Vector{F}, D::Derivation;
     A = ConstantSystem(M, BaseDerivation(D))
     if exit_if_small_nullspace
         A = RowEchelon(A)
-        if size(A, 2)-size(A, 1) <= 1
+        if size(A, 2) - size(A, 1) <= 1
             # rank(nullspace) <= 1
-            return F[], A
+            return F[], A, true
         end
     end
     if n==-123456789
@@ -851,7 +854,12 @@ function ParamPolyCoeffsRischDE(a::P, b::P, gs::Vector{F}, D::Derivation;
             A[neq+i1, m+r+i1] = -one(C)
         end
     end
-    hs, A
+    A = RowEchelon(A)
+    if exit_if_small_nullspace
+        return hs, A, false
+    else
+        hs, A
+    end
 end
 
 """
@@ -861,7 +869,7 @@ Parametric Risch differential equation.
 
 Given a field `K`, a derivation `D` on `K`, `f` in `K`, `gs=[g₁,...,gₘ]`,
 `g₁`,...,`gₘ` in `K`, return `hs=[h₁,...,hᵣ]`,
-`h₁`,...,`hᵣ` in `K` and  a matrix `A` with entries in `Const(K)` such that
+`h₁`,...,`hᵣ` in `K` and  a matrix `A` reduced row echelon form with entries in `Const(K)` such that
  `c₁`,...,`cₘ` in `Const(K)` and `y` in `K` is a solution of 
 `D(y)+f*y=∑ᵢcᵢ*gᵢ` if and only if `y=∑ⱼdⱼ*hⱼ` for `d₁`,...,`dᵣ` in `Const(K)` with
 `A*[c₁,...,cₘ,d₁,...,dᵣ]=0`.
@@ -899,7 +907,7 @@ function ParamRischDE(f::F, gs::Vector{F}, D::NullDerivation) where F<:FieldElem
         end
         hs = [gs[i]//f for i=1:m]
     end
-    hs, A
+    hs, RowEchelon(A)
 end
 
 function ParamRischDE(f::F, gs::Vector{F}, D::Derivation) where 
@@ -918,10 +926,10 @@ function ParamRischDE(f::F, gs::Vector{F}, D::Derivation) where
     a, b, gs, h2 =  ParamRdeSpecialDenominator(a, b, gs, D)
     @info "special denominator h2=$h2"
 
-    hs, A = ParamPolyCoeffsRischDE(a, b, gs, D)
+    hs, A = ParamPolyCoeffsRischDE(a, b, gs, D) # A in reduced echelon form
 
     h012 = h0*h1*h2
-    [h//h012 for h in hs], RowEchelon(A)
+    [h//h012 for h in hs], A
 end
     
 """
@@ -953,11 +961,11 @@ function LimitedIntegrateReduce(f::F, ws::Vector{F}, D::Derivation) where
     b = -D(hn)
     N = 0
     if is_Sirr1_eq_Sirr(D)
-       hn = lcm(vcat(ds, [es for (en, es) in eness]))
+       hs = lcm(vcat(ds, [es for (en, es) in eness]))
        a = hn*hs
        b = -D(hn)-divexact(hn*D(hs),hs)
-       μ = min(valuation_infinity(f), minimum([valuation(w) for w in ws]))
-       N = degree(hn) + degree(hs)+max(0, 1 - degree(D) - μ)
+       μ = min(valuation_infinity(f), minimum([valuation_infinity(w) for w in ws]))
+       N = degree(hn) + degree(hs) + max(0, 1 - degree(D) - μ)
     end
     ahn = a*hn
     a, b, a, N, ahn*f, [-ahn*w for w in ws] 
@@ -974,7 +982,7 @@ function solve_x1_eq_1(A::Matrix{T}) where T<:FieldElement
     if iszero(A[1,1])
         x[1] = E
         return x
-    elseif (isone(A[1,1]) && (all([iszero(a) for a in A[1,2:nr]])))
+    elseif (isone(A[1,1]) && (all([iszero(a) for a in A[1,2:nc]])))
         return x    
     else 
         # A[1,1]==1 && not all other elements in the first row are ==0
@@ -982,8 +990,19 @@ function solve_x1_eq_1(A::Matrix{T}) where T<:FieldElement
         p = [findfirst(a->isone(a), A[i,:]) for i=1:nr]
         x[k] = E
         x[p] = -A*x
+        @assert !iszero(x[1])
         x .//= x[1]
         return x
+    end
+end
+
+function LimitedIntegrate(f::F, w::F, D::Derivation) where 
+    {P<:PolyElem, F<:FracElem{P}}
+    y, cs, ρ = LimitedIntegrate(f, [w], D)
+    if ρ <=0
+        return zero(f), zero(constant_field(D)), ρ
+    else
+        return y, cs[1], 1
     end
 end
 
@@ -993,13 +1012,14 @@ function LimitedIntegrate(f::F, ws::Vector{F}, D::Derivation) where
         error("rational functions f and w_i must be in the domain of derivation D")
     Z = zero(f)
     (a, b, h, n, g, vs) = LimitedIntegrateReduce(f, ws, D)
-    if isSiir1_eq_Sirr(D)
+    if is_Sirr1_eq_Sirr(D)
         gs = vcat(g, vs)
-        hs, A = ParamPolyCoeffsRischDE(a, b, gs, D, exit_if_small_nullspace=true)
-        if !isempty(hs) # regular exit 
+        hs, A, small_nullspace = ParamPolyCoeffsRischDE(a, b, gs, D, n=n, exit_if_small_nullspace=true)
+        # A in reduced echelon form
+        if !small_nullspace # regular exit 
             cds = solve_x1_eq_1(A) # solution of A*(cs, ds)=0 with cs[1]==1
             if iszero(cds[1])
-                return Z, [], 0
+                return Z, F[], 0
             end
             @assert isone(cds[1])
             m = length(gs)
@@ -1011,12 +1031,12 @@ function LimitedIntegrate(f::F, ws::Vector{F}, D::Derivation) where
         # premature exit
         rg = size(A, 2)-size(A, 1)        
         if rg==0 # no soluion
-            return Z, [], 0
+            return Z, F[], 0
         end
         @assert rg==1
         cs = solve_x1_eq_1(A) # solution of A*cs=0 with cs[1]==1
         if iszero(cs[1])
-            return Z, [], 0
+            return Z, F[], 0
         end
         @assert isone(cs[1])
         c = g
@@ -1024,9 +1044,9 @@ function LimitedIntegrate(f::F, ws::Vector{F}, D::Derivation) where
             c += cs[i]*gs[i]
         end
         b, c, n, α, β, ρ = SPDE(a, b, c, D, n)
-        ρ>=1 || return Z, [], ρ
+        ρ>=1 || return Z, F[], ρ
         z, ρ = PolyRischDE(b, c, D, n)
-        ρ>=1 || return Z, [], ρ
+        ρ>=1 || return Z, F[], ρ
         return (α*z+β)//h, cs[2:m], 1
     else
         error("not implemented")

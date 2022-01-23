@@ -144,13 +144,14 @@ function IntegratePrimitivePolynomial(p::P, D::Derivation) where
         return zero(p), 1
     end
     a = leading_coefficient(p)
-    b, c, β = LimitedIntegrate(a, MonomialDerivative(D), D)
+    b, c, β = LimitedIntegrate(a, leading_coefficient(D), BaseDerivation(D))
     if β<=0 
         @info "IntegratePrimitivePolynomial: no solution, LimitedIntegrate returned no solution"
         return zero(p, 0)
     end
     m = degree(p)
-    q0 = c*t^(m+1)//((m+1) + b*t^m)
+    t = gen(parent(p))
+    q0 = (c//(m+1))*t^(m+1) + b*t^m
     q, β = IntegratePrimitivePolynomial(p-D(q0), D)
     if β<=0 
         @info "IntegratePrimitivePolynomial: no solution, recursive call of itself returned no solution"
@@ -240,14 +241,14 @@ function InFieldDerivative(f::F, D::Derivation) where
             return Z, β
         end
         a0 = p-D(q)
-        @assert isone(denominator(a0)) && degree(numerator(a0))<=0 # p-D(q) ∈ k
-        a = constant_coefficient(numerator(a0))        
-        v, c, β = LimitedIntegrate(a, leading_coefficient(D), BaseDerivation(D)) # not yet implemented
+        @assert degree(a0)<=0 # p-D(q) ∈ k
+        a = constant_coefficient(a0)        
+        v, c, β = LimitedIntegrate(a, leading_coefficient(D), BaseDerivation(D)) 
         if β<=0
             @info "InFieldDerivative: no solution, LimitedIntegrate returned no solution"
             return Z, β
         end
-        return g + q + v + c*H, 1
+        return g + q + v + c*MonomialDerivative(D), 1
     else # nonlinear case  # TODO: minor modification mentioned near the top of p.176
         if ishyperexponential(D)
             q, β = IntegrateHyperexponentialPolynomial(p, D)

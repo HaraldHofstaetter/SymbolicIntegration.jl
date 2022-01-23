@@ -678,8 +678,6 @@ function ParamPolyRischDECancelLiouvillian(b::T,  qs::Vector{P}, D::Derivation, 
     {T<:RingElement, P<:PolyElem{T}} 
     isprimitive(D) || ishyperexponential(D) ||
     error("monomial of derivation D must be primitive or hyperexponential")
-    @info "ParamPolyRischDECancelLiouvillian: b=$b qs=$qs n=$n"
-
     D0 = BaseDerivation(D)
     iscompatible(b, D0) || 
         error("coefficient b must be in the domain of the base derivation of D") 
@@ -791,7 +789,6 @@ function ParamPolyCoeffsRischDE(a::P, b::P, gs::Vector{F}, D::Derivation;
                                 {P<:PolyElem, F<:FracElem{P}}
     iscompatible(a, D) && iscompatible(b, D) && all([iscompatible(g, D) for g in gs]) || 
         error("polynomials a and b and rational functions g_i must be in the domain of derivation D")
-    @info "ParamPolyCoeffsRischDE: a=$a b=$b gs=$gs"
     m = length(gs)
     d = gcd(a, b)
     a = divexact(a, d)
@@ -880,9 +877,8 @@ function ParamRischDE(f::F, gs::Vector{F}, D::NullDerivation) where F<:FieldElem
     m = length(gs)
     C = parent(f)
     if iszero(f)
-        @info "case: n<0"
-        hs = F[]
-        A = [g for i=1:1, g in gs] # gs as 1-by-m Matrix
+        hs = [one(parent(f))]
+        A = reshape(vcat(gs, zero(parent(f))), (1, m+1))
     else
         A = zeros(C, m , 2*m) 
         for i=1:m

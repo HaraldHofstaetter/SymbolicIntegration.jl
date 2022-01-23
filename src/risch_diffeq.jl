@@ -692,7 +692,7 @@ function PolyRischDECancelPrim(b::T, c::P, D::Derivation, n::Int=typemax(Int)) w
     Z = zero(c)
     if b==0
         q0, β = InFieldDerivative(c//one(c), D) # make poly c a rational function
-        q = numerator(p0)
+        q = numerator(q0)
         if β<=0 || !isone(denominator(q0)) || degree(q)>n
             @info "PolyRischDECancelPrim: no solution"
             return Z, 0 

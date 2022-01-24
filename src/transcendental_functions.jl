@@ -73,7 +73,7 @@ end
 Polynomial reduction.
 
 Given a field `k`, a derivation `D` on `k(t)` and `f` in `k(t)`, return either `ρ=1`
-and `ss=[s₁,...,sₘ]`, `s_i` in `k[z]`, `Ss=[S₁,...Sₘ]`, `S_i` in `k[z,t]` where
+and `ss=[s₁,...,sₘ]`, `sᵢ` in `k[z]`, `Ss=[S₁,...Sₘ]`, `Sᵢ` in `k[z,t]` where
 `z` is a new indeterminate over `k` such that `f-D(g)` is in `k[t]` where
 `g=∑ᵢ∑_{α:sᵢ(α)=0}α*log(Sᵢ(α,t))`, or `ρ=0` and such `ss` and `Ss` such that
 `f+h` and `f+h-D(g)` do not have an elementary integral over `k(t)` for any
@@ -123,6 +123,43 @@ function ResidueReduce(f::F, D::Derivation; symbol=:α) where
     b = degree(prod(ns))==0
     ss, Ss, b
 end
+
+
+"""
+    ConstantPart(ss, Ss, D) -> (αs, gs, ss1, Ss1)
+
+Given the output `ss=[s₁,...,sₘ]`, `sᵢ` in `k[z]`, `Ss=[S₁,...Sₘ]`, `Sᵢ` in `k[z,t]` 
+of `ResidueReduce` and the derivation D on k(t) which was used by `ResidueReduce`
+return  `αs=[α₁,...,αᵣ]` consisting of the roots of those `sᵢ` that have all its roots in `Const(k)` and the corresponding
+`gs=[g₁,...,gᵣ]` where `gⱼ` in `k[t]` and`gⱼ(t) = Sᵢ(αⱼ,t)`. The remaining `sᵢ` that have at least one root not in `Const(k)`
+and the corresponding `Sᵢ` are returned in `ss1` and `Ss1`.
+"""
+function ConstantPart(ss::Vector{P}, Ss::Vector{PP}, D::Derivation) where  {P<:PolyElem, PP<:PolyElem{P}}
+    length(ss)==length(Ss) || error("lengths must match")
+    if isempty(ss)
+        return [], [], ss, Ss
+    end
+    Ss1 = eltype(Ss)[]
+    ss1 = eltype(ss)[]    
+    αs = zeros(constant_field(D), 0)
+    gs = P[]
+    D1 = CoefficientLiftingDerivation(parent(ss[1]), BaseDerivation(D))
+    for i=1:length(ss)        
+        rs = constant_roots(ss[1], D1)
+        if length(rs)==degree(ss[i]) # all roots found
+            for α in rs                
+                push!(αs, α)                
+                g = map_coefficients(c->c(α), Ss[i])
+                push!(gs, g)
+            end
+        else
+            push!(Ss1, Ss[i])
+            push!(ss1, ss[i])
+        end
+    end
+    αs, gs, ss1, Ss1
+end
+
 
 """
     IntegratePrimitivePolynomial(p, D) -> (q, ρ)
@@ -175,6 +212,7 @@ function IntegrateHyperexponentialPolynomial(p::F, D::Derivation) where
     {T<:RingElement, P<:PolyElem{T}, F<:FracElem{P}}
     iscompatible(p, D) || error("rational function p must be in the domain of derivation D")
     ishyperexponential(D) || error("monomial of derivation D must be hyperexponential")
+    isreduced(p, D) || error("raional function p must be reduced.")
     q = zero(p)
     β = 1
     if iszero(p) 

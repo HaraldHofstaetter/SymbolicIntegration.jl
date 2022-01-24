@@ -20,7 +20,7 @@ See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 
 """
 function WeakNormalizer(f::F, D::Derivation) where 
     {P<:PolyElem, F<:FracElem{P}}
-    iscompatible(f, D) || error("rational function f must be in the domain of derivation D")
+    iscompatible(f, D) || error("rational function f must be in the domain of derivation D")    
     dn, ds = SplitFactor(denominator(f), D)
     g = gcd(dn, derivative(dn))
     dstar = divexact(dn, g)
@@ -30,6 +30,9 @@ function WeakNormalizer(f::F, D::Derivation) where
     kzt, t = PolynomialRing(kz, var(parent(a)))
     dd1 = D(d1)
     r = resultant(d1(t), a(t)-z*dd1(t))
+    if iszero(r)
+        return one(parent(a))
+    end
     D1 = CoefficientLiftingDerivation(kz, BaseDerivation(D)) # dummy derivation compatible with r
     ns = [numerator(rationalize_over_Int(x)) for x in constant_roots(r, D1) if
             isrational(x) && isone(denominator(x)) && x>0]
@@ -324,7 +327,7 @@ function RdeBoundDegreePrim(a::P, b::P, c::P, D::Derivation) where P<:PolyElem
         if ρ>0 && !iszero(z)
             β = -leading_coefficient(a*D0(z)+b*z)//(z*leading_coefficient(a))
             w, m0, ρ = LimitedIntegrate(β, leading_coefficient(D), D0) # not yet implemented
-            if ρ>0 && is_rational(m0)
+            if ρ>0 && isrational(m0)
                 m = rationalize_over_Int(m0)
                 if denominator(m)==1
                     n = max(n, numerator(m))
@@ -915,8 +918,11 @@ function RischDE(f::F, g::F, D::Derivation) where
     {P<:PolyElem, F<:FracElem{P}}
     iscompatible(f, D) && iscompatible(g, D) || 
         error("rational functions f and g must be in the domain of derivation D")
+    if iszero(f)
+        return InFieldDerivative(g::F, D::Derivation)
+    end
+    
     Z = zero(f)
-
     h0 = WeakNormalizer(f, D)
     @info "weak normalizer h0=$h0"
 

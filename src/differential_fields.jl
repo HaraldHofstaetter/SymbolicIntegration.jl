@@ -258,10 +258,14 @@ function constantize(x::F, D::Derivation) where {P<:PolyElem, F<:FracElem{P}}
     constantize(numerator(x), D)
 end
 
-function constant_roots(f::PolyElem{T}, D::Derivation) where T<:FieldElement
+function constant_roots(f::PolyElem{T}, D::Derivation; useQQBar::Bool=false) where T<:FieldElement
     @assert iscompatible(f, D)
     p = map_coefficients(c->constantize(c, BaseDerivation(D)), constant_factors(f)) 
-    roots(p) 
+    if useQQBar
+        return roots(p, QQBar) 
+    else
+        return roots(p)
+    end
 end
     
 

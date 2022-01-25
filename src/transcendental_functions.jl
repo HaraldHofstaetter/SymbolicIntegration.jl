@@ -243,6 +243,7 @@ See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 
 function InFieldDerivative(f::F, D::Derivation) where F<:FieldElement
     # base case f \in constant field, D must be the null derivation
     iscompatible(f, D) || error("field element f must be in the domain of derivation D")
+    iszero(D) || error("base case only for null derivations")
     if iszero(f)
         return zero(f), 1
     else
@@ -328,6 +329,7 @@ See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 
 function InFieldLogarithmicDerivativeOfRadical(f::F, D::Derivation; expect_one::Bool=false) where F<:FieldElement
     # base case f \in constant field, D must be the null derivation
     iscompatible(f, D) || error("field element f must be in the domain of derivation D")
+    iszero(D) || error("base case only for null derivations")
     if iszero(f)
         return 1, one(f), 1
     else

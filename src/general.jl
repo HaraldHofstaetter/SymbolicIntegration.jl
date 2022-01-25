@@ -8,6 +8,16 @@
 using AbstractAlgebra
 using Nemo
 
+
+struct NotImplemented <: Exception
+    msg::String
+end
+
+struct AlgorithmFailed <: Exception
+    msg::String
+end
+
+
 isrational(x::T) where T<:Integer = true
 
 isrational(x::T) where T<:Rational = true

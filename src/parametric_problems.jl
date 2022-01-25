@@ -6,9 +6,6 @@
 #
 
 
-using Logging
-
-
 function Base.lcm(as::Vector{T}) where T<:RingElement
     m = length(as)
     if m==0
@@ -134,11 +131,12 @@ function ParamRdeSpecialDenominator(a::P, b::F, gs::Vector{F}, D::Derivation) wh
         b = b//d
         gs = [g//d for g in gs]
         return ParamRdeSpecialDenomExp(a, b, gs, D)
-    elseif ishypertangent(D)
-        error("not implemented")
+    elseif ishypertangent(D)        
+        throw(NotImplemented("ParamRdeSpecialDenominator: hypertangent case"))
         #return ParamRdeSpecialDenomTan(a, b, gs, D) # not yet implemented
     else
-        error("not implemented")
+        H = MonomialDerivative(D)
+        throw(NotImplemented("ParamRdeSpecialDenominator: monomial derivative $H"))        
     end
 end
 
@@ -478,8 +476,9 @@ function ParamRdeBoundDegree(a::P, b::P, qs::Vector{P}, D::Derivation) where P<:
         return ParamRdeBoundDegreeExp(a, b, qs, D) 
     elseif isnonlinear(D)
         return ParamRdeBoundDegreeNonLinear(a, b, qs, D)
-    else
-        error("not implemented")
+    else        
+        H = MonomialDerivative(D)
+        throw(NotImplemented("ParamRdeBoundDegree: monomial derivative $H"))    
     end
 end
 
@@ -753,20 +752,24 @@ function ParamPolyRischDE(b::P,  qs::Vector{P}, D::Derivation, n::Int) where P<:
         error("coefficient b and polynomials q_i must be in the domain of derivation D")
     δ = degree(D)
     if !iszero(b) && (isbasic(D) || degree(b)>max(0, δ-1))
-        @info "case: NoCancel1"
         return ParamPolyRischDENoCancel1(b, qs, D, n)
     elseif (iszero(b) || degree(b)<δ-1) && (isbasic(D) || δ>=2)
-        @info "case: NoCancel2"
         return ParamPolyRischDENoCancel2(b, qs, D, n)
     elseif δ>=2 && degree(b)==δ-1
-        error("not implemented")
-        # TODO: implement this case
+        if ishypertangent(D)                
+            throw(NotImplemented("ParamPolyRischDE: no cancellation, degree(b)==δ-1, hypertangent case"))                                        
+        else
+            H = MonomialDerivative(D)
+            throw(NotImplemented("ParamPolyRischDE: no cancellation, degree(b)==δ-1, monomial derivative $H"))                        
+        end
     elseif isprimitive(D) || ishyperexponential(D)
-        @info "case: CancelLiouville"
         @assert δ<=1 && degree(b)<=0 && !isbasic(D)
         return ParamPolyRischDECancelLiouvillian(constant_coefficient(b), qs, D, n)
-    else
-        error("not implemented")
+    elseif ishypertangent(D)
+        throw(NotImplemented("ParamPolyRischDE: hypertangent, cancellation case")) 
+    else        
+        H = MonomialDerivative(D)
+        throw(NotImplemented("ParamPolyRischDE: cancelling case, monomial derivative $H")) 
     end
 end
 
@@ -806,7 +809,6 @@ function ParamPolyCoeffsRischDE(a::P, b::P, gs::Vector{F}, D::Derivation;
     if n==typemin(Int)
         n = ParamRdeBoundDegree(a, b, qs, D)
     end
-    @info "degree bound n=$n"
     aprod = one(parent(a))
     Rs = zeros(parent(a//one(a)), m)
     while n>=0 && degree(a)>0
@@ -825,7 +827,6 @@ function ParamPolyCoeffsRischDE(a::P, b::P, gs::Vector{F}, D::Derivation;
     end
     C = constant_field(D)
     if n<0
-        @info "case: n<0"
         hs = F[]
         A = vcat(A, ConstantSystem(RowEchelon([q//1 for i=1:1, q in qs]), D))
     else
@@ -896,15 +897,12 @@ function ParamRischDE(f::F, gs::Vector{F}, D::Derivation) where
         error("rational functions f and g_i must be in the domain of derivation D")
 
     h0 = WeakNormalizer(f, D)
-    @info "weak normalizer h0=$h0"
 
     f1 = f - D(h0)//h0
     gs = [h0*g for g in gs]
-    a, b, gs, h1 = ParamRdeNormalDenominator(f1, gs, D)
-    @info "normal denominator h1=$h1"
+    a, b, gs, h1 = ParamRdeNormalDenominator(f1, gs, D)    
 
-    a, b, gs, h2 =  ParamRdeSpecialDenominator(a, b, gs, D)
-    @info "special denominator h2=$h2"
+    a, b, gs, h2 =  ParamRdeSpecialDenominator(a, b, gs, D)    
 
     hs, A = ParamPolyCoeffsRischDE(a, b, gs, D) # A in reduced echelon form
 
@@ -991,6 +989,7 @@ function LimitedIntegrate(f::F, ws::Vector{F}, D::Derivation) where
     iscompatible(f, D) && all(iscompatible(w, D) for w in ws) || 
         error("rational functions f and w_i must be in the domain of derivation D")
     Z = zero(f)
+    no_solution = (Z, F[], 0)
     (a, b, h, n, g, vs) = LimitedIntegrateReduce(f, ws, D)
     if is_Sirr1_eq_Sirr(D)
         gs = vcat(g, vs)
@@ -999,7 +998,7 @@ function LimitedIntegrate(f::F, ws::Vector{F}, D::Derivation) where
         if !small_nullspace # regular exit 
             cds = solve_x1_eq_1(A) # solution of A*(cs, ds)=0 with cs[1]==1
             if iszero(cds[1])
-                return Z, F[], 0
+                return no_solution
             end
             @assert isone(cds[1])
             m = length(gs)
@@ -1010,13 +1009,13 @@ function LimitedIntegrate(f::F, ws::Vector{F}, D::Derivation) where
         end
         # premature exit
         rg = size(A, 2)-size(A, 1)        
-        if rg==0 # no soluion
-            return Z, F[], 0
+        if rg==0 
+            return no_solution
         end
         @assert rg==1
         cs = solve_x1_eq_1(A) # solution of A*cs=0 with cs[1]==1
         if iszero(cs[1])
-            return Z, F[], 0
+            return no_solution
         end
         m = length(gs)
         @assert isone(cs[1])
@@ -1027,7 +1026,7 @@ function LimitedIntegrate(f::F, ws::Vector{F}, D::Derivation) where
         ρ>=1 || return Z, F[], ρ
         return (α*z+β)//h, cs[2:m], 1
     else
-        error("not implemented")
+        throw(NotImplemented("LimitedIntegrate: !is_Sirr1_eq_Sirr(D)"))                                        
     end
 end
 

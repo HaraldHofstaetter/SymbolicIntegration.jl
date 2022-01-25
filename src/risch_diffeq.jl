@@ -5,8 +5,6 @@
 #    2nd ed., Springer 2005. 
 #
 
-using Logging
-
 
 """
     WeakNormalizer(f, D) -> q
@@ -68,8 +66,7 @@ function RdeNormalDenominator(f::F, g::F, D::Derivation) where
     p = gcd(dn, en)
     h = divexact(gcd(en, derivative(en)), gcd(p, derivative(p)))
     if !iszero(rem(dn*h^2, en))
-        @info "RdeNormalDenominator: no solution"
-        return zero(h), zero(f), zero(f), zero(h), 0
+        return zero(h), zero(f), zero(f), zero(h), 0 # no solution
     end
     dn*h, dn*h*f-dn*D(h), dn*h^2*g, h, 1
 end
@@ -105,9 +102,11 @@ end
 Parametric logarithmic derivative heuristic.
 
 Given a field `k`, a derivation `D` on `k[t]`, `f` in `k(t)` and `w=D(θ)/θ` in `k` such that `θ` 
-is a hyperexponential monomial over `k(t)`, return either `ρ=-1`, in which case the algoithm 
-failed, or `ρ=0`, in which case `n*f=D(v)/v+m*D(θ)/θ` has no solution `v≠0` in `k(t)` and 
+is a hyperexponential monomial over `k(t)`, return either `ρ=0`, in which case 
+`n*f=D(v)/v+m*D(θ)/θ` has no solution `v≠0` in `k(t)` and 
 integers `n≠0` and `m`, or `ρ=1` and a solution `n`, `m`, `v` of that equation.
+
+This function may throw exception `AlgorithmFailed`.
 
 See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 7.3, p. 253.
 """
@@ -124,14 +123,15 @@ function ParametricLogarithmicDerivative(f::F, w::F, D::Derivation) where
     {P<:PolyElem, F<:FracElem{P}}
     # See Bronstein's book, Section 7.3, p. 253
     Z = zero(f)
+    no_solution = (0, 0, Z, 0)
     if degree(numerator(f))<=0 && degree(denominator(f))<=0 &&
         degree(numerator(w))<=0 && degree(denominator(w))<=0 
         #f, w \in k(t) are actually in k, so search solution not in k(t) but in k
-        n, m, v, β = ParametricLogarithmicDerivative(
+        n, m, v, ρ = ParametricLogarithmicDerivative(
             constant_coefficient(numerator(f)),
             constant_coefficient(numerator(w)),
             BaseDerivation(D))
-        return n, m, v + Z, β # make v \in k an element of k(t)
+        return n, m, v + Z, ρ # make v \in k an element of k(t)
     end
     d = denominator(f)
     e = denominator(w)
@@ -143,55 +143,47 @@ function ParametricLogarithmicDerivative(f::F, w::F, D::Derivation) where
     if degree(q)>B
         ss = one_times_n_solve([coeff(p, i) for i=B+1:C], [coeff(q, i) for i=B+1:C])
         if isempty(ss) 
-            @info "ParametricLogarithmicDerivative: no solution, one_times_n_solve returned no solution"
-            return 0, 0, Z, 0 
+            return no_solution
         end
         if !isrational(ss[1])
-            @info "ParametricLogarithmicDerivative: no solution, solution returned by one_times_n_solve was not rational"
-            return 0, 0, Z, 0 
+            return no_solution
         end
         s = rationalize_over_Int(ss[1])
         N = numerator(s)
         M = denominator(s)
-        Q, v, β = InFieldLogarithmicDerivativeOfRadical(N*f - M*w, D)
-        if β>=1 && !iszero(Q) && !iszero(v) 
+        Q, v, ρ = InFieldLogarithmicDerivativeOfRadical(N*f - M*w, D)
+        if ρ>=1 && !iszero(Q) && !iszero(v) 
             return Q*N, Q*M, v, 1
         else
-            @info "ParametricLogarithmicDerivative: no solution, no nonzero solution v∈k(t) of Q*(N*f-M*w)==D(v)//v found for any nonzero integer Q"
-            return 0, 0, Z, min(β, 0)  
+            return no_solution
         end
     end
     if degree(p)>B
-        @info "ParametricLogarithmicDerivative: no solution, degree(p) was > B"
-        return 0, 0, Z, 0 
+        return no_solution 
     end
     l = lcm(d, e)
     ln, ls = SplitFactor(l, D)
     z = ls*gcd(ln, derivative(ln))
     if degree(z)<=0 # z \in k
-        @error "ParametricLogarithmicDerivative: failed, z was not ∈k"
-        return  0, 0, Z, -1 
+        throw(AlgorithmFailed("ParametricLogarithmicDerivative"))  
     end
     u1, r1 = divrem(numerator(l*f), z)
     u2, r2 = divrem(numerator(l*w), z)
     ss = one_times_n_solve([coeff(r1, i) for i=0:(degree(z)-1)], [coeff(r2, i) for i=0:(degree(z)-1)])
     if isempty(ss) 
-        @info "ParametricLogarithmicDerivative: no solution, one_times_n_solve returned no solution"
-        return 0, 0, Z, 0 
+        return no_solution 
     end
     if !isrational(ss[1])
-        @info "ParametricLogarithmicDerivative: no solution, solution returned by one_times_n_solve was not rational"
-        return 0, 0, Z, 0 
+        return no_solution
     end
     s = rationalize_over_Int(ss[1])
     M = numerator(s)
     N = denominator(s)
-    Q, v, β = InFieldLogarithmicDerivativeOfRadical(N*f - M*w, D)
-    if β>=1 && !iszero(Q) && !iszero(v) 
+    Q, v, ρ = InFieldLogarithmicDerivativeOfRadical(N*f - M*w, D)
+    if ρ>=1 && !iszero(Q) && !iszero(v) 
         return Q*N, Q*M, v, 1
     else
-        @info "ParametricLogarithmicDerivative: no solution, no nonzero solution v∈k(t) of Q*(N*f-M*w)==D(v)//v found for any nonzero integer Q"
-        return 0, 0, Z, min(β, 0)  
+        return no_solution
     end
 end
 
@@ -227,9 +219,6 @@ function RdeSpecialDenomExp(a::P, b::F, c::F, D::Derivation) where
         α = Remainder(-b//a, p)
         w = coeff(MonomialDerivative(D), 1)
         n0, m, z, β = ParametricLogarithmicDerivative(constant_coefficient(α), w, BaseDerivation(D))
-        if β<0
-            error("ParametricLogarithmicDerivative failed")
-        end
         if  β>0 && n0==1 && !iszero(z)
             n = min(n, m)
         end
@@ -275,13 +264,12 @@ function RdeSpecialDenominator(a::P, b::F, c::F, D::Derivation) where
         b = b//d
         c = c//d
         return  RdeSpecialDenomExp(a, b, c, D)
-    elseif ishypertangent(D)
-        @error "not implemented"        
-        throw(ErrorException)
+    elseif ishypertangent(D)        
+        throw(NotImplemented("RdeSpecialDenominator: hypertangent case"))                        
         #return RdeSpecialDenomTan(a, b, c, D) # not yet implemented
     else
-        @error "not implemented"        
-        throw(ErrorException)
+        H = MonomialDerivative(D)
+        throw(NotImplemented("RdeSpecialDenominator: monomial derivative $H"))
     end    
 end
 
@@ -391,9 +379,6 @@ function RdeBoundDegreeExp(a::P, b::P, c::P, D::Derivation) where P<:PolyElem
         α = -leading_coefficient(b)//leading_coefficient(a)
         w = coeff(MonomialDerivative(D), 1)
         n0, m, z, ρ = ParametricLogarithmicDerivative(α, w, BaseDerivation(D))
-        if ρ<0
-            error("ParametricLogarithmicDerivative failed")
-        end
         if  ρ>0 && n0==1 && !iszero(z)
             n = max(n, m)
         end
@@ -460,8 +445,8 @@ function RdeBoundDegree(a::P, b::P, c::P, D::Derivation) where P<:PolyElem
     elseif isnonlinear(D)
         return RdeBoundDegreeNonLinear(a, b, c, D)
     else
-        @error "not implemented"
-        throw(ErrorException)
+        H = MonomialDerivative(D)
+        throw(NotImplemented("RdeBoundDegree: monomial derivative $H"))                        
     end
 end
 
@@ -484,18 +469,17 @@ function SPDE(a::P, b::P, c::P, D::Derivation, n::Int) where P<:PolyElem
         error("polynomials a, b, and c must be in the domain of derivation D")
     !iszero(a) || error("polynomial a must be nonzero")
     Z = zero(a)
+    no_solution = (Z, Z, 0, Z, Z, 0)
     if n<0
         if iszero(c)
             return Z, Z, 0, Z, Z, 1 
         else
-            @info "SPDE: no solution, n was < 0 but c != 0"
-            return Z, Z, 0, Z, Z, 0 
+            return no_solution 
         end
     end
     g = gcd(a, b)
     if !iszero(rem(c, g))
-        @info "SPDE: no solution, c was not divisible by g"
-        return Z, Z, Z, 0, Z, 0 
+        return no_solution
     end
     a = divexact(a, g)
     b = divexact(b, g)
@@ -505,9 +489,8 @@ function SPDE(a::P, b::P, c::P, D::Derivation, n::Int) where P<:PolyElem
     end
     r, z = gcdx(b, a, c)
     u = SPDE(a, b + D(a), z - D(r), D, n - degree(a))
-    if u[6]==0
-        @info "SPDE: no solution, recursive call of itself returned no solution"
-        return u
+    if u[6]==0 # no solution of recursive call of SPDE
+        return no_solution
     end
     b1, c1, m, α, β, _ = u
     b1, c1, m, a*α, a*β+r, 1
@@ -532,15 +515,13 @@ function PolyRischDENoCancel1(b::P, c::P, D::Derivation, n::Int=typemax(Int)) wh
         error("polynomials b and c must be in the domain of derivation D")
     !iszero(b) || error("polynomial b must be nonzero")
     isbasic(D) || degree(b)>max(0, degree(D)-1) || 
-        error("either derivation D must be basic or degree(b)>max(0, degree(D)-1)")
-    @info "PolyRischDENoCancel1(b,c,D,n)\nb=$b\nc=$c\nn=$n"
+        error("either derivation D must be basic or degree(b)>max(0, degree(D)-1)")    
     Z  = zero(b)
     t = gen(parent(b))
     q = Z 
     while !iszero(c)
         m = degree(c)-degree(b)
         if n<0 || m<0 || m>n 
-            @info "PolyRischDENoCancel1: no solution"
             return Z, 0 # no solution
         end
         p = (leading_coefficient(c)//leading_coefficient(b))*t^m
@@ -581,6 +562,7 @@ function PolyRischDENoCancel2(b::P, c::P, D::Derivation, n::Int=typemax(Int)) wh
     λ = leading_coefficient(D)
     Z  = zero(b)
     Z0 = zero(λ)
+    no_solution = (Z, Z0, Z0, 0)
     q = Z
     while !iszero(c)
         if n==0
@@ -589,15 +571,13 @@ function PolyRischDENoCancel2(b::P, c::P, D::Derivation, n::Int=typemax(Int)) wh
             m = degree(c) - δ + 1
         end
         if n<0 || m<0 || m>n 
-            @info "PolyRischDENoCancel2: no solution"
-            return Z, Z0, Z0, 0 
+            return no_solution
         end
         if m>0
             p = (leading_coefficient(c)//(m*λ))*t^m
         else
             if degree(b)!=degree(c)
-                @info "PolyRischDENoCancel2: no solution"
-                return Z, Z0, Z0, 0 
+                return no_solution 
             end
             if degree(b)==0
                 return q, constant_coefficient(b), constant_coefficient(c), 2  
@@ -634,6 +614,7 @@ function PolyRischDENoCancel3(b::P, c::P, D::Derivation, n::Int=typemax(Int)) wh
     δ>=2 || error("degree(D) must be >= 2")
     degree(b)==δ-1 || error("degree(b)==degree(D)-1 must hold")
     Z = zero(b)
+    no_solution = (Z, 0, Z, 0)
     t = gen(parent(b))
     λ = leading_coefficient(D)
     M = -1
@@ -648,8 +629,7 @@ function PolyRischDENoCancel3(b::P, c::P, D::Derivation, n::Int=typemax(Int)) wh
     while !iszero(c)
         m = max(M, degree(c)-δ+1)
         if n<0 || m<0 || m>n
-            @info "PolyRischDENoCancel3: no solution"
-            return Z, 0, Z, 0 
+            return no_solution
         end
         u = m*λ + leading_coefficient(b)
         if iszero(u)
@@ -659,8 +639,7 @@ function PolyRischDENoCancel3(b::P, c::P, D::Derivation, n::Int=typemax(Int)) wh
             p = (leading_coefficient(c)//u)*t^m
         else
             if degree(c)!=δ-1
-                @info "PolyRischDENoCancel3: no solution"
-                return Z, 0, Z, 0 
+                return no_solution
             end
             p = (leading_coefficient(c)//leading_coefficient(b)) + Z #make p\in k an element of k[t]
         end
@@ -693,23 +672,22 @@ function PolyRischDECancelPrim(b::T, c::P, D::Derivation, n::Int=typemax(Int)) w
     iscompatible(c, D) || 
         error("polynomial c must be in the domain of derivation D")
     Z = zero(c)
+    no_solution = (Z, 0)
     if b==0
-        q0, β = InFieldDerivative(c//one(c), D) # make poly c a rational function
+        q0, ρ = InFieldDerivative(c//one(c), D) # make poly c a rational function
         q = numerator(q0)
-        if β<=0 || !isone(denominator(q0)) || degree(q)>n
-            @info "PolyRischDECancelPrim: no solution"
-            return Z, 0 
+        if ρ<=0 || !isone(denominator(q0)) || degree(q)>n
+            return no_solution 
         end
         return q, 1
     end
     t = gen(parent(c))
-    z, β = InFieldLogarithmicDerivative(b, D0) 
-    if β>0
-        p0, β = InFieldDerivative(z*c, D)
+    z, ρ = InFieldLogarithmicDerivative(b, D0) 
+    if ρ>0
+        p0, ρ = InFieldDerivative(z*c, D)
         p = numerator(p0)
-        if β<=0 || !isone(denominator(p0)) || degree(p)>n
-            @info "PolyRischDECancelPrim: no solution"
-            return Z, 0 
+        if ρ<=0 || !isone(denominator(p0)) || degree(p)>n
+            return no_solution 
         end
         return p//z, 1
     end
@@ -717,19 +695,16 @@ function PolyRischDECancelPrim(b::T, c::P, D::Derivation, n::Int=typemax(Int)) w
         return Z, 1 # zero is solution
     end
     if n<degree(c)
-        @info "PolyRischDECancelPrim: no solution"
-        return Z, 0 
+        return no_solution
     end
     q = Z
     while !iszero(c)
         m = degree(c)
         if n<m
-            @info "PolyRischDECancelPrim: no solution"
-            return Z, 0 # no solution
+            return no_solution
         end
-        s, β = RischDE(b, leading_coefficient(c), D0)
-        if β<=0
-            @info "PolyRischDECancelPrim: no solution"
+        s, ρ = RischDE(b, leading_coefficient(c), D0)
+        if ρ<=0
             return Z, 0 
         end
         q += s*t^m
@@ -762,59 +737,50 @@ function PolyRischDECancelExp(b::T, c::P, D::Derivation, n::Int=typemax(Int)) wh
     iscompatible(c, D) || 
         error("polynomial c must be in the domain of derivation D")
     Z = zero(c)
+    no_solution = (Z, 0)
     if b==0
-        q0, β = InFieldDerivative(c//one(c), D) # make poly c a rational function
+        q0, ρ = InFieldDerivative(c//one(c), D) # make poly c a rational function
         q = numerator(q0)
-        if β<=0 || !isone(denominator(q0)) || degree(q)>n
-            @info "PolyRischDECancelExp: no solution"
-            return Z, 0 
+        if ρ<=0 || !isone(denominator(q0)) || degree(q)>n
+            return no_solution 
         end
         return q, 1
     end
     t = gen(parent(c))
     H = MonomialDerivative(D)
     w = coeff(H,1) # = Dt/t for hyperexponentialm case
-    n, m, z, β = ParametricLogarithmicDerivative(b, w, D0)
-    if β<0
-        error("ParametricLogarithmicDerivative failed")
-    end
-    if  β>0 && n==1
-        p, β = InFieldDerivative(c*z*t^m, D)
-        if β<=0
-            @info "PolyRischDECancelExp: no solution"
-            return Z, 0 
+    n, m, z, ρ = ParametricLogarithmicDerivative(b, w, D0)
+    if  ρ>0 && n==1
+        p, ρ = InFieldDerivative(c*z*t^m, D)
+        if ρ<=0
+            return no_solution             
         end
         if !isreduced(p, D)
-            @info "PolyRischDECancelExp: no solution"
-            return Z, 0 
+            return no_solution             
         end
         q0 = p//(z*t^m)
         q = numerator(q0)
         if isone(denominator(q0)) && degree(q)<=n
             return q, 1
         else
-            @info "PolyRischDECancelExp: no solution"
-            return Z, 0
+            return no_solution             
         end
     end
     if iszero(c)
         return Z, 1 # zero is solution
     end
     if n<degree(c)
-        @info "PolyRischDECancelExp: no solution"
-        return Z, 0 
+        return no_solution         
     end
     q = Z
     while !iszero(c)
         m = degree(c)
         if n<m
-            @info "PolyRischDECancelExp: no solution"
-            return Z, 0 # no solution
+            return no_solution             
         end
-        s, β = RischDE(b+m*w, leading_coefficient(c), D0)
-        if β<=0
-            @info "PolyRischDECancelExp: no solution"
-            return Z, 0 # no solution
+        s, ρ = RischDE(b+m*w, leading_coefficient(c), D0)
+        if ρ<=0
+            return no_solution             
         end
         q += s*t^m
         n = m - 1
@@ -842,10 +808,8 @@ function PolyRischDE(b::P, c::P, D::Derivation, n::Int=typemax(Int)) where
     δ = degree(D)
     Z = zero(parent(b))
     if !iszero(b) && isbasic(D) || degree(b)>max(0, δ-1)
-        @info "case: NoCancel1"
         return PolyRischDENoCancel1(b, c, D, n)
     elseif (iszero(b) || degree(b)<δ-1) && (isbasic(D) || δ>=2)
-        @info "case: NoCancel2"
         q, b, c, ρ = PolyRischDENoCancel2(b, c, D, n)
         if ρ==2
             q1, ρ = RischDE(b, c, BaseDerivation(D))
@@ -854,36 +818,32 @@ function PolyRischDE(b::P, c::P, D::Derivation, n::Int=typemax(Int)) where
         end
         return q, 1
     elseif δ>=2 && degree(b)==δ-1
-        @info "case: NoCancel3"
         q, m, c, ρ = PolyRischDENoCancel3(b, c, D, n) 
         if ρ<=0
             return Z, 0
         elseif ρ==1
             return q, 1
         elseif ρ==2
-            if ishypertangent(D)
-                @error "not implemented"
-                throw(ErrorException)                        
-                #  ... = PolyRischDECancelTan(...) TODO!
+            if ishypertangent(D)                
+                throw(NotImplemented("PolyRischDE: no cancellation, degree(b)==δ-1, hypertangent case"))                                        
             else
-                @error "not implemented"
-                throw(ErrorException)
+                H = MonomialDerivative(D)
+                throw(NotImplemented("PolyRischDE: no cancellation, degree(b)==δ-1, monomial derivative $H"))                        
             end
         else
-            @error "not implemented"
-            throw(ErrorException)    
+            @assert false # never reach this point
         end 
     # At this point only δ<=1, D!=d/dt is possible;
     # this is only compatible with primitive or"" hyperexponential.
     elseif isprimitive(D)
-        @info "case: CancelPrim"
         return PolyRischDECancelPrim(constant_coefficient(b), c, D, n)
     elseif ishyperexponential(D)
-        @info "case: CancelExp"
         return PolyRischDECancelExp(constant_coefficient(b), c, D, n) 
+    elseif ishypertangent(D)
+        throw(NotImplemented("PolyRischDE: hypertangent, cancellation case"))  
     else
-        @error "not implemented"
-        throw(ErrorException)
+        H = MonomialDerivative(D)
+        throw(NotImplemented("PolyRischDE: cancellation case, monomial derivative $H"))  
     end
 end
 
@@ -906,8 +866,7 @@ function RischDE(f::F, g::F, D::NullDerivation) where F<:FieldElem
         if iszero(g)
             return zero(parent(f)), 1
         else
-            @info "RischDE, base case: no solution, f was == 0 and g != 0"
-            return zero(parent(f)), 0
+            return zero(parent(f)), 0 # no solution
         end
     else
         return g//f, 1
@@ -924,19 +883,15 @@ function RischDE(f::F, g::F, D::Derivation) where
     
     Z = zero(f)
     h0 = WeakNormalizer(f, D)
-    @info "weak normalizer h0=$h0"
 
     f = f - D(h0)//h0
     g = h0*g
     a, b, c, h1, ρ = RdeNormalDenominator(f, g, D)    
     ρ>=1 || return Z, ρ
-    @info "normal denominator h1=$h1"
 
     a, b, c, h2 = RdeSpecialDenominator(a, b, c, D)
-    @info "special denominator h2=$h2"
 
     n = RdeBoundDegree(a, b, c, D)
-    @info "degree bound n=$n"
 
     b, c, n, α, β, ρ = SPDE(a, b, c, D, n)
     ρ>=1 || return Z, ρ

@@ -68,7 +68,7 @@ using Test
     @test q == t^2//2 + (x*t0-x)*t 
     @test p - D(q) == -x
 
-    if false # not everything implemented yet
+    
     @info "IntegrateHyperexponentialPolynomial, example 5.9.1, p. 162"    
     QQx, x = PolynomialRing(Nemo.QQ, :x)
     k0 = FractionField(QQx)
@@ -81,12 +81,14 @@ using Test
 
     p = (t0^3+(x+1)*t0^2+t0+x+2)*t + 1//(x^2+1)
     # p must be in k[t, t⁻¹] => must be passed as a rational function
-    q, ρ = SI.IntegrateHyperexponentialPolynomial(p//1, D)
-    @test ρ == 1
-    @test q == (t0+x)*t 
-    @test p - D(q) == 1//(x^2+1)    
-    end
+    @test_throws SI.NotImplemented  SI.IntegrateHyperexponentialPolynomial(p//1, D)
+
+    #test @q, ρ = SI.IntegrateHyperexponentialPolynomial(p//1, D)
+    #@test ρ == 1
+    #@test q == (t0+x)*t 
+    #@test p - D(q) == 1//(x^2+1)    
 end
+
 
 @testset "Chapter 6" begin    
     @info "RdeNormalDenominator, example 6.1.1, p. 186"

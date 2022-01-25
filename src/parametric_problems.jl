@@ -6,21 +6,6 @@
 #
 
 
-function Base.lcm(as::Vector{T}) where T<:RingElement
-    m = length(as)
-    if m==0
-        error("array as must not be empty")
-    elseif m==1
-        return as[1]
-    else
-        y = as[1]
-        for i=2:m
-            y = lcm(y, as[i])
-        end
-        return y
-    end
-end
-
 """
     ParamRdeNormalDenominator(f, gs, D) -> (a, b, Gs, h)
 

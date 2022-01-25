@@ -856,7 +856,7 @@ Given a field `K`, a derivation `D` on `K`, `f` in `K`, `gs=[g₁,...,gₘ]`,
 
 See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 7.1, p. 217.
 """
-function ParamRischDE(f::F, gs::Vector{F}, D::Derivation) where F<:FieldElem
+function ParamRischDE(f::F, gs::Vector{F}, D::Derivation) where F<:FieldElement
     iszero(D) || error("base case only for null derivations")
     #base case => pure (linear) algebra problem ...
     iscompatible(f, D) && all(iscompatible(g, D) for g in gs) || 

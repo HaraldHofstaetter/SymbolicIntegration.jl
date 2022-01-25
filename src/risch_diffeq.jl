@@ -859,7 +859,7 @@ or `ρ=1` and a solution `y` in `K` of this equation.
 
 See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Chapter 6, p. 181.
 """
-function RischDE(f::F, g::F, D::Derivation) where F<:FieldElem
+function RischDE(f::F, g::F, D::Derivation) where F<:FieldElement
     iszero(D) || error("base case only for null derivations")
     #base case => pure algebra problem ...
     iscompatible(f, D) && iscompatible(g,D) || 

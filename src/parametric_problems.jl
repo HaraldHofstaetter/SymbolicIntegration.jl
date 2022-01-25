@@ -871,7 +871,8 @@ Given a field `K`, a derivation `D` on `K`, `f` in `K`, `gs=[g₁,...,gₘ]`,
 
 See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 7.1, p. 217.
 """
-function ParamRischDE(f::F, gs::Vector{F}, D::NullDerivation) where F<:FieldElem
+function ParamRischDE(f::F, gs::Vector{F}, D::Derivation) where F<:FieldElem
+    iszero(D) || error("base case only for null derivations")
     #base case => pure (linear) algebra problem ...
     iscompatible(f, D) && all(iscompatible(g, D) for g in gs) || 
         error("rational functions f and g_i must be in the domain of derivation D")
@@ -925,7 +926,7 @@ and for any solution `v` in `k(t)`, `c_1`,...,`cₘ` in Const(k) of `f = D(v)+�
 Furthermore, if `S₁ⁱʳʳ==Sⁱʳʳ`, which is indicated by `is_Sirr1_eq_Sirr(D)==true`,
 then `p` is in `k[t]`, and if `t` is nonlinear or Liouvillian over `k`, then `degree(p)<=N`.
 
-See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 7.1, p. 248.
+See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 7.2, p. 248.
 """
 function LimitedIntegrateReduce(f::F, ws::Vector{F}, D::Derivation) where 
     {P<:PolyElem, F<:FracElem{P}}
@@ -974,6 +975,18 @@ function solve_x1_eq_1(A::Matrix{T}) where T<:FieldElement
     end
 end
 
+"""
+    LimitedIntegrate(f, ws, D) -> (v, cs, ρ)
+
+Limited integration problem.
+
+Given a field `k`, a derivation `D` on `k[t]`, `f` in `k(t)`, `ws=[w₁,...,wₘ]`,
+`w₁`,...,`wₘ` in `k(t)`, return either `ρ=0`, in which case the equation
+`f = D(v)+∑ᵢcᵢ*wᵢ` has no solution `v` in `k(t)`, `cs=[c₁,...,cₘ]`, `cᵢ` in `Const(k)`,
+or `ρ=1` and a solution `v`, `cs` of that equation.
+
+See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 7.2, p. 245.
+"""
 function LimitedIntegrate(f::F, w::F, D::Derivation) where 
     {P<:PolyElem, F<:FracElem{P}}
     y, cs, ρ = LimitedIntegrate(f, [w], D)

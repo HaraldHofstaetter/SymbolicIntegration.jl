@@ -279,7 +279,19 @@ end
     @test (h, m, c, ρ) == expected
 end
 
+@testset "Chapter 7" begin   
+    @info "ParametricLogarithmicDerivative, example 7.3.1, p. 254"
+    QQx, x = PolynomialRing(Nemo.QQ, :x)
+    k = FractionField(QQx) 
+    kt, t = PolynomialRing(k, :t)
+    D = SI.ExtensionDerivation(kt, SI.BasicDerivation(k), 1//x+0*t)    
 
+    w = -1//(x*t^2)
+    f = (5*t^2+t-6)//(2*x*t^2)
+    n, m, u, ρ = SI.ParametricLogarithmicDerivative(f, w, D)
+    expected = (2, 6, x^5*t, 1)
+    @test (n, m, u, ρ) == expected
+end
 
 
 

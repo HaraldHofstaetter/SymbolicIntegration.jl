@@ -137,7 +137,7 @@ function ParametricLogarithmicDerivative(f::F, w::F, D::Derivation) where
     d = denominator(f)
     e = denominator(w)
     p, a = divrem(numerator(f), d)
-    q, b = divrem(numerator(w), d)
+    q, b = divrem(numerator(w), e)
     t = gen(parent(d))
     B = max(0, degree(D(t))-1)
     C = max(degree(q), degree(p))
@@ -150,8 +150,8 @@ function ParametricLogarithmicDerivative(f::F, w::F, D::Derivation) where
             return no_solution
         end
         s = rationalize_over_Int(ss[1])
-        N = numerator(s)
-        M = denominator(s)
+        M = numerator(s)  # In Bronstein's book, M and N are switched, this is the first and so far only bug I found there
+        N = denominator(s)
         Q, v, ρ = InFieldLogarithmicDerivativeOfRadical(N*f - M*w, D)
         if ρ>=1 && !iszero(Q) && !iszero(v) 
             return Q*N, Q*M, v, 1

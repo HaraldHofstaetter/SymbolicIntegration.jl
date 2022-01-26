@@ -279,13 +279,13 @@ function InFieldDerivative(f::F, D::Derivation) where
             return no_solution
         end
         return g + q + v + c*MonomialDerivative(D), 1
-    else # nonlinear case  # TODO: minor modification mentioned near the top of p.176
+    else #  TODO: minor modification mentioned near the top of p.176
         if ishyperexponential(D)
             q, ρ = IntegrateHyperexponentialPolynomial(p, D)
             if ρ<=0
                 return no_solution
             end
-        elseif ishyperexponential(D)
+        elseif ishypertangent(D)
             throw(NotImplemented("InFieldDerivative: hypertangent case"))
         else
             H = MonomialDerivative(D)
@@ -353,7 +353,8 @@ function InFieldLogarithmicDerivativeOfRadical(f::F, D::Derivation; expect_one::
         Dg = Z 
         v = one(f)
     else
-        Rs, Gs, β = ResidueReduce(f, D)
+        Rs, Gs, ρ = ResidueReduce(f, D)
+        @assert ρ>=1    
         if length(Rs)==0
             m = 1
             Dg = Z 
@@ -442,7 +443,28 @@ function InFieldLogarithmicDerivativeOfRadical(f::F, D::Derivation; expect_one::
         # otherwise exponentiation with negative numbers would not work.
         U = v^div(N, m)*(u+Z)^div(N, n)*(t+Z)^div(e*N, n)
         return N, U, 1
-    elseif ishypertangent(D)        
+    elseif ishypertangent(D)     
+        p0 = numerator(p)   
+        @assert degree(p0)<=1
+        a = coeff(p0, 0)
+        b = coeff(p0, 1)
+        t = gen(parent(H))
+        c = b//2*(t^2+1)//H
+        if !isrational(c)
+            return no_solution
+        end
+        n, u, ρ = InFieldLogarithmicDerivativeOfRadical(a, BaseDerivation(D))
+        if ρ<=0
+            return no_solution
+        end
+        e0 = n*rationalize_over_Int(c)
+        if !isone(denominator(e0))
+            return no_solution
+        end
+        e = numerator(e0)
+        N = lcm(n, m)
+        U = v^div(N, m)*(u+Z)^div(N, n)*(t^2+1+Z)^div(e*N, n)
+        return N, U, 1
         throw(NotImplemented("InFieldLogarithmicDerivativeOfRadical: hypertangent case"))        
     else
         throw(NotImplemented("InFieldLogarithmicDerivativeOfRadical: monomial derivative $H"))        

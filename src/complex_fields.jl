@@ -78,8 +78,14 @@ function switch_t_i(K::AbstractAlgebra.ResField{P}, D::Derivation) where {R<:Pol
     v = var(base_ring(base_ring(base_ring(K))))
     kIt, t = PolynomialRing(kI, v)
     K1 = FractionField(kIt)
-    H = MonomialDerivative(D)(t)
-    D1 = ExtensionDerivation(kIt, D0I, H)
+    if iszero(D)
+        D1 = NullDerivation(kIt)
+    elseif isbasic(D)
+        D1 = BasicDerivation(kIt)
+    else
+        H = MonomialDerivative(D)(t)
+        D1 = ExtensionDerivation(kIt, D0I, H)
+    end
     K1, t, I, D1
 end
 

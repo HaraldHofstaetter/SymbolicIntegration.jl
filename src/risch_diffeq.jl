@@ -730,8 +730,8 @@ function PolyRischDECancelPrim(b::T, c::P, D::Derivation, n::Int=typemax(Int)) w
         error("polynomial c must be in the domain of derivation D")
     Z = zero(c)
     no_solution = (Z, 0)
-    if b==0
-        q0, ρ = InFieldDerivative(c//one(c), D) # make poly c a rational function
+    if b==0  #Note: case b==0 allowed, TODO: test this and update docstring
+        q0, ρ = InFieldDerivative(c//1, D) # make poly c a rational function
         q = numerator(q0)
         if ρ<=0 || !isone(denominator(q0)) || degree(q)>n
             return no_solution 
@@ -796,7 +796,7 @@ function PolyRischDECancelExp(b::T, c::P, D::Derivation, n::Int=typemax(Int)) wh
     Z = zero(c)
     no_solution = (Z, 0)
     if b==0
-        q0, ρ = InFieldDerivative(c//one(c), D) # make poly c a rational function
+        q0, ρ = InFieldDerivative(c//1, D) # make poly c a rational function
         q = numerator(q0)
         if ρ<=0 || !isone(denominator(q0)) || degree(q)>n
             return no_solution 
@@ -809,10 +809,7 @@ function PolyRischDECancelExp(b::T, c::P, D::Derivation, n::Int=typemax(Int)) wh
     n, m, z, ρ = ParametricLogarithmicDerivative(b, w, D0)
     if  ρ>0 && n==1
         p, ρ = InFieldDerivative(c*z*t^m, D)
-        if ρ<=0
-            return no_solution             
-        end
-        if !isreduced(p, D)
+        if ρ<=0 || !isreduced(p, D)
             return no_solution             
         end
         q0 = p//(z*t^m)

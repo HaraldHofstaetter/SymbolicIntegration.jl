@@ -112,12 +112,12 @@ and the generators `t` and `I≈√-1` for the isomorphic
 field `K1=k(t)(√-1)`, return the corresponding element
 `f1` in `K1`
 """
-function backtransform(f::K, t, I) where 
-    {T<:FieldElement, P<:PolyElem{T}, K<:AbstractAlgebra.ResFieldElem{P}}
-    u = real(numerator(f))(t)
-    v = imag(numerator(f))(t)
-    z = real(denominator(f))(t)
-    w = imag(denominator(f))(t)
+function backtransform(f::K, t, I) where
+    {T<:AbstractAlgebra.ResFieldElem, P<:PolyElem{T}, K<:FracElem{P}}
+    u = map_coefficients(c->real(c), numerator(f))(t)
+    v = map_coefficients(c->imag(c), numerator(f))(t)
+    z = map_coefficients(c->real(c), denominator(f))(t)
+    w = map_coefficients(c->imag(c), denominator(f))(t)
     d = z^2 + w^2
     (u*z-v*w)//d  + ((v*z-u*w)//d)*I
 end

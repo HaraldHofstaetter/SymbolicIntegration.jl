@@ -49,6 +49,18 @@ function constantize(f::AbstractAlgebra.ResFieldElem{P}, D::ComplexExtensionDeri
     CI(u+v*I)
 end
 
+isrational(f::AbstractAlgebra.ResFieldElem{P}) where {T<:FieldElement, P<:PolyElem{T}} =
+    isrational(real(f)) && iszero(imag(f))
+
+function rationalize(f::AbstractAlgebra.ResFieldElem{P}) where {T<:FieldElement, P<:PolyElem{T}} 
+    iszero(imag(f)) || error("not rational")
+    rationalize(real(f))
+end
+
+
+
+
+
 function (D::ComplexExtensionDerivation)(f::AbstractAlgebra.ResFieldElem{P}) where {T<:FieldElement, P<:PolyElem{T}}
     iscompatible(f, D) || error("f not in domain of D")
     #m = modulus(f)
@@ -150,7 +162,7 @@ function InFieldDerivative(f::K, D::Derivation) where
     ktI = parent(f)
     I0 = ktI(gen(base_ring(ktI)))
     t0 = gen(base_ring(base_ring(base_ring(ktI))))
-    _, I, D = Complexify(base_ring(base_ring(ktI)), D)
+    _, t, I, D =  switch_t_i(K, D)
     f = transform(f, t, I)
     u, ρ = InFieldDerivative(f, D)
     backtransform(u, t0, I0), ρ
@@ -163,10 +175,10 @@ function InFieldLogarithmicDerivativeOfRadical(f::K, D::Derivation; expect_one::
     ktI = parent(f)
     I0 = ktI(gen(base_ring(ktI)))
     t0 = gen(base_ring(base_ring(base_ring(ktI))))
-    _, I, D = Complexify(base_ring(base_ring(ktI)), D)    
+    _, t, I, D =  switch_t_i(ktI, D)
     f = transform(f, t, I)
-    u, ρ = InFieldLogarithmicDerivativeOfRadical(f, D, expect_one=expect_one)
-    backtransform(u, t0, I0), ρ
+    n, u, ρ = InFieldLogarithmicDerivativeOfRadical(f, D, expect_one=expect_one)
+    n, backtransform(u, t0, I0), ρ
 end
 
 function RischDE(f::F, g::K, D::Derivation) where 
@@ -174,7 +186,7 @@ function RischDE(f::F, g::K, D::Derivation) where
     ktI = parent(f)
     I0 = ktI(gen(base_ring(ktI)))
     t0 = gen(base_ring(base_ring(base_ring(ktI))))
-    _, I, D = Complexify(base_ring(base_ring(ktI)), D)    
+    _, t, I, D =  switch_t_i(ktI, D)  
     f = transform(f, t, I)
     g = transform(g, t, I)
     y, ρ = RischDE(f, g, D) 
@@ -185,8 +197,8 @@ function ParamRischDE(f::F, gs::Vector{K}, D::Derivation) where
     {R<:PolyElem, F<:FracElem{R}, P<:PolyElem{F}, K<:AbstractAlgebra.ResFieldElem{P}}
     ktI = parent(f)
     I0 = ktI(gen(base_ring(ktI)))
-    t0 = gen(base_ring(base_ring(base_ring(ktI))))
-    _, I, D = Complexify(base_ring(base_ring(ktI)), D)    
+    t0 = gen(base_ring(base_ring(base_ring(ktI))))    
+    _, t, I, D =  switch_t_i(ktI, D)
     f = transform(f, t, I)
     gs = [transform(g, t, I) for g in gs]
     hs, A = ParamRischDE(f, gs, D) # could A have complex entries ???? 
@@ -198,7 +210,7 @@ function LimitedIntegrate(f::F, w::K, D::Derivation) where
     ktI = parent(f)
     I0 = ktI(gen(base_ring(ktI)))
     t0 = gen(base_ring(base_ring(base_ring(ktI))))
-    _, I, D = Complexify(base_ring(base_ring(ktI)), D)        
+    _, t, I, D =  switch_t_i(ktI, D)    
     f = transform(f, t, I)
     w = transform(w, t, I)
     v, cs, ρ = LimitedIntegrate(f, w, D) # could cs have complex elements ???
@@ -210,7 +222,7 @@ function ParametricLogarithmicDerivative(f::F, w::K, D::Derivation) where
     ktI = parent(f)
     I0 = ktI(gen(base_ring(ktI)))
     t0 = gen(base_ring(base_ring(base_ring(ktI))))
-    _, I, D = Complexify(base_ring(base_ring(ktI)), D)    
+    _, t, I, D =  switch_t_i(ktI, D)  
     f = transform(f, t, I)
     w = transform(w, t, I)
     n, m, v, ρ = ParametricLogarithmicDerivative(f, w, D) 

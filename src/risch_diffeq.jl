@@ -217,10 +217,10 @@ function RdeSpecialDenomExp(a::P, b::F, c::F, D::Derivation) where
     nc = valuation(c, p)
     n = min(0, nc - min(0, nb))
     if nb==0 
-        α = Remainder(-b//a, p)
+        α = constant_coefficient(Remainder(-b//a, p))
         w = coeff(MonomialDerivative(D), 1)
-        n0, m, z, β = ParametricLogarithmicDerivative(constant_coefficient(α), w, BaseDerivation(D))
-        if  β>0 && n0==1 && !iszero(z)
+        n0, m, z, ρ = ParametricLogarithmicDerivative(α, w, BaseDerivation(D))
+        if  ρ>0 && n0==1 && !iszero(z)
             n = min(n, m)
         end
     end
@@ -231,6 +231,58 @@ function RdeSpecialDenomExp(a::P, b::F, c::F, D::Derivation) where
     c1 = c*p^(N-n)
     @assert isone(denominator(c1))
     a*p_power_N, numerator(b1), numerator(c1), p^(-n)
+end
+
+"""
+    RdeSpecialDenomTan(a, b, c, D) -> (A, B, C, h)
+
+Special part of the denominator - hypertangent case.
+
+Given a field `k`, a derivation `D` on `k[t]`, `a` in `k[t]`, `b`, `c` in `k⟨t⟩`
+with `D(t)/(t^2+1)` in `k`, `a≠0` and `gcd(a,t^2+1)=1`, return  `A`, `B`, `C`, `h` in `k[t]` such that
+for any solution `q` in `k⟨t⟩` of `a*D(q)+b*q=c`, `r=q*h` in `k[t]` satisfies `A*D(r)+B*r=C`.     
+
+(Here, `k⟨t⟩` denotes the elements of `k(t)` which are reduced w.r.t. `D`.)
+
+See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 6.2, p. 192.
+"""
+function RdeSpecialDenomTan(a::P, b::F, c::F, D::Derivation) where
+    {P<:PolyElem, F<:FracElem{P}}    
+    !iszero(a) || error("a must be != 0")
+    ishypertangent(D) ||
+        error("monomial of derivation D must be hypertangent")
+    iscompatible(a, D) && iscompatible(b, D) && iscompatible(c, D) || 
+        error("polynomial a and rational functions b and c must be in the domain of derivation D")
+    isreduced(b, D) && isreduced(c, D) || 
+        error("rational functions b and c must be reduced with respect to derivation D")
+    t = gen(parent(a))
+    p = t^2+1
+    degree(gcd(a, p))==0 || error("gcd(a, t^2+1) must be == 1")
+    nb = valuation(b, p)
+    nc = valuation(c, p)
+    n = min(0, nc - min(0, nb))
+    if nb==0         
+        α_plust_βI = Remainder(-b//a, p)
+        α = coeff(α_plus_βI, 1)
+        β = coeff(α_plus_βI, 0)
+        η = divexact(MonomialDerivative(D), p)
+        v, ρ = InFieldDerivative(2*β, D0)
+        D0 = BaseDerivation(D)
+        if ρ>0 && !iszero(v)
+            _, I, D0I = Complexify(parent(η), D0)
+            n0, m, v, ρ = ParametricLogarithmicDerivative(α*I+β, 2*η*I, D0I)
+            if  ρ>0 && n0==1 && !iszero(v)
+                n = min(n, m)
+            end
+        end
+    end
+    N = max(0, -nb, n-nc)
+    p_power_N = p^N
+    b1 = (b+n*a*divexact(D(p), p))*p_power_N
+    @assert isone(denominator(b1))
+    c1 = c*p^(N-n)
+    @assert isone(denominator(c1))
+    a*p_power_N, numerator(b1), numerator(c1), p^(-n)   
 end
 
 """
@@ -260,14 +312,18 @@ function RdeSpecialDenominator(a::P, b::F, c::F, D::Derivation) where
     elseif ishyperexponential(D)
         t = gen(parent(a))
         d = gcd(a, t)
-        t = gen(parent(a))
         a = divexact(a, d)
         b = b//d
         c = c//d
         return  RdeSpecialDenomExp(a, b, c, D)
     elseif ishypertangent(D)        
-        throw(NotImplemented("RdeSpecialDenominator: hypertangent case"))                        
-        #return RdeSpecialDenomTan(a, b, c, D) # not yet implemented
+        t = gen(parent(a))
+        p = t^2 + 1
+        d = gcd(a, p)
+        a = divexact(a, d)
+        b = b//d
+        c = c//d
+        return RdeSpecialDenomTan(a, b, c, D) 
     else
         H = MonomialDerivative(D)
         throw(NotImplemented("RdeSpecialDenominator: monomial derivative $H"))

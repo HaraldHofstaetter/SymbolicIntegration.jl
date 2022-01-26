@@ -12,13 +12,42 @@ struct ComplexExtensionDerivation{T<:FieldElement, P<:PolyElem{T}} <: Derivation
     end
 end
 
+function Base.real(f::AbstractAlgebra.ResFieldElem{P}) where {T<:FieldElement, P<:PolyElem{T}}
+    #m = modulus(f)
+    #degree(m)==2 && isone(coeff(m, 0)) && iszero(coeff(m, 1)) && isone(coeff(m,2)) ||
+    #    error("f must be element of residue field modulo X^2+1.")
+    coeff(data(f), 0)
+end
+
+function Base.imag(f::AbstractAlgebra.ResFieldElem{P}) where {T<:FieldElement, P<:PolyElem{T}}
+    #m = modulus(f)
+    #degree(m)==2 && isone(coeff(m, 0)) && iszero(coeff(m, 1)) && isone(coeff(m,2)) ||
+    #    error("f must be element of residue field modulo X^2+1.")
+    coeff(data(f), 1)
+end 
+
 Base.iszero(D::ComplexExtensionDerivation) = iszero(D.D)
 isbasic(D::ComplexExtensionDerivation) = isbasic(D.D)
 MonomialDerivative(D::ComplexExtensionDerivation) = MonomialDerivative(D.D)
 BaseDerivation(D::ComplexExtensionDerivation) = D.D 
 
+function constant_field(D::ComplexExtensionDerivation) 
+    C = constant_field(D.D)
+    Cz, I = PolynomialRing(C, :I)
+    ResidueField(Cz, I^2+1)
+end
 
-# TODO: constantize, isconstant, constant_field (should be complex !?!?)
+isconstant(f::AbstractAlgebra.ResFieldElem{P}, D::ComplexExtensionDerivation) where {T<:FieldElement, P<:PolyElem{T}} =
+    isconstant(real(f), D.D) && isconstant(imag(f), D.D)
+
+function constantize(f::AbstractAlgebra.ResFieldElem{P}, D::ComplexExtensionDerivation) where {T<:FieldElement, P<:PolyElem{T}} 
+    u = constantize(real(f), D.D)
+    v = constantize(imag(f), D.D)
+    C = parent(u)
+    Cz, I = PolynomialRing(C, :I)
+    CI = ResidueField(Cz, I^2+1)   
+    CI(u+v*I)
+end
 
 function (D::ComplexExtensionDerivation)(f::AbstractAlgebra.ResFieldElem{P}) where {T<:FieldElement, P<:PolyElem{T}}
     iscompatible(f, D) || error("f not in domain of D")
@@ -31,6 +60,7 @@ function (D::ComplexExtensionDerivation)(f::AbstractAlgebra.ResFieldElem{P}) whe
     I = gen(base_ring(kI))
     kI(D.D(u)+I*D.D(v))
 end
+
 
 """
     Complexify(k, D) -> k1, I, D1
@@ -45,20 +75,6 @@ function Complexify(k::AbstractAlgebra.Field, D::Derivation) # where {T <:FieldE
     DI = ComplexExtensionDerivation(kI, D)
     kI, kI(I), DI
 end
-
-function Base.real(f::AbstractAlgebra.ResFieldElem{P}) where {T<:FieldElement, P<:PolyElem{T}}
-    #m = modulus(f)
-    #degree(m)==2 && isone(coeff(m, 0)) && iszero(coeff(m, 1)) && isone(coeff(m,2)) ||
-    #    error("f must be element of residue field modulo X^2+1.")
-    coeff(data(f), 0)
-end
-
-function Base.imag(f::AbstractAlgebra.ResFieldElem{P}) where {T<:FieldElement, P<:PolyElem{T}}
-    #m = modulus(f)
-    #degree(m)==2 && isone(coeff(m, 0)) && iszero(coeff(m, 1)) && isone(coeff(m,2)) ||
-    #    error("f must be element of residue field modulo X^2+1.")
-    coeff(data(f), 1)
-end 
 
 """
     switch_t_i(K, D) -> (K1, t, I, D1)

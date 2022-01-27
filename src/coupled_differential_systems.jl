@@ -280,14 +280,19 @@ function CoupledDESystem(f1::F, f2::F, g1::F, g2, F, D::Derivation) where
         ρ>=1 || return no_solution
     elseif ishypertangent(D)             
         η = divexact(MonomialDerivative(D), t0^2+1)
-        b0 = b1 + n*t*η
+        b0 = b1 + n*t0*η
         z1, z2, ρ = CoupledDECancelTan(b0, b2, c1, c1,  D, n)
         ρ>=1 || return no_solution
     else
         H = MonomialDerivative(D)
-        throw(NotImplemented("PolyRischDE: cancellation case, monomial derivative $H")) 
+        throw(NotImplemented("CoupledDESystem: cancellation case, monomial derivative $H")) 
     end
-    # TODO! Note: α, β, h0, h1, h2 are in k(√-1)(t) or k(√-1)[t]
-    (α*z+β)//(h0*h1*h2), 1
+
+    # Note: α, β, h0, h1, h2 are in k(√-1)(t) or k(√-1)[t]
+    α = backtransform(α, t0, I0) 
+    β = backtransform(β, t0, I0) 
+    h = backtransform(ho*h1*h2, t0, I0) 
+    y = (α*(z1+z2*I0)+β)//h
+    real(y), imag(y), 1
 end
 

@@ -57,7 +57,37 @@ function rationalize(f::AbstractAlgebra.ResFieldElem{P}) where {T<:FieldElement,
     rationalize(real(f))
 end
 
+contains_I(F::AbstractAlgebra.Ring) = false
 
+contains_I(P::PolyRing{T}) where T<:RingElement = contains_I(base_ring(P))
+
+contains_I(F::FracField{T}) where T<:RingElement = contains_I(base_ring(F))
+
+function contains_I(F::AbstractAlgebra.ResField{P}) where {T<:FieldElement, P<:PolyElem{T}}    
+    m = modulus(F)
+    if degree(m)==2 && isone(coeff(m, 0)) && iszero(coeff(m, 1)) && isone(coeff(m,2)) 
+        return true
+    else
+        error("contains_I not appplicable for residue field with moduos != X^2+1.")
+    end
+end
+
+function get_I(F::AbstractAlgebra.Ring)
+    error("does not contain I")
+end
+
+get_I(P::PolyRing{T}) where T<:RingElement = get_I(base_ring(P)) + zero(P)
+
+get_I(F::FracField{T}) where T<:RingElement = get_I(base_ring(F)) + zero(F)
+
+function get_I(F::AbstractAlgebra.ResField{P}) where {T<:FieldElement, P<:PolyElem{T}}    
+    m = modulus(F)
+    if degree(m)==2 && isone(coeff(m, 0)) && iszero(coeff(m, 1)) && isone(coeff(m,2)) 
+        return gen(base_ring(F)) + zero(F)
+    else
+        error("get_I not appplicable for residue field with moduos != X^2+1.")
+    end
+end
 
 
 
@@ -77,11 +107,12 @@ end
 """
     Complexify(k, D) -> k1, I, D1
 
-Given a field `k` and a derivation `D` on `k`, return the complexified field
+Given a field `k` not containing `√-1` and a derivation `D` on `k`, return the complexified field
 `k1=k(√-1)`, the generator `I≈√-1` of this field and the unique extension derivation `D1` on `k1` of `D` that
 satisfies `D1(√-1)=0`. 
 """
 function Complexify(k::AbstractAlgebra.Field, D::Derivation) # where {T <:FieldElement, F<: AbstractAlgebra.Field{T}}
+    !contains_I(k) || error("k already contains I=sqrt(-1)")
     kz, I = PolynomialRing(k, :I)
     kI = ResidueField(kz, I^2+1)
     DI = ComplexExtensionDerivation(kI, D)

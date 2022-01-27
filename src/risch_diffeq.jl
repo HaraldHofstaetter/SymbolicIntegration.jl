@@ -17,7 +17,7 @@ Given a field `k`, a derivation `D` on `k[t]` and `f` in `k(t)`, return
 See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 6.1, p. 183.
 """
 function WeakNormalizer(f::F, D::Derivation) where 
-    {P<:PolyElem, F<:FracElem{P}}
+    {T<:FieldElement, P<:PolyElem{T}, F<:FracElem{P}}
     iscompatible(f, D) || error("rational function f must be in the domain of derivation D")    
     dn, ds = SplitFactor(denominator(f), D)
     g = gcd(dn, derivative(dn))
@@ -56,7 +56,7 @@ in `k(t)` of `D(y)+f*y=g`, `q=y*h` in `k⟨t⟩` satisfies `a*D(q)+b*q=c`.
 See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 6.1, p. 185.
 """
 function RdeNormalDenominator(f::F, g::F, D::Derivation) where 
-    {P<:PolyElem, F<:FracElem{P}}
+    {T<:FieldElement, P<:PolyElem{T}, F<:FracElem{P}}
     iscompatible(f, D) && iscompatible(g, D) || 
         error("rational functions f and g must be in the domain of derivation D")
     # Note: f must be weakly normalized which we do not check. It is recommended
@@ -71,7 +71,7 @@ function RdeNormalDenominator(f::F, g::F, D::Derivation) where
     dn*h, dn*h*f-dn*D(h), dn*h^2*g, h, 1
 end
 
-function one_times_n_solve(A::Vector{T}, B::Vector{T}) where T<:RingElement
+function one_times_n_solve(A::Vector{T}, B::Vector{T}) where T<:FieldElement
     if length(A)!=length(B) || length(A)==0 
         return T[] # no solution
     end
@@ -121,7 +121,7 @@ function ParametricLogarithmicDerivative(f::F, w::F, D::Derivation) where F<:Fie
 end
 
 function ParametricLogarithmicDerivative(f::F, w::F, D::Derivation) where 
-    {P<:PolyElem, F<:FracElem{P}}
+    {T<:FieldElement, P<:PolyElem{T}, F<:FracElem{P}}
     # See Bronstein's book, Section 7.3, p. 253
     Z = zero(f)
     no_solution = (0, 0, Z, 0)
@@ -202,7 +202,7 @@ for any solution `q` in `k⟨t⟩` of `a*D(q)+b*q=c`, `r=q*h` in `k[t]` satisfie
 See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 6.2, p. 190.
 """
 function RdeSpecialDenomExp(a::P, b::F, c::F, D::Derivation) where
-    {P<:PolyElem, F<:FracElem{P}}    
+    {T<:FieldElement, P<:PolyElem{T}, F<:FracElem{P}}    
     !iszero(a) || error("a must be != 0")
     ishyperexponential(D) ||
         error("monomial of derivation D must be hyperexponential")
@@ -247,7 +247,7 @@ for any solution `q` in `k⟨t⟩` of `a*D(q)+b*q=c`, `r=q*h` in `k[t]` satisfie
 See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 6.2, p. 192.
 """
 function RdeSpecialDenomTan(a::P, b::F, c::F, D::Derivation) where
-    {P<:PolyElem, F<:FracElem{P}}    
+    {T<:FieldElement, P<:PolyElem{T}, F<:FracElem{P}}    
     !iszero(a) || error("a must be != 0")
     ishypertangent(D) ||
         error("monomial of derivation D must be hypertangent")
@@ -299,7 +299,7 @@ for any solution `q` in `k⟨t⟩` of `a*D(q)+b*q=c`, `r=q*h` in `k[t]` satisfie
 See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 6.2, p. 186.
 """
 function RdeSpecialDenominator(a::P, b::F, c::F, D::Derivation) where
-    {P<:PolyElem, F<:FracElem{P}}
+    {T<:FieldElement, P<:PolyElem{T}, F<:FracElem{P}}
     !iszero(a) || error("a must be != 0")
     iscompatible(a, D) && iscompatible(b, D) && iscompatible(c, D) || 
         error("polynomial a and rational functions b and c must be in the domain of derivation D")
@@ -345,7 +345,8 @@ for any solution `q` in `k[t]` of `a*D(q)+b*q=c`.
 
 See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 6.3, p. 198.
 """
-function RdeBoundDegreePrim(a::P, b::P, c::P, D::Derivation) where P<:PolyElem
+function RdeBoundDegreePrim(a::P, b::P, c::P, D::Derivation) where 
+    {T<:FieldElement, P<:PolyElem{T}}
     isprimitive(D) ||
         error("monomial of derivation D must be primitive")
     iscompatible(a, D) && iscompatible(b, D) && iscompatible(c, D) || 
@@ -397,7 +398,8 @@ such that `degree(q)≤n` for any solution `q` in `k[t]` of `a*(d/dt)(q)+b*q=c`.
 
 See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 6.3, p. 199.
 """
-function RdeBoundDegreeBase(a::P, b::P, c::P) where P<:PolyElem
+function RdeBoundDegreeBase(a::P, b::P, c::P) where 
+    {T<:FieldElement, P<:PolyElem{T}}
     !iszero(a) || error("polynomial a must be nonzero")
     da = degree(a)
     db = degree(b)
@@ -426,7 +428,8 @@ for any solution `q` in `k[t]` of `a*D(q)+b*q=c`.
 
 See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 6.3, p. 200.
 """
-function RdeBoundDegreeExp(a::P, b::P, c::P, D::Derivation) where P<:PolyElem    
+function RdeBoundDegreeExp(a::P, b::P, c::P, D::Derivation) where 
+    {T<:FieldElement, P<:PolyElem{T}}
     ishyperexponential(D) ||
         error("monomial of derivation D must be hyperexponential")
     iscompatible(a, D) && iscompatible(b, D) && iscompatible(c, D) || 
@@ -458,7 +461,8 @@ for any solution `q` in `k[t]` of `a*D(q)+b*q=c`.
 
 See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 6.3, p. 201.
 """
-function RdeBoundDegreeNonLinear(a::P, b::P, c::P, D::Derivation) where P<:PolyElem
+function RdeBoundDegreeNonLinear(a::P, b::P, c::P, D::Derivation) where 
+    {T<:FieldElement, P<:PolyElem{T}}
     isnonlinear(D) ||
         error("monomial of derivation D must be nonlinear")
     iscompatible(a, D) && iscompatible(b, D) && iscompatible(c, D) || 
@@ -493,7 +497,8 @@ for any solution `q` in `k[t]` of `a*D(q)+b*q=c`.
 
 See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 6.3, p. 193.
 """
-function RdeBoundDegree(a::P, b::P, c::P, D::Derivation) where P<:PolyElem
+function RdeBoundDegree(a::P, b::P, c::P, D::Derivation) where 
+    {T<:FieldElement, P<:PolyElem{T}}
     iscompatible(a, D) && iscompatible(b, D) && iscompatible(c, D) || 
         error("polynomials a, b, and c must be in the domain of derivation D")
     !iszero(a) || error("polynomial a must be nonzero")
@@ -525,7 +530,8 @@ of `a*D(q)+b*q=c` must be of the form `q=α*h+β`, where `h` is in `k[t]`, `degr
 
 See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 6.4, p. 204.
 """
-function SPDE(a::P, b::P, c::P, D::Derivation, n::Int) where P<:PolyElem
+function SPDE(a::P, b::P, c::P, D::Derivation, n::Int) where 
+    {T<:FieldElement, P<:PolyElem{T}}
     iscompatible(a, D) && iscompatible(b, D) && iscompatible(c, D) || 
         error("polynomials a, b, and c must be in the domain of derivation D")
     !iszero(a) || error("polynomial a must be nonzero")
@@ -571,7 +577,7 @@ or `ρ=1` and a solution `q` in `k[t]` of this equation with `degree(q)≤n`.
 See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 6.5, p. 208.
 """
 function PolyRischDENoCancel1(b::P, c::P, D::Derivation, n::Int=typemax(Int)) where
-    P<:PolyElem # here typemax(Int) represents +infinity
+    {T<:FieldElement, P<:PolyElem{T}}      # here typemax(Int) represents +infinity
     iscompatible(b, D) && iscompatible(c, D) || 
         error("polynomials b and c must be in the domain of derivation D")
     !iszero(b) || error("polynomial b must be nonzero")
@@ -609,7 +615,7 @@ of degree at most `n` of `D(y)+b*y=c`, `z=y-q` is a solution of `D(z)+B*z=C`.
 See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 6.5, p. 209.
 """
 function PolyRischDENoCancel2(b::P, c::P, D::Derivation, n::Int=typemax(Int)) where
-    P<:PolyElem # here typemax(Int) represents +infinity
+    {T<:FieldElement, P<:PolyElem{T}}      # here typemax(Int) represents +infinity
     iscompatible(b, D) && iscompatible(c, D) || 
         error("polynomials b and c must be in the domain of derivation D")
     δ = degree(D)
@@ -668,7 +674,7 @@ of degree at most `m` of `D(z)+b*z=C`.
 See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 6.5, p. 210.
 """
 function PolyRischDENoCancel3(b::P, c::P, D::Derivation, n::Int=typemax(Int)) where
-    P<:PolyElem # here typemax(Int) represents +infinity    
+    {T<:FieldElement, P<:PolyElem{T}}      # here typemax(Int) represents +infinity    
     iscompatible(b, D) && iscompatible(c, D) || 
         error("polynomials b and c must be in the domain of derivation D")
     δ = degree(D)
@@ -724,7 +730,7 @@ or `ρ=1` and a solution `q` in `k[t]` of this equation with `degree(q)≤n`.
 See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 6.6, p. 212.
 """
 function PolyRischDECancelPrim(b::T, c::P, D::Derivation, n::Int=typemax(Int)) where
-    {T<:RingElement, P<:PolyElem{T}} # here typemax(Int) represents +infinity
+    {T<:FieldElement, P<:PolyElem{T}}       # here typemax(Int) represents +infinity
     isprimitive(D) ||
         error("monomial of derivation D must be primitive")
     D0 = BaseDerivation(D)
@@ -788,7 +794,7 @@ or `ρ=1` and a solution `q` in `k[t]` of this equation with `degree(q)≤n`.
 See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 6.6, p. 213.
 """
 function PolyRischDECancelExp(b::T, c::P, D::Derivation, n::Int=typemax(Int)) where
-    {T<:RingElement, P<:PolyElem{T}} # here typemax(Int) represents +infinity
+    {T<:FieldElement, P<:PolyElem{T}}      # here typemax(Int) represents +infinity
     # See Bronstein's book, Section 6.6, p. 213
     ishyperexponential(D) ||
         error("monomial of derivation D must be hyperexponential")
@@ -860,7 +866,7 @@ or `ρ=1` and a solution `q` in `k[t]` of this equation with `degree(q)≤n`.
 See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Sections 6.6 and 6.7, p_power_N. 206-216.
 """
 function PolyRischDE(b::P, c::P, D::Derivation, n::Int=typemax(Int)) where
-    P<:PolyElem # here typemax(Int) represents +infinity
+    {T<:FieldElement, P<:PolyElem{T}} # here typemax(Int) represents +infinity
     iscompatible(b, D) && iscompatible(c, D) || 
         error("polynomials b and c must be in the domain of derivation D")
     δ = degree(D)
@@ -945,7 +951,7 @@ function RischDE(f::F, g::F, D::Derivation) where F<:FieldElement
  end
 
 function RischDE(f::F, g::F, D::Derivation) where 
-    {P<:PolyElem, F<:FracElem{P}}
+    {T<:FieldElement, P<:PolyElem{T}, F<:FracElem{P}}
     iscompatible(f, D) && iscompatible(g, D) || 
         error("rational functions f and g must be in the domain of derivation D")
     if iszero(f)

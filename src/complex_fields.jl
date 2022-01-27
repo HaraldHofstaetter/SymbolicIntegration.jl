@@ -98,7 +98,8 @@ return the field `K1=k(√-1)(t)`, the generators `t` and `I≈√-1` for `K1`, 
 the derivation `D1` on `K1` corresponding to `D`
 such that the differential fields `(K,D)` and `(K1,D1)` are isomorphic.
 """
-function switch_t_i(K::AbstractAlgebra.ResField{P}, D::Derivation) where {R<:PolyElem, F<:FracElem{R}, P<:PolyElem{F}}
+function switch_t_i(K::AbstractAlgebra.ResField{P}, D::Derivation) where 
+    {T<:FieldElement, R<:PolyElem{T}, F<:FracElem{R}, P<:PolyElem{F}}
     domain(D)==K || error("K must be the domain of D")        
     k = base_ring(base_ring(base_ring(base_ring(K))))
     D0 = BaseDerivation(BaseDerivation(D))
@@ -128,7 +129,7 @@ and the generators `t` and `I≈√-1` for the field `K1=k(√-1)(t)`
 `f1` in `K1`
 """
 function transform(f::K, t, I) where 
-    {R<:PolyElem, F<:FracElem{R}, P<:PolyElem{F}, K<:AbstractAlgebra.ResFieldElem{P}}
+    {T<:FieldElement, R<:PolyElem{T}, F<:FracElem{R}, P<:PolyElem{F}, K<:AbstractAlgebra.ResFieldElem{P}}
     a = numerator(real(f))(t)
     b = denominator(real(f))(t)
     c = numerator(imag(f))(t)
@@ -158,7 +159,7 @@ end
 
 
 function InFieldDerivative(f::K, D::Derivation) where 
-    {R<:PolyElem, F<:FracElem{R}, P<:PolyElem{F}, K<:AbstractAlgebra.ResFieldElem{P}}
+    {T<:FieldElement, R<:PolyElem{T}, F<:FracElem{R}, P<:PolyElem{F}, K<:AbstractAlgebra.ResFieldElem{P}}
     ktI = parent(f)
     I0 = ktI(gen(base_ring(ktI)))
     t0 = gen(base_ring(base_ring(base_ring(ktI))))
@@ -171,7 +172,7 @@ end
 #Note: InFieldLogarithmicDerivative is merely a wrapper for InFieldLogarithmicDerivativeOfRadical
 
 function InFieldLogarithmicDerivativeOfRadical(f::K, D::Derivation; expect_one::Bool=false) where 
-    {R<:PolyElem, F<:FracElem{R}, P<:PolyElem{F}, K<:AbstractAlgebra.ResFieldElem{P}}
+    {T<:FieldElement, R<:PolyElem{T}, F<:FracElem{R}, P<:PolyElem{F}, K<:AbstractAlgebra.ResFieldElem{P}}
     ktI = parent(f)
     I0 = ktI(gen(base_ring(ktI)))
     t0 = gen(base_ring(base_ring(base_ring(ktI))))
@@ -182,7 +183,7 @@ function InFieldLogarithmicDerivativeOfRadical(f::K, D::Derivation; expect_one::
 end
 
 function RischDE(f::F, g::K, D::Derivation) where 
-    {R<:PolyElem, F<:FracElem{R}, P<:PolyElem{F}, K<:AbstractAlgebra.ResFieldElem{P}}
+    {T<:FieldElement, R<:PolyElem{T}, F<:FracElem{R}, P<:PolyElem{F}, K<:AbstractAlgebra.ResFieldElem{P}}
     ktI = parent(f)
     I0 = ktI(gen(base_ring(ktI)))
     t0 = gen(base_ring(base_ring(base_ring(ktI))))
@@ -194,7 +195,7 @@ function RischDE(f::F, g::K, D::Derivation) where
 end
 
 function ParamRischDE(f::F, gs::Vector{K}, D::Derivation) where 
-    {R<:PolyElem, F<:FracElem{R}, P<:PolyElem{F}, K<:AbstractAlgebra.ResFieldElem{P}}
+    {T<:FieldElement, R<:PolyElem{T}, F<:FracElem{R}, P<:PolyElem{F}, K<:AbstractAlgebra.ResFieldElem{P}}
     ktI = parent(f)
     I0 = ktI(gen(base_ring(ktI)))
     t0 = gen(base_ring(base_ring(base_ring(ktI))))    
@@ -206,7 +207,7 @@ function ParamRischDE(f::F, gs::Vector{K}, D::Derivation) where
 end
 
 function LimitedIntegrate(f::F, w::K, D::Derivation) where 
-    {R<:PolyElem, F<:FracElem{R}, P<:PolyElem{F}, K<:AbstractAlgebra.ResFieldElem{P}}
+    {T<:FieldElement, R<:PolyElem{T}, F<:FracElem{R}, P<:PolyElem{F}, K<:AbstractAlgebra.ResFieldElem{P}}
     ktI = parent(f)
     I0 = ktI(gen(base_ring(ktI)))
     t0 = gen(base_ring(base_ring(base_ring(ktI))))
@@ -218,7 +219,7 @@ function LimitedIntegrate(f::F, w::K, D::Derivation) where
 end
 
 function ParametricLogarithmicDerivative(f::F, w::K, D::Derivation) where
-    {R<:PolyElem, F<:FracElem{R}, P<:PolyElem{F}, K<:AbstractAlgebra.ResFieldElem{P}}
+    {T<:FieldElement, R<:PolyElem{T}, F<:FracElem{R}, P<:PolyElem{F}, K<:AbstractAlgebra.ResFieldElem{P}}
     ktI = parent(f)
     I0 = ktI(gen(base_ring(ktI)))
     t0 = gen(base_ring(base_ring(base_ring(ktI))))

@@ -224,3 +224,70 @@ function CoupledDECancelTan(b0::T, b2::T,  c1::P, c2::P, D::Derivation, n::Int=t
     end
     h1*t + h2 + s1, h2*t - h1 + s2
 end
+
+
+function CoupledDESystem(f1::F, f2::F, g1::F, g2, F, D::Derivation) where 
+    {P<:PolyElem, F<:FracElem{P}}
+    iscompatible(f1, D) && iscompatible(f2, D) && iscompatible(g1, D) && iscompatible(g2, D)|| 
+        error("rational functions f1. f2. g1, g2 must be in the domain of derivation D")
+    #if iszero(f1) && iszero(f2)  
+    #    return InFieldDerivative ...
+    #end
+ 
+    no_solution = zero(f), zero(f), 0
+
+    t0 = gen(parent(numerator(f1)))
+    ktI, I0, DI0 = Complexify(FractionField(parent(f1), D)) # k(t)(√-1)        
+    kIt, t, I, DI =  switch_t_i(ktI, DI0) # k(√-1)(t)
+
+    f = transform(f1 + I0*f2, t, I)
+    g = transform(g1 + I0*g2, t, I)
+
+    Z = zero(f)
+    h0 = WeakNormalizer(f, DI)
+
+    f = f - DI(h0)//h0
+    g = h0*g
+    a, b, c, h1, ρ = RdeNormalDenominator(f, g, DI)    
+    ρ>=1 || return no_solution
+
+    a, b, c, h2 = RdeSpecialDenominator(a, b, c, DI)
+
+    n = RdeBoundDegree(a, b, c, DI)
+
+    b, c, n, α, β, ρ = SPDE(a, b, c, DI, n)
+    ρ>=1 || return no_solution
+
+    z, ρ = PolyRischDE(b, c, D, n)
+    if ρ<=0 
+        return no_solution
+    elseif ρ==1
+        y = backtransform((α*z + β)//(h0*h1*h2), t0, I0)
+        return real(y), imag(y), 1
+    end
+    
+    @assert ρ>=100
+    n = ρ - 101
+    c = backtransform(z, t0, I0)
+    c1 = real(c)
+    c2 = imag(c)
+    
+    if isprimitive(D)
+        z1, z2, ρ = CoupledDECancelPrim(b1, b2, c1, c1,  D, n)
+        ρ>=1 || return no_solution
+    elseif ishyperexponential(D)
+        z1, z2, ρ = CoupledDECancelExp(b1, b2, c1, c1,  D, n)
+        ρ>=1 || return no_solution
+    elseif ishypertangent(D)             
+        η = divexact(MonomialDerivative(D), t0^2+1)
+        b0 = b1 + n*t*η
+        z1, z2, ρ = CoupledDECancelTan(b0, b2, c1, c1,  D, n)
+        ρ>=1 || return no_solution
+    else
+        H = MonomialDerivative(D)
+        throw(NotImplemented("PolyRischDE: cancellation case, monomial derivative $H")) 
+    end
+    # TODO! Note: α, β, h0, h1, h2 are in k(√-1)(t) or k(√-1)[t]
+    (α*z+β)//(h0*h1*h2), 1
+end
+

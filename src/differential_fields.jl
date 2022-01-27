@@ -268,9 +268,18 @@ function constant_roots(f::PolyElem{T}, D::Derivation; useQQBar::Bool=false) whe
     end
 end
     
+"""
+    SplitFactor(p, D) -> (pₙ, pₛ)
 
-function SplitFactor(p::PolyElem{T}, D::Derivation) where T<:RingElement
-    # See Bronstein's book, Section 3.5, p. 100
+Splitting factorization.
+    
+Given a field `k`, a derivation `D` on `k[t]` and `p` in `k[t]`, return
+`pₙ`, `pₛ` in `k[t]` such that `p=pₙ*pₛ`, `pₛ` is special, and each squarefree 
+factor of `pₙ` is normal.
+    
+See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 3.5, p. 100.
+"""
+function SplitFactor(p::PolyElem{T}, D::Derivation) where T<:FieldElement
     iscompatible(p, D) || error("polynomial p must be in the domain of derivation D")
     S = divexact(gcd(p, D(p)), gcd(p, derivative(p)))
     if degree(S)==0
@@ -280,8 +289,19 @@ function SplitFactor(p::PolyElem{T}, D::Derivation) where T<:RingElement
     qn, S*qs
 end
 
-function SplitSquarefreeFactor(p::PolyElem{T}, D::Derivation) where T<:RingElement
-    # See Bronstein's book, Section 3.5, p. 102
+"""
+    SplitSquarefreeFactor(p, D) -> (Ns, Ss)
+
+Splitting squarefree factorization.
+    
+Given a field `k`, a derivation `D` on `k[t]` and `p` in `k[t]`, return
+`Ns=[N₁,...,Nₘ]`, `Ss=[S₁,...,Sₘ]` with  `Nᵢ`, `Sᵢ` in `k[t]` such that
+`p=(N₁*N₂²*...*Nₘᵐ)*(S₁*S₂²*...*Sₘᵐ)` is a splitting factorization of `p`
+and the `Nᵢ` and `Sᵢ` are squarefree and coprime.
+    
+See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 3.5, p. 102.
+"""
+function SplitSquarefreeFactor(p::PolyElem{T}, D::Derivation) where T<:FieldElement    
     iscompatible(p, D) || error("polynomial p must be in the domain of derivation D")
     ps = Squarefree(p)
     Ss = [gcd(ps[i], D(ps[i])) for i=1:length(ps)]
@@ -289,6 +309,17 @@ function SplitSquarefreeFactor(p::PolyElem{T}, D::Derivation) where T<:RingEleme
     return Ns, Ss
 end
 
+"""
+CanonicalRepresentation(f, D) -> (fₚ, fₛ, fₙ)
+
+Canonical representation.
+
+Given a field `k`, a derivation `D` on `k[t]` and `f` in `k(t)`, return
+fₚ, fₛ, fₙ in `k(t)` such that `f=fₚ+fₛ+fₙ` is the canonical representation
+of `f`.
+    
+See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 3.5, p. 103.
+"""
 function CanonicalRepresentation(f::FracElem{P}, D::Derivation) where {T<:FieldElement, P<:PolyElem{T}}
     # See Bronstein's book, Section 3.5, p. 103
     iscompatible(f, D) || error("rational function f must be in the domain of derivation D")

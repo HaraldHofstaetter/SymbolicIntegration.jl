@@ -323,7 +323,11 @@ function RdeSpecialDenominator(a::P, b::F, c::F, D::Derivation) where
         a = divexact(a, d)
         b = b//d
         c = c//d
-        return RdeSpecialDenomTan(a, b, c, D) 
+        #if contains_I(parent(a))
+        #    return RdeSpecialDenomTanI(a, b, c, D) #case √-1 in k
+        #else
+            return RdeSpecialDenomTan(a, b, c, D) 
+        #end
     else
         H = MonomialDerivative(D)
         throw(NotImplemented("RdeSpecialDenominator: monomial derivative $H"))
@@ -878,7 +882,17 @@ function PolyRischDE(b::P, c::P, D::Derivation, n::Int=typemax(Int)) where
         elseif ρ==1
             return q, 1
         elseif ρ==2
-            if ishypertangent(D)                
+            if ishypertangent(D)       
+                #=if contains_I(parent(b))  
+                    # Seems that PolyRischDE was called by CoupledDESystem,
+                    # this case should be handled by CoupledDESystem.
+                    return c, 101 + max(-1, m) # return new c, m
+                else
+                    t = gen(parent(b))
+                    η = divexact(MonomialDerivative(D), t^2+1)
+                    b0 = b1 + n*t*η
+                    return PolyRischDECancelTan(b0, c, D, n)
+                end=#
                 throw(NotImplemented("PolyRischDE: no cancellation, degree(b)==δ-1, hypertangent case"))                                        
             else
                 H = MonomialDerivative(D)
@@ -887,14 +901,16 @@ function PolyRischDE(b::P, c::P, D::Derivation, n::Int=typemax(Int)) where
         else
             @assert false # never reach this point
         end 
-    # At this point only δ<=1, D!=d/dt is possible;
-    # this is only compatible with primitive or"" hyperexponential.
+    # At this point only the cancellation case δ<=1, D!=d/dt is possible;
+    # this is only compatible with primitive or hyperexponential.
+    #elseif contains_I(parent(b))
+        # Seems that PolyRischDE was called by CoupledDESystem,
+        # this case should be handled by CoupledDESystem.
+        #return c, 101 + max(-1, n) # return original c, n
     elseif isprimitive(D)
         return PolyRischDECancelPrim(constant_coefficient(b), c, D, n)
     elseif ishyperexponential(D)
         return PolyRischDECancelExp(constant_coefficient(b), c, D, n) 
-    elseif ishypertangent(D)
-        throw(NotImplemented("PolyRischDE: hypertangent, cancellation case"))  
     else
         H = MonomialDerivative(D)
         throw(NotImplemented("PolyRischDE: cancellation case, monomial derivative $H"))  

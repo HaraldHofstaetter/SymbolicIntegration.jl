@@ -365,7 +365,7 @@ function ParamRdeBoundDegreePrim(a::P, b::P, qs::Vector{P}, D::Derivation) where
     D0 = BaseDerivation(D)
     if db==da-1
         α = -leading_coefficient(b)//leading_coefficient(a)
-        z, s0, ρ = LimitedIntegrate(α, leading_coefficient(D), D0) # not yet implemented
+        z, s0, ρ = LimitedIntegrate(α, leading_coefficient(D), D0) 
         if ρ>0 && isrational(s0)
             s = rationalize_over_Int(s0)
             if denominator(s)==1
@@ -378,7 +378,7 @@ function ParamRdeBoundDegreePrim(a::P, b::P, qs::Vector{P}, D::Derivation) where
         z, ρ = InFieldDerivative(α, D0)
         if ρ>0 && !iszero(z)
             β = -leading_coefficient(a*D0(z)+b*z)//(z*leading_coefficient(a))
-            w, s0, ρ = LimitedIntegrate(β, leading_coefficient(D), D0) # not yet implemented
+            w, s0, ρ = LimitedIntegrate(β, leading_coefficient(D), D0) 
             if ρ>0 && isrational(s0)
                 m = rationalize_over_Int(s0)
                 if denominator(s)==1

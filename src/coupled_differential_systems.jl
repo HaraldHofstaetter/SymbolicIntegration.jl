@@ -234,10 +234,10 @@ function CoupledDESystem(f1::F, f2::F, g1::F, g2::F, D::Derivation) where
     #    return InFieldDerivative ...
     #end
  
-    no_solution = zero(f), zero(f), 0
+    no_solution = zero(f1), zero(f1), 0
 
     t0 = gen(parent(numerator(f1)))
-    ktI, I0, DI0 = Complexify(FractionField(parent(f1), D)) # k(t)(√-1)        
+    ktI, I0, DI0 = Complexify(parent(f1), D) # k(t)(√-1)        
     kIt, t, I, DI =  switch_t_i(ktI, DI0) # k(√-1)(t)
 
     f = transform(f1 + I0*f2, t, I)
@@ -258,7 +258,7 @@ function CoupledDESystem(f1::F, f2::F, g1::F, g2::F, D::Derivation) where
     b, c, n, α, β, ρ = SPDE(a, b, c, DI, n)
     ρ>=1 || return no_solution
 
-    z, ρ = PolyRischDE(b, c, D, n)
+    z, ρ = PolyRischDE(b, c, DI, n)
     if ρ<=0 
         return no_solution
     elseif ρ==1

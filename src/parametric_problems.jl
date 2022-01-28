@@ -95,7 +95,7 @@ of `a*D(q)+b*q=∑ᵢcᵢ*gᵢ`, `r=q*h` in `k[t]` satisfies `A*D(r)+B*r=∑ᵢc
 
 (Here, `k⟨t⟩` denotes the elements of `k(t)` which are reduced w.r.t. `D`.)
 
-See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 7.1, p. 221.
+See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 7.1, p. 222.
 """
 function ParamRdeSpecialDenomTan(a::P, b::F, gs::Vector{F}, D::Derivation) where
     {T<:FieldElement, P<:PolyElem{T}, F<:FracElem{P}}
@@ -165,9 +165,14 @@ function ParamRdeSpecialDenominator(a::P, b::F, gs::Vector{F}, D::Derivation) wh
         b = b//d
         gs = [g//d for g in gs]
         return ParamRdeSpecialDenomExp(a, b, gs, D)
-    elseif ishypertangent(D)        
-        throw(NotImplemented("ParamRdeSpecialDenominator: hypertangent case"))
-        #return ParamRdeSpecialDenomTan(a, b, gs, D) # not yet implemented
+    elseif ishypertangent(D)       
+        t = gen(parent(a))
+        p = t^2 + 1
+        d = gcd(a, p)
+        a = divexact(a, d)
+        b = b//d
+        gs = [g//d for g in gs]        
+        return ParamRdeSpecialDenomTan(a, b, gs, D) 
     else
         H = MonomialDerivative(D)
         throw(NotImplemented("ParamRdeSpecialDenominator: monomial derivative $H"))        

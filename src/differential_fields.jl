@@ -269,19 +269,20 @@ function constant_roots(f::PolyElem{T}, D::Derivation; useQQBar::Bool=false) whe
 end
 
 """
-    TowerOfDifferentialFields(Hs) -> K, (X, T₁,...,Tₙ), D
+    TowerOfDifferentialFields(Hs) -> K, gs, D
 
 Construct tower of differential fields.
 
-Given `Hs = [H₁,...,Hₙ]` where the `H_i` are fractions
-of multivariate polynomials in variables `x, t₁,...,tₙ` over a field `C`
-such that `Hᵢ` is a polynomial in `tᵢ` with coefficients  in `C(x, t₁,...,tᵢ₋₁)` (i.e., `Hᵢ` does not depend on `tᵢ₊₁,...,tₙ`),
+Given `Hs = [H₁,...,Hₙ]` with `Hᵢ` in `C(x,t₁,...,tₙ)` (i.e., they are fractions
+of multivariate polynomials in variables `x, t₁,...,tₙ` over a field `C`) 
+such that `Hᵢ` can be represented as a polynomial in `tᵢ` with coefficients  in `C(x, t₁,...,tᵢ₋₁)` (in particular, `Hᵢ` does not depend on `tᵢ₊₁,...,tₙ`),
 return a field `K = C(x)(t₁)...(tₙ)` isomorphic to `C(x, t₁,...,tₙ)` and a derivation `D` on `K` such that
 `K` is constructed by iteratively adjoining the indeterminates `x`, `t₁`,...,`tₙ`, `C` is the constant field
 of `D`, `D` is `d/dx` on `C(x)`, and `D` is iteratively extended from `C(x)(t₁)...(tᵢ₋₁)` to `C(x)(t₁)...(tᵢ)`
 such that `tᵢ` is monomial over `C(x)(t₁)...(tᵢ₋₁)` with `D(tᵢ)=Hᵢ=Hᵢ(x, t₁,....,tᵢ)`.
 The generators `x` of C(x) over C and `tᵢ` of `C(x)(t₁)...(tᵢ)` over `C(x)(t₁)...(tᵢ₋₁)` are returned
-as `X, T₁,...,Tₙ`.
+as `gs=[x, t₁,...,tₙ]`. (Note that these returned generators `x, t₁,...,tₙ` are isomorphic but not identical to the variables 
+of the rational functions `Hᵢ`.)
 
 # Example  
 ```julia
@@ -317,7 +318,27 @@ function TowerOfDifferentialFields(Hs::Vector{F})  where
         D = ExtensionDerivation(Kt, D, H)
         K = FractionField(Kt)       
     end
-    K, tuple(gs...), D
+    K, gs, D
+end
+
+"""
+    transform(f, gs) -> f1
+
+Given `f` in `C(x,t₁,...,tₙ)` and the generators `gs=[x, t₁,...,tₙ]` as returned by 
+`TowerOfDifferentialFields`, return the corresponding element `f1` in `C(x)(t₁)...(tₙ)`,
+
+# Example
+```
+R, (x, t1, t2) = PolynomialRing(QQ, [:x, :t1, :t2])
+Z = zero(R)//1 # zero element of the fraction field of R
+K, gs, D = TowerOfDifferentialFields([t1//x, (t2^2+1)*x*t1 + Z])
+f = (x+t1)//(x+t2)     # element of FractionField(R)
+f1 = transform(f, gs)  # element of K
+```
+"""
+function transform(f::F, gs::Vector) where 
+    {T<:FieldElement, P<:MPolyElem{T}, F<:FracElem{P}}
+    numerator(f)(gs...)//denominator(f)(gs...)
 end
 
 

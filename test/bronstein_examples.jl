@@ -5,7 +5,7 @@ SI = SymbolicIntegration
 
 using Test
 
-@testset "Chapter 5" begin    
+@testset "Chapter 5" begin
     @info "HermiteReduce, example 5.3.1, p. 140"
     QQx, x = PolynomialRing(Nemo.QQ, :x)
     k = FractionField(QQx)
@@ -68,7 +68,7 @@ using Test
     @test q == t^2//2 + (x*t0-x)*t 
     @test p - D(q) == -x
 
-    
+ 
     @info "IntegrateHyperexponentialPolynomial, example 5.9.1, p. 162"    
     QQx, x = PolynomialRing(Nemo.QQ, :x)
     k0 = FractionField(QQx)
@@ -81,12 +81,48 @@ using Test
 
     p = (t0^3+(x+1)*t0^2+t0+x+2)*t + 1//(x^2+1)
     # p must be in k[t, t⁻¹] => must be passed as a rational function
-    @test_throws SI.NotImplemented  SI.IntegrateHyperexponentialPolynomial(p//1, D)
+    q, ρ = SI.IntegrateHyperexponentialPolynomial(p//1, D)
+    @test ρ == 1
+    @test q == (t0+x)*t 
+    @test p - D(q) == 1//(x^2+1)  
 
-    #test @q, ρ = SI.IntegrateHyperexponentialPolynomial(p//1, D)
-    #@test ρ == 1
-    #@test q == (t0+x)*t 
-    #@test p - D(q) == 1//(x^2+1)    
+
+    @info "IntegrateHypertangentPolynomial, example 5.10.1, p. 167"    
+    QQx, x = PolynomialRing(Nemo.QQ, :x)
+    k = FractionField(QQx)
+    kt, t = PolynomialRing(k, :t)
+    D = ExtensionDerivation(kt,  BasicDerivation(QQx), 1+t^2)  
+
+    p = t^2 + x*t + 1
+    q, c = SI.IntegrateHypertangentPolynomial(p, D)
+    expected = (t, x//2)
+    @test (q, c) == expected
+
+
+    @info "IntegrateHypertangentReduced, example 5.10.2, p. 169"    
+    QQx, x = PolynomialRing(Nemo.QQ, :x)
+    k = FractionField(QQx)
+    kt, t = PolynomialRing(k, :t)
+    D = ExtensionDerivation(kt,  BasicDerivation(QQx), 1//2*(1+t^2))  
+
+    p = (2*t*1//x)//(t^2+1)
+    q, ρ = SI.IntegrateHypertangentReduced(p, D)
+    @test ρ == 0
+
+    
+    @info "IntegrateHypertangentReduced, example 5.10.3, p. 170"    
+    QQx, x = PolynomialRing(Nemo.QQ, :x)
+    k = FractionField(QQx)
+    kt, t = PolynomialRing(k, :t)
+    D = ExtensionDerivation(kt,  BasicDerivation(QQx), 1+t^2)  
+
+    p = (t^5 + t^3 + x^2*t + 1)//(t^2 + 1)^3
+    q, ρ = SI.IntegrateHypertangentReduced(p, D)
+    q_ex = ((1 + 1//3*x)*t - (x^2 - 1//18))//(6*(t^2 + 1)^3) +
+           (5*(1 + 1//3*x)*t + 77//12)//(24*(t^2 + 1)^2) + (5*(1 + 1//3*x)*t -43//6)//(16*(t^2 + 1))
+    @test ρ == 1
+    @test q == q_ex
+    @test p - D(q) == 5//16*(1 + x//3)
 end
 
 
@@ -292,7 +328,6 @@ end
     expected = (2, 6, x^5*t, 1)
     @test (n, m, u, ρ) == expected
 end
-
 
 
  

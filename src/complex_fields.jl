@@ -68,7 +68,7 @@ function contains_I(F::AbstractAlgebra.ResField{P}) where {T<:FieldElement, P<:P
     if degree(m)==2 && isone(coeff(m, 0)) && iszero(coeff(m, 1)) && isone(coeff(m,2)) 
         return true
     else
-        error("contains_I not appplicable for residue field with moduos != X^2+1.")
+        error("contains_I not appplicable for residue field with modulus != X^2+1.")
     end
 end
 
@@ -85,7 +85,7 @@ function get_I(F::AbstractAlgebra.ResField{P}) where {T<:FieldElement, P<:PolyEl
     if degree(m)==2 && isone(coeff(m, 0)) && iszero(coeff(m, 1)) && isone(coeff(m,2)) 
         return gen(base_ring(F)) + zero(F)
     else
-        error("get_I not appplicable for residue field with moduos != X^2+1.")
+        error("get_I not appplicable for residue field with modulus != X^2+1.")
     end
 end
 

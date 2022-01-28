@@ -234,6 +234,66 @@ function IntegrateHyperexponentialPolynomial(p::F, D::Derivation) where
 end
 
 """
+    IntegrateHypertangentPolynomial(p, D) -> (q, c)
+
+Integration of hypertangent polynomials.
+
+Given a field `k` not conataining `√-1` a derivation `D` on `k(t)` such that `t` is a hypertangent monomial over `k`
+and `p` in `k[t]`, return `q` in `k[t]` and `c` in `k` such that `p-D(q)-c*D(t²+1)/(t²+1)` is in `k` and
+`p-D(q)` does not have an elementary integral over `k(t)` if `D(c)≠0`.
+
+
+See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 5.10, p. 167.
+"""
+function IntegrateHypertangentPolynomial(p::P, D::Derivation) where 
+    {T<:FieldElement, P<:PolyElem{T}}
+    iscompatible(p, D) || error("rational function p must be in the domain of derivation D")
+    ishypertangent(D) || error("monomial of derivation D must be hypertangent")
+    t = gen(parent(p))
+    q, r = PolynomialReduce(p, D)
+    α = constant_coefficient(divexact(MonomialDerivative(D), t^2+1))
+    c = coeff(r, 1)//(2*α)  
+    q, c
+end
+
+"""
+    IntegrateHypertangentReduced(p, D) -> (q, ρ)
+
+Integration of hypertangent reduced elements.
+
+Given a field `k` not conataining `√-1` a derivation `D` on `k(t)` such that `t` is a hypertangent monomial over `k`
+and `p` in `k⟨t⟩`, return return either `ρ=1` and `q` in `k⟨t⟩` such that `p-D(q)` is in `k[t]`, or 
+`ρ=0` and  `q` in `k⟨t⟩` such that  `p-D(q)` does not have an elementary integral over `k(t).
+
+See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 5.10, p. 169.
+"""
+function IntegrateHypertangentReduced(p::F, D::Derivation) where 
+    {T<:FieldElement, P<:PolyElem{T}, F<:FracElem{P}}
+    iscompatible(p, D) || error("rational function p must be in the domain of derivation D")
+    ishypertangent(D) || error("monomial of derivation D must be hypertangent")
+    isreduced(p, D) || error("rational function p must be reduced.")
+    t = gen(base_ring(parent(p)))
+    Z = zero(parent(p))
+    Q = t^2+1
+    m = -valuation(p, Q)
+    if m<=0
+        return Z, 1
+    end
+    h = numerator(Q^m*p)
+    q, r = divrem(h, Q)
+    a = coeff(r, 1)
+    b = coeff(r, 0)
+    η = constant_coefficient(divexact(MonomialDerivative(D), Q))
+    c, d, ρ = CoupledDESystem(zero(parent(a)), 2*m*η, a, b, BaseDerivation(D))
+    if ρ<=0
+        return Z, 0
+    end
+    q0 = (c*t + d)//Q^m
+    q, ρ = IntegrateHypertangentReduced(p - D(q0), D)
+    q + q0, ρ
+end
+
+"""
     InFieldDerivative(f, D) -> (u, ρ)
 
 Given a field `K`, a derivation `D` on `K` and `f` in `K`, return either `ρ=0`, in which case

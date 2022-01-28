@@ -299,7 +299,10 @@ for any solution `q` in `k⟨t⟩` of `a*D(q)+b*q=c`, `r=q*h` in `k[t]` satisfie
 
 (Here, `k⟨t⟩` denotes the elements of `k(t)` which are reduced w.r.t. `D`.)
 
-See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 6.2, p. 192.
+The implementation is  analogous to `RdeSpecialDenomPrim` and `RdeSpecialDenomTan`, 
+but now with `p=t-√-1` instead of `p=t` resp. `p=t^2+1`, 
+see [Bronstein's book](https://link.springer.com/book/10.1007/b138171), last sentence
+before algorithm `RdeSpecialDenomTan` in Section 6.2, p. 192 and Exercise 6.1, p. 216.
 """
 function RdeSpecialDenomTanI(a::P, b::F, c::F, D::Derivation) where
     {T<:FieldElement, P<:PolyElem{T}, F<:FracElem{P}}    
@@ -312,6 +315,7 @@ function RdeSpecialDenomTanI(a::P, b::F, c::F, D::Derivation) where
         error("rational functions b and c must be reduced with respect to derivation D")
     t = gen(parent(a))    
     degree(gcd(a, t^2 + 1))==0 || error("gcd(a, t^2+1) must be == 1")
+    contains_I(parent(a)) || error("field k must contain I=sqrt(-1)")
     I = get_I(parent(a))
     p = t-I
     nb = valuation(b, p)
@@ -841,7 +845,6 @@ See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 
 """
 function PolyRischDECancelExp(b::T, c::P, D::Derivation, n::Int=typemax(Int)) where
     {T<:FieldElement, P<:PolyElem{T}}      # here typemax(Int) represents +infinity
-    # See Bronstein's book, Section 6.6, p. 213
     ishyperexponential(D) ||
         error("monomial of derivation D must be hyperexponential")
     D0 = BaseDerivation(D)
@@ -897,6 +900,69 @@ function PolyRischDECancelExp(b::T, c::P, D::Derivation, n::Int=typemax(Int)) wh
         c -= b*s*t^m + D(s*t^m)
     end
     q, 1
+end
+
+"""
+    PolyRischDECancelTan(b₀, c, D[, n=∞]) -> (q, ρ)
+
+Polynomial Risch differential equation, cancellation - hyperexponential case.
+
+Given a field `k` not containing `√-1`, a derivation `D` on `k[t]` with `D(t)/(t^2+1)` in `k`, an integer `n`,
+`b₀` in `k` and `c` in `k[t]`, return either
+`ρ=0`, in which case the equation `D(q)+(b₀-n*t*D(t)/(t^2+1))*q=c` has no solution of degree at most `n` in `k[t]`,
+or `ρ=1` and a solution `q` in `k[t]` of this equation with `degree(q)≤n`.
+
+See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 6.6, p. 215.
+"""
+function PolyRischDECancelTan(b0::T, c::P, D::Derivation, n::Int=typemax(Int)) where
+    {T<:FieldElement, P<:PolyElem{T}}      # here typemax(Int) represents +infinity
+    ishypertangent(D) ||
+        error("monomial of derivation D must be hypertangent")
+    D0 = BaseDerivation(D)
+    iscompatible(b0, D0) || 
+        error("coefficient b0 must be in the domain of the base derivation of D")
+    iscompatible(c, D) || 
+        error("polynomial c must be in the domain of derivation D")
+    Z = zero(c)
+    no_solution = (Z, 0)
+    if n==0
+        if degree(c)<=0
+            if !iszero(b0)
+                q, ρ = RischDE(b0, c0, BaseDerivation(D))
+                if ρ<=0
+                    return no_solution
+                else
+                    return q + Z, 1
+                end
+            end
+            q, ρ = InFieldDerivative(c, BaseDerivation(D))
+            if ρ<=0
+                return no_solution
+            else
+                return q + Z, 1
+            end
+        end
+    end
+    t = gen(parent(c))
+    p = t^2 + 1
+    η = divexact(MonomialDerivative(D), p)
+    r = rem(c, p)
+    c0 = coeff(r, 0)
+    c1 = coeff(r, 1)
+    u, v, ρ   = CoupledDESystem(b0, -n*η, c0, c1, BaseDerivation(D))
+    if ρ<=0
+        return no_solution
+    end
+    r = u + v*t
+    if n==1
+        return r, 1
+    end
+    c = divexact(c - D(r) - (b0 - n*η*t)*r, p)
+    h, ρ = PolyRischDECancelTan(b0, c, D, n-2)
+    if ρ<=0
+        return no_solution
+    end
+    p*h + r, 1
 end
 
 """

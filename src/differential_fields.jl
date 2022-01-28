@@ -177,7 +177,7 @@ isnormal(p::PolyElem, D::Derivation) =
 
 isspecial(p::PolyElem, D::Derivation) =
     # see Def. 3.4.2
-    iscompatible(p, D) && iszero(rem(MonomialDerivative(D),p))
+    iscompatible(p, D) && iszero(rem(D(p), p)) # gcd(p, D(p))==p
 
 issimple(f::FracElem{P}, D::Derivation) where P<:PolyElem =
     #see Def. 3.5.2.
@@ -281,14 +281,14 @@ return a field `K = C(x)(t₁)...(tₙ)` isomorphic to `C(x, t₁,...,tₙ)` and
 of `D`, `D` is `d/dx` on `C(x)`, and `D` is iteratively extended from `C(x)(t₁)...(tᵢ₋₁)` to `C(x)(t₁)...(tᵢ)`
 such that `tᵢ` is monomial over `C(x)(t₁)...(tᵢ₋₁)` with `D(tᵢ)=Hᵢ=Hᵢ(x, t₁,....,tᵢ)`.
 The generators `x` of C(x) over C and `tᵢ` of `C(x)(t₁)...(tᵢ)` over `C(x)(t₁)...(tᵢ₋₁)` are returned
-as `gs=[x, t₁,...,tₙ]`. (Note that these returned generators `x, t₁,...,tₙ` are isomorphic but not identical to the variables 
-of the rational functions `Hᵢ`.)
+as `gs=[x, t₁,...,tₙ]`. (Note that these generators, although here denoted by the same symbols for simplicity, are isomorphic but not identical to 
+the generators `x, t₁,...,tₙ` of `C(x,t₁,...,tₙ)` given implicitely as the variables of the rational functions `Hᵢ`.)
 
 # Example  
 ```julia
 R, (x, t1, t2) = PolynomialRing(QQ, [:x, :t1, :t2])
 Z = zero(R)//1 # zero element of the fraction field of R
-K, (X, T1, T2), D = TowerOfDifferentialFields([t1//x, (t2^2+1)*x*t1 + Z])
+K, gs, D = TowerOfDifferentialFields([t1//x, (t2^2+1)*x*t1 + Z])
 ```
 (Note: by adding `Z` to a polynomial we explicitely transform it to an element of the fraction field.)
 """
@@ -323,6 +323,8 @@ end
 
 """
     transform(f, gs) -> f1
+
+Transform elements of `C(x,t₁,...,tₙ)` to elements of `C(x)(t₁)...(tₙ)`.
 
 Given `f` in `C(x,t₁,...,tₙ)` and the generators `gs=[x, t₁,...,tₙ]` as returned by 
 `TowerOfDifferentialFields`, return the corresponding element `f1` in `C(x)(t₁)...(tₙ)`,

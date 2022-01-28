@@ -290,7 +290,7 @@ end
 """
     RdeSpecialDenomTanI(a, b, c, D) -> (A, B, C, h)
 
-Special part of the denominator - hypertangent case.
+Special part of the denominator - hypertangent case, field contains I=√-1.
 
 Given a field `k` containing `√-1`, a derivation `D` on `k[t]` with `D(t)/(t^2+1)` in `k`, 
 `a≠0` in `k[t]` with `gcd(a,t^2+1)=1`, and `b`, `c` in `k⟨t⟩`,
@@ -905,7 +905,7 @@ end
 """
     PolyRischDECancelTan(b₀, c, D[, n=∞]) -> (q, ρ)
 
-Polynomial Risch differential equation, cancellation - hyperexponential case.
+Polynomial Risch differential equation, cancellation - hypertangent case.
 
 Given a field `k` not containing `√-1`, a derivation `D` on `k[t]` with `D(t)/(t^2+1)` in `k`, an integer `n`,
 `b₀` in `k` and `c` in `k[t]`, return either

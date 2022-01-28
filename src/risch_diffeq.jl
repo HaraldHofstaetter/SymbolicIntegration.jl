@@ -264,9 +264,9 @@ function RdeSpecialDenomTan(a::P, b::F, c::F, D::Derivation) where
     nc = valuation(c, p)
     n = min(0, nc - min(0, nb))
     if nb==0         
-        α_plust_βI = Remainder(-b//a, p)
-        α = coeff(α_plus_βI, 1)
-        β = coeff(α_plus_βI, 0)
+        αI_plus_β = Remainder(-b//a, p)
+        α = coeff(αI_plus_β, 1)
+        β = coeff(αI_plus_β, 0)
         η = divexact(MonomialDerivative(D), p)
         v, ρ = InFieldDerivative(2*β, D0)
         D0 = BaseDerivation(D)
@@ -276,6 +276,53 @@ function RdeSpecialDenomTan(a::P, b::F, c::F, D::Derivation) where
             if  ρ>0 && n0==1 && !iszero(v)
                 n = min(n, m)
             end
+        end
+    end
+    N = max(0, -nb, n-nc)
+    p_power_N = p^N
+    b1 = (b+n*a*divexact(D(p), p))*p_power_N
+    @assert isone(denominator(b1))
+    c1 = c*p^(N-n)
+    @assert isone(denominator(c1))
+    a*p_power_N, numerator(b1), numerator(c1), p^(-n)   
+end
+
+"""
+    RdeSpecialDenomTanI(a, b, c, D) -> (A, B, C, h)
+
+Special part of the denominator - hypertangent case.
+
+Given a field `k` containing `√-1`, a derivation `D` on `k[t]` with `D(t)/(t^2+1)` in `k`, 
+`a≠0` in `k[t]` with `gcd(a,t^2+1)=1`, and `b`, `c` in `k⟨t⟩`,
+return  `A`, `B`, `C`, `h` in `k[t]` such that
+for any solution `q` in `k⟨t⟩` of `a*D(q)+b*q=c`, `r=q*h` in `k[t]` satisfies `A*D(r)+B*r=C`.     
+
+(Here, `k⟨t⟩` denotes the elements of `k(t)` which are reduced w.r.t. `D`.)
+
+See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 6.2, p. 192.
+"""
+function RdeSpecialDenomTanI(a::P, b::F, c::F, D::Derivation) where
+    {T<:FieldElement, P<:PolyElem{T}, F<:FracElem{P}}    
+    !iszero(a) || error("a must be != 0")
+    ishypertangent(D) ||
+        error("monomial of derivation D must be hypertangent")
+    iscompatible(a, D) && iscompatible(b, D) && iscompatible(c, D) || 
+        error("polynomial a and rational functions b and c must be in the domain of derivation D")
+    isreduced(b, D) && isreduced(c, D) || 
+        error("rational functions b and c must be reduced with respect to derivation D")
+    t = gen(parent(a))    
+    degree(gcd(a, t^2 + 1))==0 || error("gcd(a, t^2+1) must be == 1")
+    I = get_I(parent(a))
+    p = t-I
+    nb = valuation(b, p)
+    nc = valuation(c, p)
+    n = min(0, nc - min(0, nb))
+    if nb==0         
+        α = constant_coefficient(Remainder(-b//a, p))
+        η = divexact(MonomialDerivative(D), t^2 + 1)
+        n0, m, v, ρ = ParametricLogarithmicDerivative(α, 2*η*I, BaseDerivation(D))
+        if  ρ>0 && n0==1 && !iszero(v)
+            n = min(n, m)
         end
     end
     N = max(0, -nb, n-nc)
@@ -326,8 +373,7 @@ function RdeSpecialDenominator(a::P, b::F, c::F, D::Derivation) where
         b = b//d
         c = c//d
         if contains_I(parent(a))
-            throw(NotImplemented("RdeSpecialDenominator: case hypertangent, sqrt(-1) in k not yet implemented"))
-            #return RdeSpecialDenomTanI(a, b, c, D) #case √-1 in k
+            return RdeSpecialDenomTanI(a, b, c, D) #case √-1 in k
         else
             return RdeSpecialDenomTan(a, b, c, D) 
         end

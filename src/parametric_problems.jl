@@ -99,6 +99,39 @@ See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 
 """
 function ParamRdeSpecialDenomTan(a::P, b::F, gs::Vector{F}, D::Derivation) where
     {T<:FieldElement, P<:PolyElem{T}, F<:FracElem{P}}
+    !iszero(a) || error("a must be != 0")
+    ishypertangent(D) ||
+        error("monomial of derivation D must be hypertangent")
+    iscompatible(a, D) && iscompatible(b, D) && all([iscompatible(g, D) for g in gs]) ||         
+        error("polynomial a and rational functions b and g_i must be in the domain of derivation D")
+    isreduced(b, D) && isreduced(c, D) || 
+        error("rational functions b and c must be reduced with respect to derivation D")
+    t = gen(parent(a))
+    p = t^2+1
+    degree(gcd(a, p))==0 || error("gcd(a, t^2+1) must be == 1")
+    nb = valuation(b, p)
+    nc = minimum([valuation(g, p) for g in gs])
+    n = min(0, nc - min(0, nb))
+    if nb==0         
+        αI_plus_β = Remainder(-b//a, p)
+        α = coeff(αI_plus_β, 1)
+        β = coeff(αI_plus_β, 0)
+        η = divexact(MonomialDerivative(D), p)
+        v, ρ = InFieldDerivative(2*β, D0)
+        D0 = BaseDerivation(D)
+        if ρ>0 && !iszero(v)
+            _, I, D0I = Complexify(parent(η), D0)
+            n0, m, v, ρ = ParametricLogarithmicDerivative(α*I+β, 2*η*I, D0I)
+            if  ρ>0 && n0==1 && !iszero(v)
+                n = min(n, m)
+            end
+        end
+    end
+    N = max(0, -nb)
+    p_power_N = p^N
+    b1 = (b+n*a*divexact(D(p), p))*p_power_N
+    @assert isone(denominator(b1))
+    a*p_power_N, numerator(b1), [g*p_power_N_minus_n for g in gs], p^(-n)      
 end
 
 """

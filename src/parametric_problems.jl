@@ -11,10 +11,9 @@
 
 Normal part of the denominator.
 
-Given a field `k`, a derivation `D` on `k[t]`, `f` in `k(t)`, `gs=[g₁,...,gₘ]`, `g₁`,...,`gₘ` in `k(t)`
-with `f` weakly normalized with respect to `t`, return `a`, `b`, `Gs=[G₁,...,Gₘ]`, `h` 
-such that `a`, `h` in `k[t]`, `b` in `k⟨t⟩`, `G₁`,...,`Gₘ` in `k(t)`, 
-and for any solution `c₁`,...,`cₘ` in `Const(k)` and `y` in `k(t)`
+Given a field `k`, a derivation `D` on `k[t]`, `f` in `k(t)` which is weakly normalized with respect to `t`,
+and `gs=[g₁,...,gₘ]` with `gᵢ` in `k(t)`, return  `a`, `h` in `k[t]`, `b` in `k⟨t⟩` and  `Gs=[G₁,...,Gₘ]`
+with `G_i` in `k(t)` such that for any solution `c₁`,...,`cₘ` in `Const(k)` and `y` in `k(t)`
 of `D(y)+f*y=∑ᵢcᵢ*gᵢ`, `q=y*h` in `k⟨t⟩` satisfies `a*D(q)+b*q=∑ᵢcᵢ*Gᵢ`.     
 
 (Here, `k⟨t⟩` denotes the elements of `k(t)` which are reduced w.r.t. `D`.)
@@ -40,10 +39,9 @@ end
 
 Special part of the denominator - hyperexponential case.
 
-Given a field `k`, a derivation `D` on `k[t]`, `a` in `k[t]`, `b` in `k⟨t⟩`, `gs=[g₁,...,gₘ]`,
-`g₁`,...,`gₘ` in `k(t)` with `D(t)/t` in `k`, `a≠0` and `gcd(a,t)=1`, return  
-`A`, `B`, `Gs=[G₁,...,Gₘ]`, `h` such that `A`, `B`, `h` in `k[t]`,
-`G₁`,...,`Gₘ` in `k(t)`, and for any solution `c₁`,...,`cₘ` in `Const(k)` and `q` in `k⟨t⟩`
+Given a field `k`, a derivation `D` on `k[t]` with `D(t)/t` in `k`, `a` in `k[t]`, `b` in `k⟨t⟩`, `gs=[g₁,...,gₘ]`
+with `gᵢ` in `k(t)` , `a≠0` and `gcd(a,t)=1`, return `A`, `B`, `h` in `k[t]`,  `Gs=[G₁,...,Gₘ]` with `Gᵢ` in `k(t)` 
+such that for any solution `c₁`,...,`cₘ` in `Const(k)` and `q` in `k⟨t⟩`
 of `a*D(q)+b*q=∑ᵢcᵢ*gᵢ`, `r=q*h` in `k[t]` satisfies `A*D(r)+B*r=∑ᵢcᵢ*Gᵢ`.     
 
 (Here, `k⟨t⟩` denotes the elements of `k(t)` which are reduced w.r.t. `D`.)
@@ -85,14 +83,32 @@ function ParamRdeSpecialDenomExp(a::P, b::F, gs::Vector{F}, D::Derivation) where
 end
 
 """
+    ParamRdeSpecialDenomTan(a, b, gs, D) -> (A, B, Gs, h)
+
+Special part of the denominator - hypertangent case.
+
+Given a field `k` not containing `√-1`, a derivation `D` on `k[t]` with `D(t)/(t^2+1)` in `k`, 
+`a≠0` in `k[t]` with `gcd(a,t^2+1)=1`, `b` in `k⟨t⟩`, and `gs=[g₁,...,gₘ]` with `gᵢ` in `k(t)`,
+return  `A`, `B`, `h` in `k[t]` and `Gs=[G₁,...,Gₘ]` with `Gᵢ` in `k(t)` 
+such that for any solution `c₁`,...,`cₘ` in `Const(k)` and `q` in `k⟨t⟩`
+of `a*D(q)+b*q=∑ᵢcᵢ*gᵢ`, `r=q*h` in `k[t]` satisfies `A*D(r)+B*r=∑ᵢcᵢ*Gᵢ`.     
+
+(Here, `k⟨t⟩` denotes the elements of `k(t)` which are reduced w.r.t. `D`.)
+
+See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 7.1, p. 221.
+"""
+function ParamRdeSpecialDenomTan(a::P, b::F, gs::Vector{F}, D::Derivation) where
+    {T<:FieldElement, P<:PolyElem{T}, F<:FracElem{P}}
+end
+
+"""
     ParamRdeSpecialDenominator(a, b, gs, D) -> (A, B, Gs, h)
 
 Special part of the denominator.
 
-Given a field `k`, a derivation `D` on `k[t]`, `a` in `k[t]`, `b` in `k⟨t⟩`, `gs=[g₁,...,gₘ]`,
-`g₁`,...,`gₘ` in `k(t)` with `a≠0`, return  
-`A`, `B`, `Gs=[G₁,...,Gₘ]`, `h` such that `A`, `B`, `h` in `k[t]`,
-`G₁`,...,`Gₘ` in `k(t)`, and for any solution `c₁`,...,`cₘ` in `Const(k)` and `q` in `k⟨t⟩`
+Given a field `k`, a derivation `D` on `k[t]`, `a≠0` in `k[t]`, `b` in `k⟨t⟩`, `gs=[g₁,...,gₘ]` with
+`g₁`,...,`gₘ` in `k(t)`, return  `A`, `B`, `h` in `k[t]` and `Gs=[G₁,...,Gₘ]` with `Gᵢ` in `k(t)`
+such that for any solution `c₁`,...,`cₘ` in `Const(k)` and `q` in `k⟨t⟩`
 of `a*D(q)+b*q=∑ᵢcᵢ*gᵢ`, `r=q*h` in `k[t]` satisfies `A*D(r)+B*r=∑ᵢcᵢ*Gᵢ`.     
 
 (Here, `k⟨t⟩` denotes the elements of `k(t)` which are reduced w.r.t. `D`.)
@@ -130,8 +146,8 @@ end
 
 Generate linear constraints on the constants.
 
-Given a field `k`, a derivation `D` on `k[t]`, `a`, `b` in `k[t]` and `gs=[g₁,...,gₘ]`,
-`g₁`,...,`gₘ` in `k(t)`, return `qs=[q₁,...,qₘ]`, `q₁`,...,`qₘ` in `k[t]`
+Given a field `k`, a derivation `D` on `k[t]`, `a`, `b` in `k[t]` and `gs=[g₁,...,gₘ]` with
+`gᵢ` in `k(t)`, return `qs=[q₁,...,qₘ]` with `qᵢ` in `k[t]`
 and a matrix `M` with entries in `k` sucht that for any solution 
 `c₁`,...,`cₘ` in `Const(k)` and `p` in `k[t]` of  `a*D(p)+b*p=∑ᵢcᵢ*gᵢ`,
 `x=[c₁,...,cₘ]` is a solution of `M*x=0`, and `p` and the `cᵢ` satisfy
@@ -286,8 +302,8 @@ end
 
 Bound on polynomial solutions - primitive case.
 
-Given a field `k`, a derivation `D` on `k[t]`, `a`, `b` in `k[t]` and `qs=[q₁,...,qₘ]`,
-`q₁`,...,`qₘ` in `k[t]` with `D(t)` in `k` and `a≠0`, return integer `n`
+Given a field `k`, a derivation `D` on `k[t]` with `D(t)` in `k`, `a`, `b` in `k[t]` with `a≠0`, 
+and `qs=[q₁,...,qₘ]` with `qᵢ` in `k[t]`, return integer `n`
 such that `degree(q)≤n` for any solution  `c₁`,...,`cₘ` in `Const(k)` 
 and `q` in `k[t]` of  `a*D(q)+b*q=∑ᵢcᵢ*qᵢ`.
 
@@ -341,8 +357,8 @@ end
 
 Bound on polynomial solutions - base case.
 
-Given a field `k`, `a`, `b` in `k[t]` and `qs=[q₁,...,qₘ]`,
-`q₁`,...,`qₘ` in `k[t]` with `a≠0`, return integer `n`
+Given a field `k`, `a`, `b` in `k[t]` with `a≠0`, and `qs=[q₁,...,qₘ]` with
+`qᵢ` in `k[t]`,  return integer `n`
 such that `degree(q)≤n` for any solution  `c₁`,...,`cₘ` in `Const(k)` 
 and `q` in `k[t]` of `a*(d/dt)(q)+b*q=∑ᵢcᵢ*qᵢ`.
 
@@ -372,8 +388,8 @@ end
 
 Bound on polynomial solutions - hyperexponential case.
 
-Given a field `k`, a derivation `D` on `k[t]`, `a`, `b` in `k[t]` and `qs=[q₁,...,qₘ]`,
-`q₁`,...,`qₘ` in `k[t]` with `D(t)/t` in `k` and `a≠0`, return integer `n`
+Given a field `k`, a derivation `D` on `k[t]` with `D(t)/t` in `k`, `a`, `b` in `k[t]`, 
+with `a≠0`, and `qs=[q₁,...,qₘ]` with `qᵢ` in `k[t]` return integer `n`
 such that `degree(q)≤n` for any solution  `c₁`,...,`cₘ` in `Const(k)` 
 and `q` in `k[t]` of  `a*D(q)+b*q=∑ᵢcᵢ*qᵢ`.
 
@@ -409,8 +425,8 @@ end
 
 Bound on polynomial solutions - nonlinear case.
 
-Given a  field `k`, a derivation `D` on `k[t]`, `a`, `b` in `k[t]` and `qs=[q₁,...,qₘ]`,
-`q₁`,...,`qₘ` in `k[t]` with `degree(D(t))≥2` and `a≠0`, return integer `n`
+Given a  field `k`, a derivation `D` on `k[t]` with `degree(D(t))≥2` , `a`, `b` in `k[t]` with `a≠0`,
+and `qs=[q₁,...,qₘ]` with `qᵢ` in `k[t]`, return integer `n`
 such that `degree(q)≤n` for any solution `c₁`,...,`cₘ` in `Const(k)` 
 and `q` in `k[t]` of `a*D(q)+b*q=∑ᵢcᵢ*qᵢ`.
 
@@ -446,8 +462,8 @@ end
 
 Bound on polynomial solutions.
 
-Given a  field `k`, a derivation `D` on `k[t]`, `a`, `b` in `k[t]` and `qs=[q₁,...,qₘ]`,
-`q₁`,...,`qₘ` in `k[t]` with `a≠0`, return integer `n`
+Given a  field `k`, a derivation `D` on `k[t]`, `a`, `b` in `k[t]` with `a≠0`,
+ and `qs=[q₁,...,qₘ]` with `qᵢ` in `k[t]`, return integer `n`
 such that `degree(q)≤n` for any solution `c₁`,...,`cₘ` in `Const(k)` 
 and `q` in `k[t]` of  `a*D(q)+b*q=∑ᵢcᵢ*qᵢ`.
 
@@ -477,9 +493,10 @@ end
 
 Parametric Special Polynomial Differential Equation algorithm.
 
-Given a field `k`, a derivation `D` on `k[t]`, `a`, `b` in `k[t]`, `qs=[q₁,...,qₘ]`,
-`q₁`,...,`qₘ` in `k[t]` and an integer `n` with `degree(a)>0` and `gcd(a,b)=1`, return `A`, `B`,
-`Qs=[Q₁,...,Qₘ]` and `N` such that for any solution `c₁`,...,`cₘ` in `Const(k)` 
+Given a field `k`, a derivation `D` on `k[t]`, `a`, `b` in `k[t]` with `degree(a)>0` and `gcd(a,b)=1`,
+`qs=[q₁,...,qₘ]` with `qᵢ` in `k[t]`, and an integer `n` , return `A`, `B` in `k[t]`,
+`Qs=[Q₁,...,Qₘ]` with `Qᵢ` in `k[t]`, `rs=[r₁,...,rₘ]` with `rᵢ` in `k[t]`, 
+and an integer `N` such that for any solution `c₁`,...,`cₘ` in `Const(k)` 
 and `q` in `k[t]` of degree at most `n` of `a*D(q)+b*q=∑ᵢcᵢ*qᵢ`, `p=(q-∑ᵢcᵢ*rᵢ)/a`
 has degree at most `N` and satisfies `A*D(p)+B*p=∑ᵢcᵢ*Qᵢ`.
 
@@ -500,10 +517,10 @@ end
 
 Parametric polynomial Risch differential equation - no cancellation.
 
-Given a field `k`, a derivation `D` on `k[t]`, `b` in `k[t]`, `qs=[q₁,...,qₘ]`,
-`q₁`,...,`qₘ` in `k[t]` and an integer `n` with `b≠0` and either
-`D=d/dt` or `degree(b)>max(0, degree(D(t))-1)`, return `hs=[h₁,...,hᵣ]`,
-`h₁`,...,`hᵣ` in `k[t]` and  a matrix `A` with entries in `Const(k)` such that
+Given a field `k`, a derivation `D` on `k[t]`, `b≠0` in `k[t]`, `qs=[q₁,...,qₘ]` with
+`qᵢ` in `k[t]`, and an integer `n` such that either
+`D=d/dt` or `degree(b)>max(0, degree(D(t))-1)`, return `hs=[h₁,...,hᵣ]` with
+`hᵢ` in `k[t]` and  a matrix `A` with entries in `Const(k)` such that
 if `c₁`,...,`cₘ` in `Const(k)` and `q` in `k[t]` satisfy `degree(q)<=n` and
 `D(q)+b*q=∑ᵢcᵢ*qᵢ` then `q=∑ⱼdⱼ*hⱼ` where `d₁`,...,`dᵣ` are in `Const(k)` and
 `A*[c₁,...,cₘ,d₁,...,dᵣ]=0`.
@@ -555,10 +572,10 @@ end
 
 Parametric polynomial Risch differential equation - no cancellation.
 
-Given a field `k`, a derivation `D` on `k[t]`, `b` in `k[t]`, `qs=[q₁,...,qₘ]`,
-`q₁`,...,`qₘ` in `k[t]` and an integer `n` with `degree(b)<degree(D(t)-1)` and either
-`D=d/dt` or `degree(D(t))≥2`, return `hs=[h₁,...,hᵣ]`,
-`h₁`,...,`hᵣ` in `k[t]` and  a matrix `A` with entries in `Const(k)` such that
+Given a field `k`, a derivation `D` on `k[t]`, `b` in `k[t]`, `qs=[q₁,...,qₘ]` with
+`qᵢ` in `k[t]`, and an integer `n` such that `degree(b)<degree(D(t)-1)` and either
+`D=d/dt` or `degree(D(t))≥2`, return `hs=[h₁,...,hᵣ]` with
+`hᵢ` in `k[t]` and  a matrix `A` with entries in `Const(k)` such that
 if `c₁`,...,`cₘ` in `Const(k)` and `q` in `k[t]` satisfy `degree(q)≤n` and
 `D(q)+b*q=∑ᵢcᵢ*qᵢ` then `q=∑ⱼdⱼ*hⱼ` where `d₁`,...,`dᵣ` are in `Const(k)` and
 `A*[c₁,...,cₘ,d₁,...,dᵣ]=0`.
@@ -656,10 +673,10 @@ end
 
 Parametric polynomial Risch differential equation - no cancellation.
 
-Given a field `k`, a derivation `D` on `k[t]`, `b` in `k`, `qs=[q₁,...,qₘ]`,
-`q₁`,...,`qₘ` in `k[t]` and an integer `n` with `D≠d/dt` and `D(t)` in `k`
-or `D(t)/t` in `k`, return `hs=[h₁,...,hᵣ]`,
-`h₁`,...,`hᵣ` in `k[t]` and  a matrix `A` with entries in `Const(k)` such that
+Given a field `k`, a derivation `D` on `k[t]` with `D≠d/dt` and `D(t)` in `k`
+or `D(t)/t` in `k`, `b` in `k`, `qs=[q₁,...,qₘ]` with
+`qᵢ` in `k[t]`, and an integer `n`,   return `hs=[h₁,...,hᵣ]` with
+`hᵢ` in `k[t]` and  a matrix `A` with entries in `Const(k)` such that
 if `c₁`,...,`cₘ` in `Const(k)` and `q` in `k[t]` satisfy `degree(q)≤n` and
 `D(q)+b*q=∑ᵢcᵢ*qᵢ` then `q=∑ⱼdⱼ*hⱼ` where `d₁`,...,`dᵣ` are in `Const(k)` and
 `A*[c₁,...,cₘ,d₁,...,dᵣ]=0`.
@@ -731,9 +748,9 @@ end
 
 Parametric polynomial Risch differential equation.
 
-Given a field `k`, a derivation `D` on `k[t]`, `b` in `k[t]`, `qs=[q₁,...,qₘ]`,
-`q₁`,...,`qₘ` in `k[t]` and an integer `n`, return `hs=[h₁,...,hᵣ]`,
-`h₁`,...,`hᵣ` in `k[t]` and  a matrix `A` with entries in `Const(k)` such that
+Given a field `k`, a derivation `D` on `k[t]`, `b` in `k[t]`, `qs=[q₁,...,qₘ]` with
+`qᵢ` in `k[t]` and an integer `n`, return `hs=[h₁,...,hᵣ]` with
+`hᵢ` in `k[t]` and  a matrix `A` with entries in `Const(k)` such that
 if `c₁`,...,`cₘ` in `Const(k)` and `q` in `k[t]` satisfy `degree(q)≤n` and
 `D(q)+b*q=∑ᵢcᵢ*qᵢ` then `q=∑ⱼdⱼ*hⱼ` where `d₁`,...,`dᵣ` are in `Const(k)` and
 `A*[c₁,...,cₘ,d₁,...,dᵣ]=0`.
@@ -772,9 +789,9 @@ end
 
 Parametric Risch differential equation with polynomial coefficients.
 
-Given a field `k`, a derivation `D` on `k[t]`, `a`, `b` in `k[t]` and `gs=[g₁,...,gₘ]`,
-`g₁`,...,`gₘ` in `k(t)` with `a!=0`, return `hs=[h₁,...,hᵣ]`,
-`h₁`,...,`hᵣ` in `k(t)` and  a matrix `A` in reduced row echelon form with entries in `Const(k)` such that
+Given a field `k`, a derivation `D` on `k[t]`, `a`, `b` in `k[t]` with `a≠0`, and `gs=[g₁,...,gₘ]` with
+`gᵢ` in `k(t)` , return `hs=[h₁,...,hᵣ]` with 
+`hᵢ` in `k(t)` and  a matrix `A` in reduced row echelon form with entries in `Const(k)` such that
 `c₁`,...,`cₘ` in `Const(k)` and `q` in `k[t]` is a solution of 
 `a*D(q)+b*q=∑ᵢcᵢ*gᵢ` if and only if `y=∑ⱼdⱼ*hⱼ` for `d₁`,...,`dᵣ` in `Const(k)` with
 `A*[c₁,...,cₘ,d₁,...,dᵣ]=0`.
@@ -856,10 +873,10 @@ end
 
 Parametric Risch differential equation.
 
-Given a field `K`, a derivation `D` on `K`, `f` in `K`, `gs=[g₁,...,gₘ]`,
-`g₁`,...,`gₘ` in `K`, return `hs=[h₁,...,hᵣ]`,
-`h₁`,...,`hᵣ` in `K` and  a matrix `A` reduced row echelon form with entries in `Const(K)` such that
- `c₁`,...,`cₘ` in `Const(K)` and `y` in `K` is a solution of 
+Given a field `K`, a derivation `D` on `K`, `f` in `K`, `gs=[g₁,...,gₘ]` with
+`gᵢ` in `K`, return `hs=[h₁,...,hᵣ]` with
+`hᵢ` in `K` and  a matrix `A` reduced row echelon form with entries in `Const(K)` such that
+`c₁`,...,`cₘ` in `Const(K)` and `y` in `K` is a solution of 
 `D(y)+f*y=∑ᵢcᵢ*gᵢ` if and only if `y=∑ⱼdⱼ*hⱼ` for `d₁`,...,`dᵣ` in `Const(K)` with
 `A*[c₁,...,cₘ,d₁,...,dᵣ]=0`.
 
@@ -910,15 +927,16 @@ end
 
 Reduction to a polynomial problem.
 
-Given a field `k`, a derivation `D` on `k[t]`, `f` in `k(t)`, `ws=[w₁,...,wₘ]`,
-`w₁`,...,`wₘ` in `k(t)`, return `a`, `b`, `h`, `N`, `g`, `vs=[v₁,...,vₘ]` such that 
-`a`, `b`, `h` are in `k[t]`, `N` is an integer, `g`, `v₁`,...,`vₘ` are in `k(t)`
-and for any solution `v` in `k(t)`, `c_1`,...,`cₘ` in Const(k) of `f = D(v)+∑ᵢcᵢ*wᵢ`, 
-`p=v*h` is in `k⟨t⟩` and `p` and the `c_i` satisfy `a*D(p)+b*p=g+∑ᵢcᵢ*vᵢ`.
+Given a field `k`, a derivation `D` on `k[t]`, `f` in `k(t)` and `ws=[w₁,...,wₘ]` with
+`wᵢ` in `k(t)`, return `a`, `b`, `h` in `k[t]`, `g` in `k(t)`, `vs=[v₁,...,vₘ]` with 
+`vᵢ` in `k(t)` and an integer `N` such that 
+for any solution `v` in `k(t)`, `c_1`,...,`cₘ` in Const(k) of `f = D(v)+∑ᵢcᵢ*wᵢ`, 
+`p=v*h` is in `k⟨t⟩`, and `p` and the `c_i` satisfy `a*D(p)+b*p=g+∑ᵢcᵢ*vᵢ`.
+
 (Here, `k⟨t⟩` denotes the elements of `k(t)` which are reduced w.r.t. `D`.)
 
 Furthermore, if `S₁ⁱʳʳ==Sⁱʳʳ`, which is indicated by `is_Sirr1_eq_Sirr(D)==true`,
-then `p` is in `k[t]`, and if `t` is nonlinear or Liouvillian over `k`, then `degree(p)<=N`.
+then `p` is in `k[t]`, and if `t` is nonlinear or Liouvillian over `k`, then `degree(p)≤N`.
 
 See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 7.2, p. 248.
 """
@@ -974,8 +992,8 @@ end
 
 Limited integration problem.
 
-Given a field `k`, a derivation `D` on `k[t]`, `f` in `k(t)`, `ws=[w₁,...,wₘ]`,
-`w₁`,...,`wₘ` in `k(t)`, return either `ρ=0`, in which case the equation
+Given a field `k`, a derivation `D` on `k[t]`, `f` in `k(t)`, `ws=[w₁,...,wₘ]` with
+`wᵢ` in `k(t)`, return either `ρ=0`, in which case the equation
 `f = D(v)+∑ᵢcᵢ*wᵢ` has no solution `v` in `k(t)`, `cs=[c₁,...,cₘ]`, `cᵢ` in `Const(k)`,
 or `ρ=1` and a solution `v`, `cs` of that equation.
 

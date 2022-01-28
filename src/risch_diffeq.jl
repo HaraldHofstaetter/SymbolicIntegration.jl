@@ -193,8 +193,9 @@ end
 
 Special part of the denominator - hyperexponential case.
 
-Given a field `k`, a derivation `D` on `k[t]`, `a` in `k[t]`, `b`, `c` in `k⟨t⟩`
-with `D(t)/t` in `k`, `a≠0` and `gcd(a,t)=1`, return  `A`, `B`, `C`, `h` in `k[t]` such that
+Given a field `k`, a derivation `D` on `k[t]` with `D(t)/t` in `k`, 
+`a≠0` in `k[t]` with `gcd(a,t)=1`, and `b`, `c` in `k⟨t⟩`
+return  `A`, `B`, `C`, `h` in `k[t]` such that
 for any solution `q` in `k⟨t⟩` of `a*D(q)+b*q=c`, `r=q*h` in `k[t]` satisfies `A*D(r)+B*r=C`.     
 
 (Here, `k⟨t⟩` denotes the elements of `k(t)` which are reduced w.r.t. `D`.)
@@ -238,8 +239,9 @@ end
 
 Special part of the denominator - hypertangent case.
 
-Given a field `k`, a derivation `D` on `k[t]`, `a` in `k[t]`, `b`, `c` in `k⟨t⟩`
-with `D(t)/(t^2+1)` in `k`, `a≠0` and `gcd(a,t^2+1)=1`, return  `A`, `B`, `C`, `h` in `k[t]` such that
+Given a field `k` not containing `√-1`, a derivation `D` on `k[t]` with `D(t)/(t^2+1)` in `k`, 
+`a≠0` in `k[t]` with `gcd(a,t^2+1)=1`, and `b`, `c` in `k⟨t⟩`,
+return  `A`, `B`, `C`, `h` in `k[t]` such that
 for any solution `q` in `k⟨t⟩` of `a*D(q)+b*q=c`, `r=q*h` in `k[t]` satisfies `A*D(r)+B*r=C`.     
 
 (Here, `k⟨t⟩` denotes the elements of `k(t)` which are reduced w.r.t. `D`.)
@@ -290,8 +292,8 @@ end
 
 Special part of the denominator.
 
-Given a field `k`, a derivation `D` on `k[t]`, `a` in `k[t]`, `b`, `c` in `k⟨t⟩`
-with `a≠0` return  `A`, `B`, `C`, `h` in `k[t]` such that
+Given a field `k`, a derivation `D` on `k[t]`, `a≠0` in `k[t]`, and `b`, `c` in `k⟨t⟩`,
+return  `A`, `B`, `C`, `h` in `k[t]` such that
 for any solution `q` in `k⟨t⟩` of `a*D(q)+b*q=c`, `r=q*h` in `k[t]` satisfies `A*D(r)+B*r=C`.     
 
 (Here, `k⟨t⟩` denotes the elements of `k(t)` which are reduced w.r.t. `D`.)
@@ -323,11 +325,12 @@ function RdeSpecialDenominator(a::P, b::F, c::F, D::Derivation) where
         a = divexact(a, d)
         b = b//d
         c = c//d
-        #if contains_I(parent(a))
-        #    return RdeSpecialDenomTanI(a, b, c, D) #case √-1 in k
-        #else
+        if contains_I(parent(a))
+            throw(NotImplemented("RdeSpecialDenominator: case hypertangent, sqrt(-1) in k not yet implemented"))
+            #return RdeSpecialDenomTanI(a, b, c, D) #case √-1 in k
+        else
             return RdeSpecialDenomTan(a, b, c, D) 
-        #end
+        end
     else
         H = MonomialDerivative(D)
         throw(NotImplemented("RdeSpecialDenominator: monomial derivative $H"))
@@ -339,9 +342,8 @@ end
 
 Bound on polynomial solutions - primitive case.
 
-Given a field `k`, a derivation `D` on `k[t]` and `a`, `b`, `c` in `k[t]`  
-with `D(t)` in `k` and `a≠0`, return integer `n` such that `degree(q)≤n`
-for any solution `q` in `k[t]` of `a*D(q)+b*q=c`.
+Given a field `k`, a derivation `D` on `k[t]` with `D(t)` in `k`, and `a`, `b`, `c` in `k[t]`  
+with `a≠0`, return integer `n` such that `degree(q)≤n` for any solution `q` in `k[t]` of `a*D(q)+b*q=c`.
 
 See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 6.3, p. 198.
 """
@@ -393,7 +395,7 @@ end
 
 Bound on polynomial solutions - base case.
 
-Given a field `k` and  `a`, `b`, `c` in `k[t]`  with `a≠0`, return integer `n`
+Given a field `k` and  `a`, `b`, `c` in `k[t]` with `a≠0`, return integer `n`
 such that `degree(q)≤n` for any solution `q` in `k[t]` of `a*(d/dt)(q)+b*q=c`.
 
 See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 6.3, p. 199.
@@ -422,9 +424,8 @@ end
 
 Bound on polynomial solutions - hyperexponential case.
 
-Given a field `k`, a derivation `D` on `k[t]` and `a`, `b`, `c` in `k[t]`  
-with `D(t)/t` in `k` and `a≠0`, return integer `n` such that `degree(q)≤n`
-for any solution `q` in `k[t]` of `a*D(q)+b*q=c`.
+Given a field `k`, a derivation `D` on `k[t]` with `D(t)/t` in `k`, and `a`, `b`, `c` in `k[t]`  
+with`a≠0`, return integer `n` such that `degree(q)≤n` for any solution `q` in `k[t]` of `a*D(q)+b*q=c`.
 
 See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 6.3, p. 200.
 """
@@ -455,9 +456,8 @@ end
 
 Bound on polynomial solutions - nonlinear case.
 
-Given a field `k`, a derivation `D` on `k[t]` and `a`, `b`, `c` in `k[t]`  
-with `degree(D(t))≥2` and `a≠0`, return integer `n` such that `degree(q)≤n`
-for any solution `q` in `k[t]` of `a*D(q)+b*q=c`.
+Given a field `k`, a derivation `D` on `k[t]` with `degree(D(t))≥2`, and `a`, `b`, `c` in `k[t]`  
+with `a≠0`, return integer `n` such that `degree(q)≤n` for any solution `q` in `k[t]` of `a*D(q)+b*q=c`.
 
 See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 6.3, p. 201.
 """
@@ -569,7 +569,7 @@ end
 Polynomial Risch differential equation - no cancellation.
 
 Given a field `k`, a derivation `D` on `k[t]`, an integer `n`
-and `b`, `c` in `k[t]`  with `b≠0` and either `D=d/dt`or 
+and `b`, `c` in `k[t]`  with `b≠0` such that either `D=d/dt`or 
 `degree(b)>max(0, degree(D(t))-1)`, return either
 `ρ=0`, in which case the equation `D(q)+b*q=c` has no solution of degree at most `n` in `k[t]`,
 or `ρ=1` and a solution `q` in `k[t]` of this equation with `degree(q)≤n`.
@@ -605,7 +605,7 @@ end
 Polynomial Risch differential equation - no cancellation.
 
 Given a field `k`, a derivation `D` on `k[t]`, an integer `n`
-and `b`, `c` in `k[t]` with `degree(b)<degree(D(t))-1` and either
+and `b`, `c` in `k[t]` such that `degree(b)<degree(D(t))-1` and either
 `D=d/dt` or `degree(D(t))≥2`, return either
 `ρ=0`, in which case the equation `D(q)+b*q=c` has no solution of degree at most `n` in `k[t]`,
 or `ρ=1` and a solution `q` in `k[t]` of this equation with `degree(q)≤n`, 
@@ -664,7 +664,7 @@ end
 Polynomial Risch differential equation - no cancellation.
 
 Given a field `k`, a derivation `D` on `k[t]`, an integer `n`
-and `b`, `c` in `k[t]` with `degree(D(t))≥2` and `degree(b)=degree(D(t))-1`, 
+and `b`, `c` in `k[t]` such that `degree(D(t))≥2` and `degree(b)=degree(D(t))-1`, 
 return either `ρ=0`, in which case the equation `D(q)+b*q=c` has no solution of degree at most `n` in `k[t]`,
 or `ρ=1` and a solution `q` in `k[t]` of this equation with `degree(q)≤n`, 
 or `ρ=2`, `q`, `C` in `k[t]` and an integer `m`such that for any solution `y` in `k[t]` 
@@ -722,8 +722,8 @@ end
 
 Polynomial Risch differential equation, cancellation - primitive case.
 
-Given a field `k`, a derivation `D` on `k[t]`, an integer `n`,
-`b` in `k` and `c` in `k[t]`  with `D(t)` in `k` and `b≠0`, return either
+Given a field `k`, a derivation `D` on `k[t]` with `D(t)` in `k`, an integer `n`,
+`b≠0` in `k` and `c` in `k[t]`, return either
 `ρ=0`, in which case the equation `D(q)+b*q=c` has no solution of degree at most `n` in `k[t]`,
 or `ρ=1` and a solution `q` in `k[t]` of this equation with `degree(q)≤n`.
 
@@ -786,8 +786,8 @@ end
 
 Polynomial Risch differential equation, cancellation - hyperexponential case.
 
-Given a field `k`, a derivation `D` on `k[t]`, an integer `n`,
-`b` in `k` and `c` in `k[t]`  with `D(t)/t` in `k` and `b≠0`, return either
+Given a field `k`, a derivation `D` on `k[t]` with `D(t)/t` in `k`, an integer `n`,
+`b≠0` in `k` and `c` in `k[t]`, return either
 `ρ=0`, in which case the equation `D(q)+b*q=c` has no solution of degree at most `n` in `k[t]`,
 or `ρ=1` and a solution `q` in `k[t]` of this equation with `degree(q)≤n`.
 
@@ -889,7 +889,7 @@ function PolyRischDE(b::P, c::P, D::Derivation, n::Int=typemax(Int)) where
             return q, 1
         elseif ρ==2
             if ishypertangent(D)       
-                #=if contains_I(parent(b))  
+                if contains_I(parent(b))  
                     # Seems that PolyRischDE was called by CoupledDESystem,
                     # this case should be handled by CoupledDESystem.
                     return c, 101 + max(-1, m) # return new c, m
@@ -898,8 +898,7 @@ function PolyRischDE(b::P, c::P, D::Derivation, n::Int=typemax(Int)) where
                     η = divexact(MonomialDerivative(D), t^2+1)
                     b0 = b1 + n*t*η
                     return PolyRischDECancelTan(b0, c, D, n)
-                end=#
-                throw(NotImplemented("PolyRischDE: no cancellation, degree(b)==δ-1, hypertangent case"))                                        
+                end                
             else
                 H = MonomialDerivative(D)
                 throw(NotImplemented("PolyRischDE: no cancellation, degree(b)==δ-1, monomial derivative $H"))                        
@@ -909,10 +908,10 @@ function PolyRischDE(b::P, c::P, D::Derivation, n::Int=typemax(Int)) where
         end 
     # At this point only the cancellation case δ<=1, D!=d/dt is possible;
     # this is only compatible with primitive or hyperexponential.
-    #elseif contains_I(parent(b))
+    elseif contains_I(parent(b))
         # Seems that PolyRischDE was called by CoupledDESystem,
         # this case should be handled by CoupledDESystem.
-        #return c, 101 + max(-1, n) # return original c, n
+        return c, 101 + max(-1, n) # return original c, n
     elseif isprimitive(D)
         return PolyRischDECancelPrim(constant_coefficient(b), c, D, n)
     elseif ishyperexponential(D)

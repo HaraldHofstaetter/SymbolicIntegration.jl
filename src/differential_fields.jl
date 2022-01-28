@@ -1,5 +1,5 @@
 export Derivation, NullDerivation, BasicDerivation, ExtensionDerivation,
-   CoefficientLiftingDerivation,
+   CoefficientLiftingDerivation, TowerOfDifferentialFields,
    BaseDerivation, MonomialDerivative, domain, constant_field,
    isbasic, isprimitive, ishyperexponential, isnonlinear, ishypertangent,
    iscompatible, isnormal, isspecial, issimple, isreduced, is_Sirr1_eq_Sirr
@@ -267,7 +267,60 @@ function constant_roots(f::PolyElem{T}, D::Derivation; useQQBar::Bool=false) whe
         return roots(p)
     end
 end
-    
+
+"""
+    TowerOfDifferentialFields(Hs) -> K, (X, T₁,...,Tₙ), D
+
+Construct tower of differential fields.
+
+Given `Hs = [H₁,...,Hₙ]` where the `H_i` are fractions
+of multivariate polynomials in variables `x, t₁,...,tₙ` over a field `C`
+such that `Hᵢ` is a polynomial in `tᵢ` with coefficients  in `C(x, t₁,...,tᵢ₋₁)` (i.e., `Hᵢ` does not depend on `tᵢ₊₁,...,tₙ`),
+return a field `K = C(x)(t₁)...(tₙ)` isomorphic to `C(x, t₁,...,tₙ)` and a derivation `D` on `K` such that
+`K` is constructed by iteratively adjoining the indeterminates `x`, `t₁`,...,`tₙ`, `C` is the constant field
+of `D`, `D` is `d/dx` on `C(x)`, and `D` is iteratively extended from `C(x)(t₁)...(tᵢ₋₁)` to `C(x)(t₁)...(tᵢ)`
+such that `tᵢ` is monomial over `C(x)(t₁)...(tᵢ₋₁)` with `D(tᵢ)=Hᵢ=Hᵢ(x, t₁,....,tᵢ)`.
+The generators `x` of C(x) over C and `tᵢ` of `C(x)(t₁)...(tᵢ)` over `C(x)(t₁)...(tᵢ₋₁)` are returned
+as `X, T₁,...,Tₙ`.
+
+# Example  
+```julia
+R, (x, t1, t2) = PolynomialRing(QQ, [:x, :t1, :t2])
+Z = zero(R)//1 # zero element of the fraction field of R
+K, (X, T1, T2), D = TowerOfDifferentialFields([t1//x, (t2^2+1)*x*t1 + Z])
+```
+(Note: by adding `Z` to a polynomial we explicitely transform it to an element of the fraction field.)
+"""
+function TowerOfDifferentialFields(Hs::Vector{F})  where 
+    {T<:FieldElement, P<:MPolyElem{T}, F<:FracElem{P}}
+    n = length(Hs)
+    n>0 || error("height extension tower must be >= 1")
+    MF = parent(Hs[1])
+    MR = base_ring(MF)
+    nvars(MR) == n + 1 || error("number of monmials must be number of variables + 1")
+    syms = symbols(MR)
+    K = base_ring(MR)
+    gs = Any[zero(K) for i=1:n+1]    
+    Kt, gs[1] = PolynomialRing(K, syms[1])    
+    D = BasicDerivation(Kt)
+    K = FractionField(Kt)       
+    for i=1:n
+        Kt, gs[i+1] = PolynomialRing(K, syms[i+1])        
+        p = numerator(Hs[i])
+        q = denominator(Hs[i])
+        maximum(vcat(0, var_index.(vars(p)), var_index.(vars(q)))) <=i+1 ||
+            error("Hs[$(i)] may only depend on $(gens(MR)[1:i+1]))")
+        H = p(gs...)//q(gs...) 
+        isone(denominator(H)) ||
+            error("Hs[$(i)] must be a polynomial in $(gens(MR[i+1]))")
+        H = numerator(H)
+        D = ExtensionDerivation(Kt, D, H)
+        K = FractionField(Kt)       
+    end
+    K, tuple(gs...), D
+end
+
+
 """
     SplitFactor(p, D) -> (pₙ, pₛ)
 

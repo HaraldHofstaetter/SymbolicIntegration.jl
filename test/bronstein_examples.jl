@@ -359,4 +359,19 @@ end
 end
 
 
- 
+@testset "Chapter 8" begin   
+    @info "CoupledDECancelTan, example 8.4.1, p. 265"
+    QQx, x = PolynomialRing(Nemo.QQ, :x)
+    k = FractionField(QQx) 
+    kt, t = PolynomialRing(k, :t)
+    D = SI.ExtensionDerivation(kt, SI.BasicDerivation(k), 1 + t^2)    
+
+    b0 = 0//x
+    b2 = 4*x + 0//x
+    c1 = -t^2 + 2*t - 8*x^2 + 1
+    c2 = 2*(1 - 2*x) + 0*t
+    n = 2
+    q1, q2, ρ = SI.CoupledDECancelTan(b0, b2,  c1, c2, D, n)
+    expected = (t - 1, 2*x, 1)
+    @test (q1, q2, ρ) == expected
+end

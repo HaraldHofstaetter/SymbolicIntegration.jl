@@ -174,7 +174,7 @@ See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 
 """
 function CoupledDECancelTan(b0::T, b2::T,  c1::P, c2::P, D::Derivation, n::Int=typemax(Int)) where
     {T<:FieldElement, P<:PolyElem{T}} # here typemax(Int) represents +infinity
-    ishypertangentl(D) ||
+    ishypertangent(D) ||
         error("monomial of derivation D must be hypertangent")
     D0 = BaseDerivation(D)
     (iscompatible(b0, D0) && iscompatible(b2, D0)) || 
@@ -190,28 +190,27 @@ function CoupledDECancelTan(b0::T, b2::T,  c1::P, c2::P, D::Derivation, n::Int=t
             if ρ<=0
                 return no_solution
             end
-            return q1+Z, q2+Z, 1
+            return q1 + Z, q2 + Z, 1
         end
         return no_solution
     end
     t = gen(parent(c1))
     H = MonomialDerivative(D)
-    η = constant_coefficient(divexact(H, t^2+1))
-    ktI, I, DI = Complexify(FractionField(parent(c1), D)) # k(t)(√-1)    
-    p = t - I
-    _, _, I1, _ =  switch_t_i(ktI, DI) # k(√-1)(t)
-    z = backtransform(c1(I1), t, I) + backtransform(c2(I1), t, I)*I
+    η = constant_coefficient(divexact(H, t^2 + 1))
+    ktI, I, DI = Complexify(FractionField(parent(c1)), D) # k(t)(√-1)    
+    p = t - I    
+    z = c1(I) + c2(I)*I
     z1 = real(z)
-    @assert isopne(denominator(z1)) && degree(z1)<=0
-    z1 = constant_coefficient(z1)  # real(z) in k(t), z1 in k
+    @assert isone(denominator(z1)) && degree(numerator(z1))<=0
+    z1 = constant_coefficient(numerator(z1))  # real(z) in k(t), z1 in k
     z2 = imag(z)
-    @assert isone(denominator(z2)) && degree(z2)<=0
-    z2 = constant_coefficient(z2)  # imag(z) in k(t), z2 in k
+    @assert isone(denominator(z2)) && degree(numerator(z2))<=0
+    z2 = constant_coefficient(numerator(z2))  # imag(z) in k(t), z2 in k
     s1, s2, ρ = CoupledDESystem(b0, b2 - n*η, z1, z2, BaseDerivation(D))
     if ρ<=0
         return no_solution
     end
-    c = (c1 - z1 +n*η*(s1*t+s2) + (c2 - z2 + n*η*(s2*t-s1))*I)//p
+    c = (c1 - z1 + n*η*(s1*t + s2) + (c2 - z2 + n*η*(s2*t - s1))*I)//p
     d1 = real(c)
     @assert isone(denominator(d1))
     d1 = numerator(d1)
@@ -222,7 +221,7 @@ function CoupledDECancelTan(b0::T, b2::T,  c1::P, c2::P, D::Derivation, n::Int=t
     if ρ<=0
         return no_solution
     end
-    h1*t + h2 + s1, h2*t - h1 + s2
+    h1*t + h2 + s1, h2*t - h1 + s2, 1
 end
 
 

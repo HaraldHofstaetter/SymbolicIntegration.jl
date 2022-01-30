@@ -151,7 +151,7 @@ end
     @test (a, b, c, h, ρ) == expected
 
 
-    @info "RdeSpeciaDenominator, example 6.2.1, p. 190"
+    @info "RdeSpeciaDenominatorExp, example 6.2.1, p. 190"
     QQx, x = PolynomialRing(Nemo.QQ, :x)
     k = FractionField(QQx) 
     kt, t = PolynomialRing(k, :t)    
@@ -163,6 +163,19 @@ end
     a, b, c, h = SI.RdeSpecialDenomExp(a, b, c, D)
     expected = (t^2+2*x*t+x^2, t^2*1//x^2+(2//x-1)*t, t^2*1//x^2+(2//x-1)*t, t)
     @test (a, b, c, h) == expected
+
+
+    @info "RdeSpeciaDenominatorTan, example 6.2.2, p. 192"
+    QQx, x = PolynomialRing(Nemo.QQ, :x)
+    k = FractionField(QQx) 
+    kt, t = PolynomialRing(k, :t)    
+    D = ExtensionDerivation(kt, BasicDerivation(k), 1 + t^2)
+
+    a = t
+    b = (t - 1)*(t^2 + 1) + 0//t
+    c = 1 + 0//t
+    a1, b1, c1, h = SI.RdeSpecialDenomTan(a, b, c, D)
+    @test (a1, b1, c1, h) == (a, b, c, 1)
 
 
     @info "RdeBoundDegreePrim, example 6.3.1, p. 198"
@@ -181,7 +194,7 @@ end
     @test n==3
 
     
-    @info "RdeBoundDegreeBase, example 6.3.3, p. 199"
+    @info "RdeBoundDegreeBase, example 6.3.2, p. 199"
     QQt, t = PolynomialRing(Nemo.QQ, :t)
     D = BasicDerivation(QQt)
 
@@ -307,13 +320,29 @@ end
     QQx, x = PolynomialRing(Nemo.QQ, :x)
     k = FractionField(QQx) 
     kt, t = PolynomialRing(k, :t)
-    D = ExtensionDerivation(kt, BasicDerivation(k), 1+t^2)
+    D = ExtensionDerivation(kt, BasicDerivation(k), 1 + t^2)
+
     b = 1-t
     c = t^3+t^2-2*x*t-2*x
     h, m, c, ρ   = SI.PolyRischDENoCancel3(b, c, D)
-    expected = (t^2,  1, -2*(x+1)*t-2*x, 2)
+    expected = (t^2,  1, -2*(x + 1)*t - 2*x, 2)
     @test (h, m, c, ρ) == expected
+
+
+    @info "PolyRischDECancelTan, example 6.6.1, p. 216"
+    QQx, x = PolynomialRing(Nemo.QQ, :x)
+    k = FractionField(QQx) 
+    kt, t = PolynomialRing(k, :t)
+    D = ExtensionDerivation(kt, BasicDerivation(k), 1 + t^2)
+
+    b0 = 1 + 0//x
+    c = -2*(x + 1)*t - 2*x
+    n = 1
+    q, ρ = SI.PolyRischDECancelTan(b0, c, D, n)
+    expected = (-2*x*t, 1)
+    @test  (q, ρ) == expected
 end
+
 
 @testset "Chapter 7" begin   
     @info "ParametricLogarithmicDerivative, example 7.3.1, p. 254"

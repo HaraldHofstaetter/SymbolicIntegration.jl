@@ -945,7 +945,7 @@ function PolyRischDECancelTan(b0::T, c::P, D::Derivation, n::Int=typemax(Int)) w
     end
     t = gen(parent(c))
     p = t^2 + 1
-    η = divexact(MonomialDerivative(D), p)
+    η = constant_coefficient(divexact(MonomialDerivative(D), p))
     r = rem(c, p)
     c0 = coeff(r, 0)
     c1 = coeff(r, 1)

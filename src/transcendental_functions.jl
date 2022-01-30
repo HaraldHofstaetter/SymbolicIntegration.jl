@@ -294,14 +294,14 @@ function IntegrateHypertangentReduced(p::F, D::Derivation) where
 end
 
 """
-    Integrate(f, D) -> (αs, lgs, g1, ρ)
+    Integrate(f, D) -> (αs, lgs, g1, r, ρ)
 
 Given a field `k` (with `√-1` not in `k` in the hypertangent case), a derivation
 `D` on `k(t)`, and `f` in `k(t)`, 
 return either `ρ=1`, `αs=[α₁,...αᵣ]` with `αᵢ` in `Const(k)`, `lgs=[lg₁,...lgᵣ]` 
 with `lgᵢ` in `k[t]`,
-and `g1` in `k(t)`  such that `g=g1+∑αᵢ*log(lgᵢ)` is elementary over `k(t)` and `f-D(g)` is in `k`, or
-`ρ=0` and such `αs`, `lgs` and `g1` such that `f-D(g)` does not have an elementary integral over
+and `g1` in `k(t)`  such that `g=g1+∑αᵢ*log(lgᵢ)` is elementary over `k(t)` and `r=f-D(g)` is in `k`, or
+`ρ=0` and such `αs`, `lgs` and `g1` such that `r=f-D(g)` does not have an elementary integral over
 `k(t)`.
 
 This function corresponds to `IntegreatePrimitive`, `IntegrateHyperexponential` and
@@ -322,22 +322,22 @@ function Integrate(f:: F, D::Derivative) where
     if isprimitive(D)
         @assert isone(denominator(p))
         q, ρ = IntegratePrimitivePolynomial(numerator(p), D)
-        return αs, lgs, g1 + q, ρ
+        return αs, lgs, g1 + q, f - D(g1 + q) - Dg2, ρ
     elseif ishyperexponential(D)
         q, ρ = IntegrateHyperexponentialPolynomial(p, D)
-        return αs, lgs, g1 + q, ρ
+        return αs, lgs, g1 + q, f - D(g1 + q) - Dg2, ρ
     elseif ishypertangent(D)        
         q1, ρ = IntegrateHypertangentReduced(p, D)
         if ρ==0
-            return αs, lgs,  g1 + q, 0
+            return αs, lgs,  g1 + q, f - D(g1 + q1) - Dg2, 0
         end
         q2, c = IntegrateHypertangentPolynomial(p - D(q1), D)
         if D(c)==0
             push!(αs, c)
             push!(lgs, t^2 + 1)
-            return αs, lgs, g1 + q1 + q2, 1 
+            return αs, lgs, g1 + q1 + q2, f - D(g1 + q1 + q2) - Dg2, 1 
         else
-            return αs, lgs, g1 + q1 + q2, 0
+            return αs, lgs, g1 + q1 + q2, f - D(g1 + q1 + q2) - Dg2, 0
         end
     else
         H = MonomialDerivative(D)

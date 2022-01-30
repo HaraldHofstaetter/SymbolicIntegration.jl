@@ -211,7 +211,7 @@ end
 
 function TowerOfDifferentialFields(f, x::SymbolicUtils.Sym)
     p, funs, vars, args = analyze_expr(f, x)    
-    R, vars_mpoly = PolynomialRing(QQ, Symbol.(vars))
+    R, vars_mpoly = PolynomialRing(Nemo.QQ, Symbol.(vars))
     Z = zero(R)//one(R)
     args_mpoly = typeof(Z)[transform_symtree_to_mpoly(a, vars, vars_mpoly) + Z for a in args]    
     p_mpoly = transform_symtree_to_mpoly(p, vars, vars_mpoly)           

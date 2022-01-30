@@ -131,7 +131,7 @@ end
 Given the output `ss=[s₁,...,sₘ]`, `sᵢ` in `k[z]`, `Ss=[S₁,...Sₘ]`, `Sᵢ` in `k[z,t]` 
 of `ResidueReduce` and the derivation D on k(t) which was used by `ResidueReduce`
 return  `αs=[α₁,...,αᵣ]` consisting of the roots of those `sᵢ` that have all its roots in `Const(k)` and the corresponding
-`gs=[g₁,...,gᵣ]` where `gⱼ` in `k[t]` and`gⱼ(t) = Sᵢ(αⱼ,t)`. The remaining `sᵢ` that have at least one root not in `Const(k)`
+`gs=[g₁,...,gᵣ]` where `gⱼ` in `k[t]` and `gⱼ(t) = Sᵢ(αⱼ,t)`. The remaining `sᵢ` that have at least one root not in `Const(k)`
 and the corresponding `Sᵢ` are returned in `ss1` and `Ss1`.
 """
 function ConstantPart(ss::Vector{P}, Ss::Vector{PP}, D::Derivation) where  {P<:PolyElem, PP<:PolyElem{P}}
@@ -262,7 +262,7 @@ end
 Integration of hypertangent reduced elements.
 
 Given a field `k` not conataining `√-1` a derivation `D` on `k(t)` such that `t` is a hypertangent monomial over `k`
-and `p` in `k⟨t⟩`, return return either `ρ=1` and `q` in `k⟨t⟩` such that `p-D(q)` is in `k[t]`, or 
+and `p` in `k⟨t⟩`, return either `ρ=1` and `q` in `k⟨t⟩` such that `p-D(q)` is in `k[t]`, or 
 `ρ=0` and  `q` in `k⟨t⟩` such that  `p-D(q)` does not have an elementary integral over `k(t).
 
 See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 5.10, p. 169.
@@ -291,6 +291,58 @@ function IntegrateHypertangentReduced(p::F, D::Derivation) where
     q0 = (c*t + d)//Q^m
     q, ρ = IntegrateHypertangentReduced(p - D(q0), D)
     q + q0, ρ
+end
+
+"""
+    Integrate(f, D) -> (αs, lgs, g1, ρ)
+
+Given a field `k` (with `√-1` not in `k` in the hypertangent case), a derivation
+`D` on `k(t)`, and `f` in `k(t)`, 
+return either `ρ=1`, `αs=[α₁,...αᵣ]` with `αᵢ` in `Const(k)`, `lgs=[lg₁,...lgᵣ]` 
+with `lgᵢ` in `k[t]`,
+and `g1` in `k(t)`  such that `g=g1+∑αᵢ*log(lgᵢ)` is elementary over `k(t)` and `f-D(g)` is in `k`, or
+`ρ=0` and such `αs`, `lgs` and `g1` such that `f-D(g)` does not have an elementary integral over
+`k(t)`.
+
+This function corresponds to `IntegreatePrimitive`, `IntegrateHyperexponential` and
+`IntegrateTangent` joined together, see [Bronstein's book](https://link.springer.com/book/10.1007/b138171), 
+Section 5.8 p. 160, Section 5.9 p. 163, and Section 5.10 p. 172, respectively.
+"""
+function Integrate(f:: F, D::Derivative) where
+    {T<:FieldElement, P<:PolyElem{T}, F<:FracElem{P}}
+    g1, h, r = HermiteReduce(f, D)
+    ss, Ss, ρ = ResidueReduce(h, D)
+    αs, lgs, ss1, Ss1 = ConstantPart(ss, Ss, D)
+    @assert isempty(ss1) # TODO: case ss1 not empty, i.e. non-rational roots ...
+    if ρ<=0 
+        return αs, lgs, g1, 0
+    end
+    Dg2 = sum([αs[i]*D(lgs[i])//lgs[i] for i=1:length(αs) ])
+    p = h - Dg2 + r
+    if isprimitive(D)
+        @assert isone(denominator(p))
+        q, ρ = IntegratePrimitivePolynomial(numerator(p), D)
+        return αs, lgs, g1 + q, ρ
+    elseif ishyperexponential(D)
+        q, ρ = IntegrateHyperexponentialPolynomial(p, D)
+        return αs, lgs, g1 + q, ρ
+    elseif ishypertangent(D)        
+        q1, ρ = IntegrateHypertangentReduced(p, D)
+        if ρ==0
+            return αs, lgs,  g1 + q, 0
+        end
+        q2, c = IntegrateHypertangentPolynomial(p - D(q1), D)
+        if D(c)==0
+            push!(αs, c)
+            push!(lgs, t^2 + 1)
+            return αs, lgs, g1 + q1 + q2, 1 
+        else
+            return αs, lgs, g1 + q1 + q2, 0
+        end
+    else
+        H = MonomialDerivative(D)
+        throw(NotImplemented("Integrate: monomial deivative =$H"))
+    end
 end
 
 """

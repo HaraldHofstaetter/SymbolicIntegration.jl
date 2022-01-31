@@ -1,7 +1,5 @@
-using SymbolicIntegration
-using Nemo
-
-QQx, x = PolynomialRing(QQ, "x")
+using SymbolicIntegration, SymbolicUtils
+@syms x
 
 #Integration Test Problems from 
 #https://rulebasedintegration.org/testProblems.html
@@ -93,7 +91,7 @@ problems = [
 
 
 for prob in problems
-    result = SymbolicIntegration.integrate(prob[1])
+    result = integrate(prob[1], x)
     println("∫", prob[1], "dx = ", result)
     println("expected: ", prob[4])
     println("--------------------------------------------------------------------")

@@ -308,7 +308,7 @@ This function corresponds to `IntegreatePrimitive`, `IntegrateHyperexponential` 
 `IntegrateTangent` joined together, see [Bronstein's book](https://link.springer.com/book/10.1007/b138171), 
 Section 5.8 p. 160, Section 5.9 p. 163, and Section 5.10 p. 172, respectively.
 """
-function Integrate(f:: F, D::Derivative) where
+function Integrate(f:: F, D::Derivation) where
     {T<:FieldElement, P<:PolyElem{T}, F<:FracElem{P}}
     g1, h, r = HermiteReduce(f, D)
     ss, Ss, ρ = ResidueReduce(h, D)

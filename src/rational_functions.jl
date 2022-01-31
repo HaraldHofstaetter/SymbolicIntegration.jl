@@ -252,7 +252,14 @@ function IntegrateRationalFunction(f::FracElem{P}) where {T<:FieldElement, P<:Po
     # See Bronstein's book, Section 2.5, p. 52 
     g, h = HermiteReduce(numerator(f), denominator(f))
     Q, R = divrem(numerator(h), denominator(h))
-    result = [IdTerm(integral(Q)), IdTerm(g)]
+    result = Term[]
+    IQ = integral(Q)
+    if !iszero(IQ)
+        push!(result, IdTerm(IQ))
+    end
+    if !iszero(g)
+        push!(result, IdTerm(g))
+    end
     if !iszero(R)
         SL =  IntRationalLogPart(R, denominator(h), make_monic=true, symbol=:α)
         result = vcat(result, [Eval(h, real_output=true) for h in SL]...)
@@ -260,7 +267,3 @@ function IntegrateRationalFunction(f::FracElem{P}) where {T<:FieldElement, P<:Po
     result
 end
 
-export integrate
-
-integrate(f::FracElem{P}) where {T<:FieldElement, P<:PolyElem{T}} =
-    Result(IntegrateRationalFunction(f))

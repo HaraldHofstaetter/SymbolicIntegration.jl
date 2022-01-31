@@ -21,16 +21,16 @@ end
 
 abstract type Term end
 
-struct IdTerm{T<:RingElement} <: Term
-    arg::T
+struct IdTerm <: Term
+    arg::RingElement
 end
 
 Base.show(io::IO, t::IdTerm) = show(io, t.arg)
 
-struct FunctionTerm{T<:RingElement} <: Term
+struct FunctionTerm <: Term
     op::Function
-    coeff
-    arg::T
+    coeff::RingElement
+    arg::RingElement
 end
 
 function Base.show(io::IO, t::FunctionTerm) 

@@ -12,6 +12,4 @@ include("parametric_problems.jl")
 include("coupled_differential_systems.jl")
 include("backend.jl")
 
-include("integrate.jl")
-
 end # module

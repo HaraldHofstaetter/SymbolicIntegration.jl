@@ -114,17 +114,6 @@ function IntRationalLogPart(A::PolyElem{T}, D::PolyElem{T}; make_monic::Bool=fal
     [SumOfLogTerms(Q, S) for (Q, S) in zip(Qs, Ss)]
 end
 
-function IntegrateRationalFunction(f::FracElem{P}; symbol=:α) where {T<:FieldElement, P<:PolyElem{T}}    
-    # See Bronstein's book, Section 2.5, p. 52 
-    g, h = HermiteReduce(numerator(f), denominator(f))
-    Q, R = divrem(numerator(h), denominator(h))
-    result = [IdTerm(integral(Q)), IdTerm(g)]
-    if !iszero(R)
-        result = vcat(result, IntRationalLogPart(R, denominator(h), make_monic=true, symbol=symbol)...)
-    end
-    result
-end
-
 function Complexify(R::PolyElem{T}; symbols=[:α, :β]) where T <: FieldElement
     F = base_ring(R)
     Fuv, uv = PolynomialRing(F, symbols)
@@ -196,3 +185,82 @@ function LogToReal(t::SumOfLogTerms; symbols=[:α, :β]) #{T, PP}) where {T<:Fie
     SumOfRealTerms(t.R, t.S, P, Q, FunctionTerm(log, 1, A^2+B^2), LogToAtan(A, B))
 end
 
+function positive_constant_coefficient(f::PolyElem)
+    if constant_coefficient(f)<0
+        return -f
+    else
+        return f
+    end
+end
+
+function rationalize_if_possible(x::qqbar) #Nemo algebraic number type
+    if degree(x)==1
+        return fmpq(x)
+    else
+        return x
+    end
+end
+
+function rationalize_if_possible(f::PolyElem{qqbar})
+    if maximum(degree.(coefficients(f)))==1
+        return polynomial(Nemo.QQ, fmpq.(coefficients(f)))
+    else
+        return f
+    end
+end
+
+function Eval(t::SumOfLogTerms; real_output::Bool=true)
+    var = string(symbols(parent(t.S))[1])
+    F = base_ring(t.R)
+    as = roots(t.R)
+    if length(as)==degree(t.R)    
+        return [FunctionTerm(log, a, positive_constant_coefficient(
+            polynomial(F, [c(a) for c in coefficients(t.S)], var))) for a in as]
+    end
+    
+    as = roots(t.R, QQBar)  
+    us = real.(as)
+    vs = imag.(as)
+    if iszero(vs) || !real_output
+        return [FunctionTerm(log, rationalize_if_possible(a), rationalize_if_possible(positive_constant_coefficient(
+            polynomial(QQBar, [c(a) for c in coefficients(t.S)], var)))) for a in as]
+    end
+    r = LogToReal(t)
+    result = Term[]
+    for i = 1:length(as)
+        a = as[i]
+        u, v = us[i], vs[i]
+        if iszero(v)
+            push!(result, FunctionTerm(log, rationalize_if_possible(u), rationalize_if_possible(positive_constant_coefficient(
+            polynomial(QQBar, [c(u) for c in coefficients(r.S)], var)))))
+        elseif v>0
+            if !iszero(u)
+                push!(result, FunctionTerm(log, rationalize_if_possible(r.LT.coeff*u), rationalize_if_possible(positive_constant_coefficient(
+                polynomial(QQBar, [numerator(c)(u, v)//denominator(c)(u, v) for c in coefficients(r.LT.arg)], var)))))
+            end
+            for AT in r.ATs
+                push!(result, FunctionTerm(atan, rationalize_if_possible(AT.coeff*v), rationalize_if_possible(
+                polynomial(QQBar, [numerator(c)(u, v)//denominator(c)(u, v) for c in coefficients(AT.arg)], var))))
+            end
+        end
+    end
+    result
+end
+
+
+function IntegrateRationalFunction(f::FracElem{P}) where {T<:FieldElement, P<:PolyElem{T}}    
+    # See Bronstein's book, Section 2.5, p. 52 
+    g, h = HermiteReduce(numerator(f), denominator(f))
+    Q, R = divrem(numerator(h), denominator(h))
+    result = [IdTerm(integral(Q)), IdTerm(g)]
+    if !iszero(R)
+        SL =  IntRationalLogPart(R, denominator(h), make_monic=true, symbol=:α)
+        result = vcat(result, [Eval(h, real_output=true) for h in SL]...)
+    end
+    result
+end
+
+export integrate
+
+integrate(f::FracElem{P}) where {T<:FieldElement, P<:PolyElem{T}} =
+    Result(IntegrateRationalFunction(f))

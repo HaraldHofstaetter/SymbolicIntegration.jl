@@ -88,6 +88,9 @@ function ResidueReduce(f::F, D::Derivation; symbol=:α) where
     iscompatible(f, D) || error("rational function f must be in the domain of derivation D")
     issimple(f, D) || error("rational function f must be simple with respect to derivation D")
     d = denominator(f)
+    if isone(d)
+        return PolyElem[], PolyElem{PolyElem}[], 1
+    end
     (p,a) = divrem(numerator(f), d)
     # For SubResultant with respect to t we have to construct the 
     # polynomial ring k[z][t] with z, t in this order (!)
@@ -137,7 +140,7 @@ and the corresponding `Sᵢ` are returned in `ss1` and `Ss1`.
 function ConstantPart(ss::Vector{P}, Ss::Vector{PP}, D::Derivation) where  {P<:PolyElem, PP<:PolyElem{P}}
     length(ss)==length(Ss) || error("lengths must match")
     if isempty(ss)
-        return [], [], ss, Ss
+        return Term[], ss, Ss
     end
     Ss1 = eltype(Ss)[]
     ss1 = eltype(ss)[]    
@@ -157,7 +160,8 @@ function ConstantPart(ss::Vector{P}, Ss::Vector{PP}, D::Derivation) where  {P<:P
             push!(ss1, ss[i])
         end
     end
-    αs, gs, ss1, Ss1
+    #αs, gs, ss1, Ss1
+    Term[FunctionTerm(log, αs[i], gs[i]) for i=1:length(αs) ], ss1, Ss1
 end
 
 
@@ -310,40 +314,66 @@ Section 5.8 p. 160, Section 5.9 p. 163, and Section 5.10 p. 172, respectively.
 """
 function Integrate(f:: F, D::Derivation) where
     {T<:FieldElement, P<:PolyElem{T}, F<:FracElem{P}}
+    if isbasic(D)
+        return IntegrateRationalFunction(f), zero(base_ring(parent(f))), 1
+    end
     g1, h, r = HermiteReduce(f, D)
     ss, Ss, ρ = ResidueReduce(h, D)
-    αs, lgs, ss1, Ss1 = ConstantPart(ss, Ss, D)
-    @assert isempty(ss1) # TODO: case ss1 not empty, i.e. non-rational roots ...
-    if ρ<=0 
-        return αs, lgs, g1, 0
+    g2, ss1, Ss1 = ConstantPart(ss, Ss, D)
+    @assert isempty(ss1) # TODO: case ss1 not empty, i.e. non-rational roots ...    
+    if isempty(g2)
+        Dg2 = zero(f)
+    else
+        Dg2 = sum([lt.coeff*D(lt.arg)//lt.arg for lt in g2])
     end
-    Dg2 = sum([αs[i]*D(lgs[i])//lgs[i] for i=1:length(αs) ])
+    if ρ<=0 
+        g = vcat(IdTerm(g1), g2)
+        return g, f - D(g1) - Dg2, 0
+    end
     p = h - Dg2 + r
     if isprimitive(D)
         @assert isone(denominator(p))
         q, ρ = IntegratePrimitivePolynomial(numerator(p), D)
-        return αs, lgs, g1 + q, f - D(g1 + q) - Dg2, ρ
+        g = vcat(IdTerm(g1 + q), g2)
+        f1 = f - D(g1 + q) - Dg2        
     elseif ishyperexponential(D)
         q, ρ = IntegrateHyperexponentialPolynomial(p, D)
-        return αs, lgs, g1 + q, f - D(g1 + q) - Dg2, ρ
+        g = vcat(IdTerm(g1 + q), g2)
+        f1 = f - D(g1 + q) - Dg2        
     elseif ishypertangent(D)        
         q1, ρ = IntegrateHypertangentReduced(p, D)
-        if ρ==0
-            return αs, lgs,  g1 + q, f - D(g1 + q1) - Dg2, 0
-        end
-        q2, c = IntegrateHypertangentPolynomial(p - D(q1), D)
-        if D(c)==0
-            push!(αs, c)
-            push!(lgs, t^2 + 1)
-            return αs, lgs, g1 + q1 + q2, f - D(g1 + q1 + q2) - Dg2, 1 
+        if ρ<=0
+            g = vcat(IdTerm(g1 + q1), g2)
+            f1 = f - D(g1 + q1) - Dg2        
         else
-            return αs, lgs, g1 + q1 + q2, f - D(g1 + q1 + q2) - Dg2, 0
+            @assert isone(denominator(p - D(q1)))
+            q2, c = IntegrateHypertangentPolynomial(numerator(p - D(q1)), D)
+            if iszero(BaseDerivation(D)(c))
+                t = gen(base_ring(parent(f)))
+                η = constant_coefficient(divexact(MonomialDerivative(D), 1 + t^2))
+                g = vcat(IdTerm(g1 + q1 + q2), g2, FunctionTerm(log, c, 1 + t^2))
+                f1 = f - D(g1 + q1 + q2) - Dg2 - 2*c*η     
+            else
+                g = vcat(IdTerm(g1 + q1 + q2), g2)
+                f1 = f - D(g1 + q1 + q2) - Dg2  
+                ρ = 0      
+            end
         end
     else
         H = MonomialDerivative(D)
         throw(NotImplemented("Integrate: monomial deivative =$H"))
     end
+    if ρ<=0
+        return g, f1, ρ
+    end
+    @assert isone(denominator(f1)) && degree(numerator(f1)) <= 0
+    f1 = constant_coefficient(numerator(f1))
+    h, f2,  ρ = Integrate(f1, BaseDerivation(D))
+    vcat(h, g), f2, ρ
 end
+
+
+
 
 """
     InFieldDerivative(f, D) -> (u, ρ)

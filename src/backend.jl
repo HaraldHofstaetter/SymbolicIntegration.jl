@@ -1,4 +1,5 @@
 using SymbolicUtils
+using SymbolicIntegration
 
 
 """
@@ -55,7 +56,7 @@ function TowerOfDifferentialFields(Hs::Vector{F})  where
 end
 
 """
-    transform_mpoly_to _tower(f, gs) -> f1
+    transform_mpoly_to_tower(f, gs) -> f1
 
 Transform elements of `C(x,t₁,...,tₙ)` to elements of `C(x)(t₁)...(tₙ)`.
 
@@ -74,6 +75,70 @@ f1 = transform_mpoly_to_tower(f, gs)  # element of K
 function transform_mpoly_to_tower(f::F, gs::Vector) where 
     {T<:FieldElement, P<:MPolyElem{T}, F<:FracElem{P}}
     numerator(f)(gs...)//denominator(f)(gs...)
+end
+
+function height(K::F) where F<:AbstractAlgebra.Field
+    0
+end
+
+function height(K::F) where
+    {T<:FieldElement, P<:PolyElem{T}, F<:FracField{P}}
+    height(base_ring(base_ring(K)))+1
+end
+
+function height(R::P) where
+    {T<:FieldElement, P<:PolyRing{T}}
+    height(base_ring(R))+1
+end
+
+function subst_tower(t::fmpq, subs::Vector, h::Int=0) 
+    t = Rational(t)
+    if isone(denominator(t))
+        return numerator(t)
+    else
+        return t
+    end
+end
+
+function subst_tower(f::F, vars::Vector, h::Int) where
+    {T<:FieldElement, P<:PolyElem{T}, F<:FracElem{P}}
+    subst_tower(numerator(f), vars, h)//subst_tower(denominator(f), vars, h)
+end
+
+function subst_tower(p::P, vars::Vector, h::Int) where
+    {T<:FieldElement, P<:PolyElem{T}}
+    if iszero(p)
+        return zero(vars[1])
+    end
+    c = collect(coefficients(p))        
+    sum([subst_tower(c[i], vars, h - 1)*vars[h]^(i-1) for i=1:length(c)])
+end
+
+function subst_tower(f::F, vars::Vector) where
+    {T<:FieldElement, P<:PolyElem{T}, F<:FracElem{P}}
+    h = height(parent(f))
+    subst_tower(f, vars, h)
+end
+
+function subst_tower(p::P, vars::Vector) where
+    {T<:FieldElement, P<:PolyElem{T}}
+    h = height(parent(p))
+    subst_tower(p, vars, h)
+end
+
+function subst_tower(t::IdTerm, subs::Vector)
+    subst_tower(t.arg, subs)
+end
+
+function subst_tower(t::FunctionTerm, subs::Vector)
+    subst_tower(t.coeff, subs)*t.op(subst_tower(t.arg, subs))
+end
+
+function subst_tower(ts::Vector{Term}, subs::Vector)
+    if isempty(ts)
+        return 0
+    end
+    sum([subst_tower(t, subs) for t in ts])
 end
 
 
@@ -165,11 +230,12 @@ function transform_symtree_to_mpoly(f::SymbolicUtils.Pow, vars::Vector, vars_mpo
     transform_symtree_to_mpoly(as[1], vars, vars_mpoly)^as[2]
 end
 
-function TowerOfDifferentialFields(Hs::Vector{Function}, args::Vector{F})  where 
+
+
+function TowerOfDifferentialFields(terms::Vector{Term})  where 
     {T<:FieldElement, P<:MPolyElem{T}, F<:FracElem{P}}
-    n = length(args)
-    n == length(Hs) || error("number of Hs must be equal number of args")    
-    MF = parent(args[1])
+    n = length(terms)
+    MF = parent(terms[1].arg)
     MR = base_ring(MF)
     nvars(MR) == n || error("number of args must be number of variables")
     syms = symbols(MR)
@@ -179,44 +245,52 @@ function TowerOfDifferentialFields(Hs::Vector{Function}, args::Vector{F})  where
     D = BasicDerivation(Kt)
     K = FractionField(Kt)       
     for i=2:n
-        f = transform_mpoly_to_tower(args[i], gs) # needs old gs
+        f = transform_mpoly_to_tower(terms[i].arg, gs) # needs old gs
         Kt, gs[i] = PolynomialRing(K, syms[i])  
         t = gs[i]
-        Z = 0*t
-        H = Hs[i](t, f, D) + Z     
-        D = ExtensionDerivation(Kt, D, H)
+
+        op = terms[i].op
+        if op == exp
+            H = t*D(f)
+        elseif op == log
+            H = D(f)//f
+        elseif op == tan
+            H = (t^2+1)*D(f)
+        elseif op == atan
+            H = D(f)//(f^2+1)
+        else
+            @assert false # never reach this point
+        end
+
+        D = ExtensionDerivation(Kt, D, H + 0*t)
         K = FractionField(Kt)       
     end
     K, gs, D
 end
 
-function get_H(fun::SymbolicUtils.Sym)
-    return  (t, f, D::Derivation) -> 1
-end        
 
-function get_H(fun::SymbolicUtils.Term)
-    op = operation(fun)
-    if op == exp
-        return  (t, f, D::Derivation) -> t*D(f)        
-    elseif op == log
-        return  (t, f, D::Derivation) -> D(f)//f 
-    elseif op == tan
-        return  (t, f, D::Derivation) -> (t^2+1)*D(f)
-    elseif op == atan
-        return  (t, f, D::Derivation) -> D(f)//(f^2+1)
-    else
-        @assert false # never reach this point
-    end
-end
+@syms ∫(f, x)
 
-function TowerOfDifferentialFields(f, x::SymbolicUtils.Sym)
+function integrate(f::SymbolicUtils.Symbolic, x::SymbolicUtils.Sym)
     p, funs, vars, args = analyze_expr(f, x)    
     R, vars_mpoly = PolynomialRing(Nemo.QQ, Symbol.(vars))
     Z = zero(R)//one(R)
     args_mpoly = typeof(Z)[transform_symtree_to_mpoly(a, vars, vars_mpoly) + Z for a in args]    
+    terms = vcat(IdTerm(args_mpoly[1]), Term[FunctionTerm(operation(funs[i]), 1, args_mpoly[i]) for i=2:length(funs)])
     p_mpoly = transform_symtree_to_mpoly(p, vars, vars_mpoly)           
-    Hs = [get_H(fun) for fun in funs]
-    K, gs, D = TowerOfDifferentialFields(Hs, args_mpoly)
-    p = transform_mpoly_to_tower(p_mpoly + Z, gs)
-    K, gs, D, p
+    _, gs, D = TowerOfDifferentialFields(terms)
+    p = transform_mpoly_to_tower(p_mpoly + Z, gs)    
+    g, r, ρ = Integrate(p, D)
+    if ρ<=0
+        return subst_tower(g, funs) + ∫(subst_tower(r, funs), x)
+    else
+        return subst_tower(g, funs)
+    end
 end
+
+
+export integrate
+
+#function integrate(f::FracElem{P}) where {T<:FieldElement, P<:PolyElem{T}} 
+#    Result(IntegrateRationalFunction(f))
+#end

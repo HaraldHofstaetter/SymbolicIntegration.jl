@@ -104,7 +104,7 @@ function ResidueReduce(f::F, D::Derivation; symbol=:α) where
     κD = CoefficientLiftingDerivation(kz, BaseDerivation(D))
     ns, ss = SplitSquarefreeFactor(r, κD)    
     ds = degree.(ss)
-    ss = [ss[i] for i=1:length(ss) if ds[i]>0]
+    ss = typeof(d)[ss[i] for i=1:length(ss) if ds[i]>0]
     Ss = typeof(t)[] 
     ii = 1
     for i=1:length(ds)

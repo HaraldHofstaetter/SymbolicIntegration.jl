@@ -3,7 +3,7 @@ __precompile__()
 module SymbolicIntegration
 
 include("general.jl")
-include("result_types.jl")
+#include("result_types.jl")
 include("rational_functions.jl")
 include("differential_fields.jl")
 include("complex_fields.jl")

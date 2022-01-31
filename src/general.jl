@@ -18,6 +18,64 @@ struct AlgorithmFailed <: Exception
 end
 
 
+
+abstract type Term end
+
+struct IdTerm{T<:RingElement} <: Term
+    arg::T
+end
+
+Base.show(io::IO, t::IdTerm) = show(io, t.arg)
+
+struct FunctionTerm{T<:RingElement} <: Term
+    op::Function
+    coeff
+    arg::T
+end
+
+function Base.show(io::IO, t::FunctionTerm) 
+    if iszero(t.coeff)
+        print("0")
+        return
+    end
+    if iszero(t.coeff+one(t.coeff))
+        print(io, "-")
+    elseif !isone(t.coeff)
+        s = string(t.coeff)
+        if findnext("+", s, 2)!==nothing || findnext("-", s, 2)!==nothing        
+            print(io, "(", s, ")")
+        else
+            print(io, s)
+        end
+        print(io,*)
+    end
+    print(io, t.op, "(")
+    show(io, t.arg)
+    print(io, ")")   
+end
+
+struct Result
+    t::Vector{Term}
+ end
+ 
+ function Base.show(io::IO, r::Result)
+     if length(r.t)==0
+         print(io, "0")
+         return
+     end
+     show(io, r.t[1])
+     for i=2:length(r.t)
+         s = string(r.t[i])
+         if s[1]!='+' && s[1]!='-'
+             print(io, " + ", s)
+         else        
+             print(io, " ", s[1], " ", s[2:end])
+         end
+     end
+ end
+ 
+
+
 isrational(x::T) where T<:Integer = true
 
 isrational(x::T) where T<:Rational = true

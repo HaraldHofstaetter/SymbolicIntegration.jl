@@ -63,7 +63,7 @@ function HermiteReduce(A::PolyElem{T}, D::PolyElem{T}) where T <: FieldElement
     return g, A//Dstar
 end
 
-struct SumOfLogTerms{T<:FieldElement, P<:PolyElem{T}} <: ResultTerm
+struct SumOfLogTerms{T<:FieldElement, P<:PolyElem{T}} <: Term
     R::P
     S::PolyElem{P}
 end
@@ -145,22 +145,22 @@ function LogToAtan(A::PolyElem{T}, B::PolyElem{T}) where T <: FieldElement
     # See Bronstein's book, Section 2.8, p. 63 
     Q, R = divrem(A, B)
     if iszero(R)
-        return [AtanTerm(2, Q)]
+        return [FunctionTerm(atan, 2, Q)]
     end
     if degree(A)<degree(B)
         return LogToAtan(-B, A)
     end
     G, D, C = gcdx(B, -A)
-    return vcat(AtanTerm(2, divexact(A*D+B*C, G)), LogToAtan(D, C))
+    return vcat(FunctionTerm(atan, 2, divexact(A*D+B*C, G)), LogToAtan(D, C))
 end
 
-struct SumOfRealTerms <: ResultTerm
+struct SumOfRealTerms <: Term
     R
     S
     P
     Q
-    LT::LogTerm
-    ATs::Vector{AtanTerm}
+    LT::Term # log term
+    ATs::Vector{Term} #atan terms
 end
 
 function Base.show(io::IO, t::SumOfRealTerms)
@@ -193,6 +193,6 @@ function LogToReal(t::SumOfLogTerms; symbols=[:α, :β]) #{T, PP}) where {T<:Fie
     cc =[Complexify(c) for c in coefficients(t.S)]
     A = Kx([c[1] for c in cc])
     B = Kx([c[2] for c in cc])
-    SumOfRealTerms(t.R, t.S, P, Q, LogTerm(1, A^2+B^2), LogToAtan(A, B))
+    SumOfRealTerms(t.R, t.S, P, Q, FunctionTerm(log, 1, A^2+B^2), LogToAtan(A, B))
 end
 

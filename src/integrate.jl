@@ -30,7 +30,7 @@ function Eval(t::SumOfLogTerms; real_output::Bool=true)
     F = base_ring(t.R)
     as = roots(t.R)
     if length(as)==degree(t.R)    
-        return [LogTerm(a, positive_constant_coefficient(
+        return [FunctionTerm(log, a, positive_constant_coefficient(
             polynomial(F, [c(a) for c in coefficients(t.S)], var))) for a in as]
     end
     
@@ -38,24 +38,24 @@ function Eval(t::SumOfLogTerms; real_output::Bool=true)
     us = real.(as)
     vs = imag.(as)
     if iszero(vs) || !real_output
-        return [LogTerm(rationalize_if_possible(a), rationalize_if_possible(positive_constant_coefficient(
+        return [FunctionTerm(log, rationalize_if_possible(a), rationalize_if_possible(positive_constant_coefficient(
             polynomial(QQBar, [c(a) for c in coefficients(t.S)], var)))) for a in as]
     end
     r = LogToReal(t)
-    result = ResultTerm[]
+    result = Term[]
     for i = 1:length(as)
         a = as[i]
         u, v = us[i], vs[i]
         if iszero(v)
-            push!(result, LogTerm(rationalize_if_possible(u), rationalize_if_possible(positive_constant_coefficient(
+            push!(result, FunctionTerm(log, rationalize_if_possible(u), rationalize_if_possible(positive_constant_coefficient(
             polynomial(QQBar, [c(u) for c in coefficients(r.S)], var)))))
         elseif v>0
             if !iszero(u)
-                push!(result, LogTerm(rationalize_if_possible(r.LT.coeff*u), rationalize_if_possible(positive_constant_coefficient(
+                push!(result, FunctionTerm(log, rationalize_if_possible(r.LT.coeff*u), rationalize_if_possible(positive_constant_coefficient(
                 polynomial(QQBar, [numerator(c)(u, v)//denominator(c)(u, v) for c in coefficients(r.LT.arg)], var)))))
             end
             for AT in r.ATs
-                push!(result, AtanTerm(rationalize_if_possible(AT.coeff*v), rationalize_if_possible(
+                push!(result, FunctionTerm(atan, rationalize_if_possible(AT.coeff*v), rationalize_if_possible(
                 polynomial(QQBar, [numerator(c)(u, v)//denominator(c)(u, v) for c in coefficients(AT.arg)], var))))
             end
         end
@@ -64,8 +64,8 @@ function Eval(t::SumOfLogTerms; real_output::Bool=true)
 end
 
 function integrate(f::FracElem{P}; real_output::Bool=true) where {T<:FieldElement, P<:PolyElem{T}}
-    h = SymbolicIntegration.IntegrateRationalFunction(f)
-    result = ResultTerm[]
+    h = IntegrateRationalFunction(f)
+    result = Term[]
     if !iszero(h[1].arg)
         push!(result, h[1])
     end

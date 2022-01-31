@@ -100,6 +100,13 @@ function subst_tower(t::fmpq, subs::Vector, h::Int=0)
     end
 end
 
+@syms Root(x::qqbar)
+
+function subst_tower(t::qqbar, subs::Vector, h::Int=0) 
+    Root(t)
+end
+
+
 function subst_tower(f::F, vars::Vector, h::Int) where
     {T<:FieldElement, P<:PolyElem{T}, F<:FracElem{P}}
     subst_tower(numerator(f), vars, h)//subst_tower(denominator(f), vars, h)

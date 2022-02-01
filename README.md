@@ -20,7 +20,7 @@ Note that `SymbolicIntegration.jl` is still in an early stage of development and
 
 ## Installation
 ```julia
-julia> using Pkg; Pkg.add(PackageSpec(url="https://github.com/HaraldHofstaetter/SymbolicIntegration.jl"))
+julia> using Pkg; Pkg.add("SymbolicIntegration")
 ```
 
 ## Usage

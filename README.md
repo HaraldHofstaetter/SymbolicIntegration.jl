@@ -1,18 +1,25 @@
 # SymbolicIntegration.jl
 This package provides Julia implementations of symbolic integration algorithms.
 
-The basic algorithms are implemented in a generic way using the 
-[AbstractAlgebra.jl](https://nemocas.github.io/AbstractAlgebra.jl/dev/) package.
-Some algorithms require the
-[Nemo.jl](https://nemocas.github.io/Nemo.jl/dev/) computer algebra package
+The backend (i.e., the user interface) requires [SymbolicUtils.jl](https://symbolicutils.juliasymbolics.org/).
+The actual integration algorithms are implemented in a generic way using  
+[AbstractAlgebra.jl](https://nemocas.github.io/AbstractAlgebra.jl/dev/).
+Some algorithms require 
+[Nemo.jl](https://nemocas.github.io/Nemo.jl/dev/) 
 for calculations with algebraic numbers.
 
-Currently, only algorithms for integrating rational functions are provided, which were taken from chapters 1 and 2 of the book
+`SymbolicIntegration.jl` is based on the algorithms from the book
 
 > Manuel Bronstein, [Symbolic Integration I: Transcentental Functions](https://link.springer.com/book/10.1007/b138171), 2nd ed, Springer 2005.
 
-It should be mentioned that building on the framework provided by [AbstractAlgebra.jl](https://nemocas.github.io/AbstractAlgebra.jl/dev/),
-the task of translating the book's pseudocode into Julia code was remarkably straightforward.
+for which we provide pretty complete reference implementations.
+Currently, `SymbolicIntegration.jl` can integrate rational functions and integrands involving transcendental elementary 
+functions like `exp`, `log`, `sin`, etc.
+As in the book, integrands involving algebraic functions like `sqrt` and non-integer powers are not treated.
+
+Note that `SymbolicIntegration.jl` is still in an early stage of development and should not be expected to run stably.  It comes with absolutely no warranty whatsoever.
+
+
 
 ## Installation
 ```julia
@@ -21,16 +28,22 @@ julia> using Pkg; Pkg.add(PackageSpec(url="https://github.com/HaraldHofstaetter/
 
 ## Usage
 ```julia
-julia> using SymbolicIntegration, Nemo
+julia> using SymbolicIntegration, SymbolicUtils
 
-julia> QQx, x = PolynomialRing(QQ, :x)
-(Univariate Polynomial Ring in x over Rational Field, x)
+julia> @syms x
+(x,)
 
 julia> f = (x^3 + x^2 + x + 2)//(x^4 + 3*x^2 + 2)
-(x^3 + x^2 + x + 2)//(x^4 + 3*x^2 + 2)
+(2 + x + x^2 + x^3) / (2 + x^4 + 3(x^2))
 
-julia> SymbolicIntegration.integrate(f)
-atan(x) + 1//2*log(x^2 + 2)
+julia> integrate(f, x)
+(1//2)*log(2 + x^2) + atan(x)
+
+julia> f = 1/(x*log(x))
+1 / (x*log(x))
+
+julia> integrate(f, x)
+log(log(x))
 ```
 
 ## Tests

@@ -2,11 +2,8 @@
 This package provides Julia implementations of symbolic integration algorithms.
 
 The backend (i.e., the user interface) requires [SymbolicUtils.jl](https://symbolicutils.juliasymbolics.org/).
-The actual integration algorithms are implemented in a generic way using  
-[AbstractAlgebra.jl](https://nemocas.github.io/AbstractAlgebra.jl/dev/).
-Some algorithms require 
-[Nemo.jl](https://nemocas.github.io/Nemo.jl/dev/) 
-for calculations with algebraic numbers.
+The actual integration algorithms are implemented in a generic way using [AbstractAlgebra.jl](https://nemocas.github.io/AbstractAlgebra.jl/dev/).
+Some algorithms require [Nemo.jl](https://nemocas.github.io/Nemo.jl/dev/) for calculations with algebraic numbers.
 
 `SymbolicIntegration.jl` is based on the algorithms from the book
 

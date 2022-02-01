@@ -323,7 +323,12 @@ function Integrate(f:: F, D::Derivation) where
     g1, h, r = HermiteReduce(f, D)
     ss, Ss, ρ = ResidueReduce(h, D)
     g2, ss1, Ss1 = ConstantPart(ss, Ss, D)
-    @assert isempty(ss1) # TODO: case ss1 not empty, i.e. non-rational roots ...    
+    if !isempty(ss1) 
+        throw(NotImplemented("Integrate: solution involves algebraic numbers"))
+        # TODO: from now on all computations have to be performed in extension fields        
+        # over field of algebraic (instead of merely rational) numbers, i.e., replace
+        # Nemo.QQ by Nemo.QQBar, see http://nemocas.github.io/Nemo.jl/latest/algebraic/
+    end
     if isempty(g2)
         Dg2 = zero(f)
     else
@@ -364,7 +369,7 @@ function Integrate(f:: F, D::Derivation) where
         end
     else
         H = MonomialDerivative(D)
-        throw(NotImplemented("Integrate: monomial deivative =$H"))
+        throw(NotImplemented("Integrate: monomial derivative = $H"))
     end
     if ρ<=0
         return g, f1, ρ

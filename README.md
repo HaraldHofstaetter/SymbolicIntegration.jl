@@ -14,7 +14,8 @@ Currently, `SymbolicIntegration.jl` can integrate rational functions and integra
 functions like `exp`, `log`, `sin`, etc.
 As in the book, integrands involving algebraic functions like `sqrt` and non-integer powers are not treated.
 
-Note that `SymbolicIntegration.jl` is still in an early stage of development and should not be expected to run stably.  It comes with absolutely no warranty whatsoever.
+Note that `SymbolicIntegration.jl` is still in an early stage of development and should not be expected to run stably in all situations.  
+It comes with absolutely no warranty whatsoever.
 
 
 

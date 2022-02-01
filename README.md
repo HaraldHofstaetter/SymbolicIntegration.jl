@@ -7,7 +7,7 @@ Some algorithms require [Nemo.jl](https://nemocas.github.io/Nemo.jl/dev/) for ca
 
 `SymbolicIntegration.jl` is based on the algorithms from the book
 
-> Manuel Bronstein, [Symbolic Integration I: Transcentental Functions](https://link.springer.com/book/10.1007/b138171), 2nd ed, Springer 2005.
+> Manuel Bronstein, [Symbolic Integration I: Transcentental Functions](https://link.springer.com/book/10.1007/b138171), 2nd ed, Springer 2005,
 
 for which we provide pretty complete reference implementations.
 Currently, `SymbolicIntegration.jl` can integrate rational functions and integrands involving transcendental elementary 

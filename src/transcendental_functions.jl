@@ -225,12 +225,12 @@ function IntegrateHyperexponentialPolynomial(p::F, D::Derivation) where
     w = coeff(MonomialDerivative(D), 1) # Dt/t
     for i=valuation(p, t):-valuation_infinity(p)
         if i!=0
-            a = coeff(numerator(p), i) - coeff(denominator(p), i)
+            a = coeff(numerator(p), i + degree(denominator(p)))
             v, ρ1 = RischDE(i*w, a, BaseDerivation(D))
             if ρ1==0
                 ρ = 0
             else 
-                q += v*t^i
+                q += v*(t//1)^i
             end
         end
     end
@@ -276,8 +276,11 @@ function IntegrateHypertangentReduced(p::F, D::Derivation) where
     iscompatible(p, D) || error("rational function p must be in the domain of derivation D")
     ishypertangent(D) || error("monomial of derivation D must be hypertangent")
     isreduced(p, D) || error("rational function p must be reduced.")
-    t = gen(base_ring(parent(p)))
     Z = zero(parent(p))
+    if iszero(p) 
+        return Z, 1
+    end
+    t = gen(base_ring(parent(p)))    
     Q = t^2+1
     m = -valuation(p, Q)
     if m<=0
@@ -352,7 +355,7 @@ function Integrate(f:: F, D::Derivation) where
                 t = gen(base_ring(parent(f)))
                 η = constant_coefficient(divexact(MonomialDerivative(D), 1 + t^2))
                 g = vcat(IdTerm(g1 + q1 + q2), g2, FunctionTerm(log, c, 1 + t^2))
-                f1 = f - D(g1 + q1 + q2) - Dg2 - 2*c*η     
+                f1 = f - D(g1 + q1 + q2) - Dg2 - 2*c*η*t     
             else
                 g = vcat(IdTerm(g1 + q1 + q2), g2)
                 f1 = f - D(g1 + q1 + q2) - Dg2  
@@ -369,6 +372,7 @@ function Integrate(f:: F, D::Derivation) where
     @assert isone(denominator(f1)) && degree(numerator(f1)) <= 0
     f1 = constant_coefficient(numerator(f1))
     h, f2,  ρ = Integrate(f1, BaseDerivation(D))
+    @assert ρ<=0 || iszero(f2)    
     vcat(h, g), f2, ρ
 end
 

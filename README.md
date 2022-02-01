@@ -1,13 +1,13 @@
 # SymbolicIntegration.jl
 This package provides Julia implementations of symbolic integration algorithms.
 
-The backend (i.e., the user interface) requires [SymbolicUtils.jl](https://symbolicutils.juliasymbolics.org/).
+The front-end (i.e., the user interface) requires [SymbolicUtils.jl](https://symbolicutils.juliasymbolics.org/).
 The actual integration algorithms are implemented in a generic way using [AbstractAlgebra.jl](https://nemocas.github.io/AbstractAlgebra.jl/dev/).
 Some algorithms require [Nemo.jl](https://nemocas.github.io/Nemo.jl/dev/) for calculations with algebraic numbers.
 
 `SymbolicIntegration.jl` is based on the algorithms from the book
 
-> Manuel Bronstein, [Symbolic Integration I: Transcentental Functions](https://link.springer.com/book/10.1007/b138171), 2nd ed, Springer 2005.
+> Manuel Bronstein, [Symbolic Integration I: Transcentental Functions](https://link.springer.com/book/10.1007/b138171), 2nd ed, Springer 2005,
 
 for which we provide pretty complete reference implementations.
 Currently, `SymbolicIntegration.jl` can integrate rational functions and integrands involving transcendental elementary 

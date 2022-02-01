@@ -1,5 +1,4 @@
 using SymbolicUtils
-using SymbolicIntegration
 using Logging
 
 export integrate

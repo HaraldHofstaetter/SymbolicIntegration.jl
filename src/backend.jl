@@ -1,6 +1,8 @@
 using SymbolicUtils
 using SymbolicIntegration
+using Logging
 
+export integrate
 
 """
     TowerOfDifferentialFields(Hs) -> K, gs, D
@@ -91,13 +93,16 @@ function height(R::P) where
     height(base_ring(R))+1
 end
 
-function subst_tower(t::fmpq, subs::Vector, h::Int=0) 
-    t = Rational(t)
+function subst_tower(t::Rational, subs::Vector, h::Int=0)     
     if isone(denominator(t))
         return numerator(t)
     else
         return t
     end
+end
+
+function subst_tower(t::fmpq, subs::Vector, h::Int=0) 
+    subst_tower(Rational(t), subs, h)
 end
 
 @syms Root(x::qqbar)
@@ -159,7 +164,7 @@ end
 
 function analyze_expr(f::SymbolicUtils.Sym , funs::Vector, vars::Vector{SymbolicUtils.Sym}, args::Vector)
     if hash(f) != hash(funs[1])
-        error("symbol $f!=$(funs[1]) not allowed")
+        throw(NotImplementedError(("integrand contains symbol $f not equal to the integration variable $(funs[1])")))
     end
     return f
 end
@@ -181,8 +186,8 @@ function analyze_expr(f::SymbolicUtils.Pow, funs::Vector, vars::Vector{SymbolicU
     p2 = analyze_expr(as[2], funs, vars, args)
     if isa(p2, Integer)
         return p1^p2
-    elseif isa(p2, Number)
-        error("proper rational exponent")
+    elseif isa(p2, Number)        
+        throw(NotImplementedError(("integrand contains not allowed exponent $p2")))
     end
     exp(p2*log(p1))    
 end
@@ -190,7 +195,16 @@ end
 function analyze_expr(f::SymbolicUtils.Term , funs::Vector, vars::Vector{SymbolicUtils.Sym}, args::Vector)    
     op = operation(f)
     a = arguments(f)[1]
-    if op == sin # transform to half angle format
+    if op == sinh
+        f = (exp(a) - 1/exp(a))/2
+        return analyze_expr(f, funs, vars, args)
+    elseif op == cosh
+        f = (exp(a) + 1/exp(a))/2
+        return analyze_expr(f, funs, vars, args)
+    elseif op == tanh
+        f = (exp(a) - 1/exp(a))/(exp(a) + 1/exp(a))
+        return analyze_expr(f, funs, vars, args)
+    elseif op == sin # transform to half angle format
         f = 2*tan(a/2)/(1 + tan(a/2)^2)
         return analyze_expr(f, funs, vars, args)
     elseif op == cos
@@ -201,8 +215,8 @@ function analyze_expr(f::SymbolicUtils.Term , funs::Vector, vars::Vector{Symboli
     if i !== nothing
         return vars[i]
     end    
-    op in [exp, log, atan, tan] ||
-        error("operation $op not implemented")
+    op in [exp, log, atan, tan] ||        
+        throw(NotImplementedError(("integrand contains function $op")))
     p = analyze_expr(a, funs, vars, args)
     tname = Symbol(:t, length(vars)) 
     t = SymbolicUtils.Sym{Number, Nothing}(tname, nothing)
@@ -279,25 +293,30 @@ end
 @syms ∫(f, x)
 
 function integrate(f::SymbolicUtils.Symbolic, x::SymbolicUtils.Sym)
-    p, funs, vars, args = analyze_expr(f, x)    
-    R, vars_mpoly = PolynomialRing(Nemo.QQ, Symbol.(vars))
-    Z = zero(R)//one(R)
-    args_mpoly = typeof(Z)[transform_symtree_to_mpoly(a, vars, vars_mpoly) + Z for a in args]    
-    terms = vcat(IdTerm(args_mpoly[1]), Term[FunctionTerm(operation(funs[i]), 1, args_mpoly[i]) for i=2:length(funs)])
-    p_mpoly = transform_symtree_to_mpoly(p, vars, vars_mpoly)           
-    _, gs, D = TowerOfDifferentialFields(terms)
-    p = transform_mpoly_to_tower(p_mpoly + Z, gs)    
-    g, r, ρ = Integrate(p, D)
-    if ρ<=0
-        return subst_tower(g, funs) + ∫(subst_tower(r, funs), x)
-    else
-        return subst_tower(g, funs)
+    try
+        p, funs, vars, args = analyze_expr(f, x)    
+        R, vars_mpoly = PolynomialRing(Nemo.QQ, Symbol.(vars))
+        Z = zero(R)//one(R)
+        args_mpoly = typeof(Z)[transform_symtree_to_mpoly(a, vars, vars_mpoly) + Z for a in args]    
+        terms = vcat(IdTerm(args_mpoly[1]), Term[FunctionTerm(operation(funs[i]), 1, args_mpoly[i]) for i=2:length(funs)])
+        p_mpoly = transform_symtree_to_mpoly(p, vars, vars_mpoly)           
+        _, gs, D = TowerOfDifferentialFields(terms)
+        p = transform_mpoly_to_tower(p_mpoly + Z, gs)    
+        g, r, ρ = Integrate(p, D)
+        if ρ<=0
+            return subst_tower(g, funs) + ∫(subst_tower(r, funs), x)
+        else
+            return subst_tower(g, funs)
+        end
+    catch e
+        if e isa NotImplementedError
+            @error "NotImplementedError: $(e.msg)"
+            return ∫(f, x)
+        elseif e isa AlgorithmFailedError
+            @error "AlgorithmFailedError: $(e.msg)"
+            return ∫(f, x)
+        else
+            rethrow(e)
+        end
     end
 end
-
-
-export integrate
-
-#function integrate(f::FracElem{P}) where {T<:FieldElement, P<:PolyElem{T}} 
-#    Result(IntegrateRationalFunction(f))
-#end

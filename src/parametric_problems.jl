@@ -175,7 +175,7 @@ function ParamRdeSpecialDenominator(a::P, b::F, gs::Vector{F}, D::Derivation) wh
         return ParamRdeSpecialDenomTan(a, b, gs, D) 
     else
         H = MonomialDerivative(D)
-        throw(NotImplemented("ParamRdeSpecialDenominator: monomial derivative $H"))        
+        throw(NotImplementedError("ParamRdeSpecialDenominator: monomial derivative $H"))        
     end
 end
 
@@ -522,7 +522,7 @@ function ParamRdeBoundDegree(a::P, b::P, qs::Vector{P}, D::Derivation) where
         return ParamRdeBoundDegreeNonLinear(a, b, qs, D)
     else        
         H = MonomialDerivative(D)
-        throw(NotImplemented("ParamRdeBoundDegree: monomial derivative $H"))    
+        throw(NotImplementedError("ParamRdeBoundDegree: monomial derivative $H"))    
     end
 end
 
@@ -806,19 +806,19 @@ function ParamPolyRischDE(b::P,  qs::Vector{P}, D::Derivation, n::Int) where
         return ParamPolyRischDENoCancel2(b, qs, D, n)
     elseif δ>=2 && degree(b)==δ-1
         if ishypertangent(D)                
-            throw(NotImplemented("ParamPolyRischDE: no cancellation, degree(b)==δ-1, hypertangent case"))                                        
+            throw(NotImplementedError("ParamPolyRischDE: no cancellation, degree(b)==δ-1, hypertangent case"))                                        
         else
             H = MonomialDerivative(D)
-            throw(NotImplemented("ParamPolyRischDE: no cancellation, degree(b)==δ-1, monomial derivative $H"))                        
+            throw(NotImplementedError("ParamPolyRischDE: no cancellation, degree(b)==δ-1, monomial derivative $H"))                        
         end
     elseif isprimitive(D) || ishyperexponential(D)
         @assert δ<=1 && degree(b)<=0 && !isbasic(D)
         return ParamPolyRischDECancelLiouvillian(constant_coefficient(b), qs, D, n)
     elseif ishypertangent(D)
-        throw(NotImplemented("ParamPolyRischDE: hypertangent, cancellation case")) 
+        throw(NotImplementedError("ParamPolyRischDE: hypertangent, cancellation case")) 
     else        
         H = MonomialDerivative(D)
-        throw(NotImplemented("ParamPolyRischDE: cancelling case, monomial derivative $H")) 
+        throw(NotImplementedError("ParamPolyRischDE: cancelling case, monomial derivative $H")) 
     end
 end
 
@@ -1089,7 +1089,7 @@ function LimitedIntegrate(f::F, ws::Vector{F}, D::Derivation) where
         ρ>=1 || return Z, F[], ρ
         return (α*z+β)//h, cs[2:m], 1
     else
-        throw(NotImplemented("LimitedIntegrate: !is_Sirr1_eq_Sirr(D)"))                                        
+        throw(NotImplementedError("LimitedIntegrate: !is_Sirr1_eq_Sirr(D)"))                                        
     end
 end
 

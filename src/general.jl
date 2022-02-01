@@ -9,11 +9,11 @@ using AbstractAlgebra
 using Nemo
 
 
-struct NotImplemented <: Exception
+struct NotImplementedError <: Exception
     msg::String
 end
 
-struct AlgorithmFailed <: Exception
+struct AlgorithmFailedError <: Exception
     msg::String
 end
 

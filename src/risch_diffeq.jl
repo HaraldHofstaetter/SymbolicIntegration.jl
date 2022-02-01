@@ -106,7 +106,7 @@ is a hyperexponential monomial over `k(t)`, return either `ρ=0`, in which case
 `n*f=D(v)/v+m*D(θ)/θ` has no solution `v≠0` in `k(t)` and 
 integers `n≠0` and `m`, or `ρ=1` and a solution `n`, `m`, `v` of that equation.
 
-This function may throw exception `AlgorithmFailed`.
+This function may throw exception `AlgorithmFailedError`.
 
 See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 7.3, p. 253.
 """
@@ -166,7 +166,7 @@ function ParametricLogarithmicDerivative(f::F, w::F, D::Derivation) where
     ln, ls = SplitFactor(l, D)
     z = ls*gcd(ln, derivative(ln))
     if degree(z)<=0 # z \in k
-        throw(AlgorithmFailed("ParametricLogarithmicDerivative"))  
+        throw(AlgorithmFailedError("ParametricLogarithmicDerivative"))  
     end
     u1, r1 = divrem(numerator(l*f), z)
     u2, r2 = divrem(numerator(l*w), z)
@@ -383,7 +383,7 @@ function RdeSpecialDenominator(a::P, b::F, c::F, D::Derivation) where
         end
     else
         H = MonomialDerivative(D)
-        throw(NotImplemented("RdeSpecialDenominator: monomial derivative $H"))
+        throw(NotImplementedError("RdeSpecialDenominator: monomial derivative $H"))
     end    
 end
 
@@ -562,7 +562,7 @@ function RdeBoundDegree(a::P, b::P, c::P, D::Derivation) where
         return RdeBoundDegreeNonLinear(a, b, c, D)
     else
         H = MonomialDerivative(D)
-        throw(NotImplemented("RdeBoundDegree: monomial derivative $H"))                        
+        throw(NotImplementedError("RdeBoundDegree: monomial derivative $H"))                        
     end
 end
 
@@ -1013,7 +1013,7 @@ function PolyRischDE(b::P, c::P, D::Derivation, n::Int=typemax(Int)) where
                 end                
             else
                 H = MonomialDerivative(D)
-                throw(NotImplemented("PolyRischDE: no cancellation, degree(b)==δ-1, monomial derivative $H"))                        
+                throw(NotImplementedError("PolyRischDE: no cancellation, degree(b)==δ-1, monomial derivative $H"))                        
             end
         else
             @assert false # never reach this point
@@ -1030,7 +1030,7 @@ function PolyRischDE(b::P, c::P, D::Derivation, n::Int=typemax(Int)) where
         return PolyRischDECancelExp(constant_coefficient(b), c, D, n) 
     else
         H = MonomialDerivative(D)
-        throw(NotImplemented("PolyRischDE: cancellation case, monomial derivative $H"))  
+        throw(NotImplementedError("PolyRischDE: cancellation case, monomial derivative $H"))  
     end
 end
 

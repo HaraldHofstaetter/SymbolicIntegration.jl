@@ -9,12 +9,12 @@ Some algorithms require [Nemo.jl](https://nemocas.github.io/Nemo.jl/dev/) for ca
 
 > Manuel Bronstein, [Symbolic Integration I: Transcentental Functions](https://link.springer.com/book/10.1007/b138171), 2nd ed, Springer 2005,
 
-for which we provide pretty complete reference implementations.
+for which a pretty complete set of reference implementations is provided.
 Currently, `SymbolicIntegration.jl` can integrate rational functions and integrands involving transcendental elementary 
 functions like `exp`, `log`, `sin`, etc.
 As in the book, integrands involving algebraic functions like `sqrt` and non-integer powers are not treated.
 
-Note that `SymbolicIntegration.jl` is still in an early stage of development and should not be expected to run stably in all situations.  
+Note that `SymbolicIntegration.jl` is still in an early stage of development and should not be expected to run stably in all situations.
 It comes with absolutely no warranty whatsoever.
 
 

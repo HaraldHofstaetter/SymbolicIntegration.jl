@@ -273,16 +273,34 @@ function TowerOfDifferentialFields(terms::Vector{Term})  where
         if op == exp
             H = t*D(f)
         elseif op == log
-            H = D(f)//f
+            H = D(f)//f + 0*t
         elseif op == tan
             H = (t^2+1)*D(f)
         elseif op == atan
-            H = D(f)//(f^2+1)
+            H = D(f)//(f^2+1) + 0*t
         else
             @assert false # never reach this point
         end
 
-        D = ExtensionDerivation(Kt, D, H + 0*t)
+        if op==log || op==atan
+            u, ρ = InFieldDerivative(constant_coefficient(H), D)
+            if ρ>0
+                #TODO: For this case there is always a remedy
+                throw(NotImplementedError("TowerOfDifferentialFields: D($t) is derviative of element of k for primitive $t over k"))
+            end
+        elseif op == exp
+            m, u, ρ = InFieldLogarithmicDerivativeOfRadical(coeff(H, 1), D)
+            if ρ>0
+                #TODO: For this case there is a remedy if m=1 or m=-1
+                throw(NotImplementedError("TowerOfDifferentialFields: D($t)/$t is logarithmic derviative of k-radical for hyperexponential $t over k"))
+            end
+        elseif op == tan
+            #TODO
+        else
+            @assert false # never reach this point
+        end
+
+        D = ExtensionDerivation(Kt, D, H)
         K = FractionField(Kt)       
     end
     K, gs, D

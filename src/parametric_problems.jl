@@ -1037,13 +1037,30 @@ or `ρ=1` and a solution `v`, `cs` of that equation.
 
 See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 7.2, p. 245.
 """
-function LimitedIntegrate(f::F, w::F, D::Derivation) where 
-    {T<:FieldElement, P<:PolyElem{T}, F<:FracElem{P}}
+function LimitedIntegrate(f::F, w::F, D::Derivation) where F <: FieldElement
+    # this is a wrapper for the case length(ws)==1 for convenience
     y, cs, ρ = LimitedIntegrate(f, [w], D)
     if ρ <=0
         return zero(f), zero(constant_field(D)), ρ
     else
         return y, cs[1], 1
+    end
+end
+
+function LimitedIntegrate(f::F, ws::Vector{F}, D::Derivation) where F <: FieldElement  
+    # base case f, ws[i] \in constant field, D must be the null derivation
+    iscompatible(f, D) && all(iscompatible(w, D) for w in ws) || 
+        error("rational functions f and w_i must be in the domain of derivation D")
+    iszero(D) || error("base case only for null derivations")    
+    Z = zero(f)
+    m = length(ws)
+    A = reshape(vcat(-f, ws), (1, m+1))
+    A = RowEchelon(A)
+    cs = solve_x1_eq_1(A)
+    if isone(cs[1])
+        return Z, cs, 1
+    else
+        return Z, fill(Z, m), 0
     end
 end
 

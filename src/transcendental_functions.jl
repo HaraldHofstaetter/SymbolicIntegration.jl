@@ -187,7 +187,7 @@ function IntegratePrimitivePolynomial(p::P, D::Derivation) where
     a = leading_coefficient(p)
     b, c, β = LimitedIntegrate(a, leading_coefficient(D), BaseDerivation(D))
     if β<=0 
-        return zero(p, 0)
+        return zero(p), 0
     end
     m = degree(p)
     t = gen(parent(p))

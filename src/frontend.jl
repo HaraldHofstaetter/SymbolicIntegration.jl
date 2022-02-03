@@ -199,7 +199,7 @@ end
 
 function analyze_expr(f::SymbolicUtils.Sym , funs::Vector, vars::Vector{SymbolicUtils.Sym}, args::Vector)
     if hash(f) != hash(funs[1])
-        throw(NotImplementedError(("integrand contains symbol $f not equal to the integration variable $(funs[1])")))
+        throw(NotImplementedError(("integrand contains symbol $f not equal to the integration variable $(funs[1])\n@ $(@__FILE__):$(@__LINE__)")))
     end
     return f
 end
@@ -222,7 +222,7 @@ function analyze_expr(f::SymbolicUtils.Pow, funs::Vector, vars::Vector{SymbolicU
     if isa(p2, Integer)
         return p1^p2
     elseif isa(p2, Number)        
-        throw(NotImplementedError(("integrand contains not allowed exponent $p2")))
+        throw(NotImplementedError(("integrand contains not allowed exponent $p2\n@ $(@__FILE__):$(@__LINE__)")))
     end
     exp(p2*log(p1))    
 end
@@ -251,7 +251,7 @@ function analyze_expr(f::SymbolicUtils.Term , funs::Vector, vars::Vector{Symboli
         return vars[i]
     end    
     op in [exp, log, atan, tan] ||        
-        throw(NotImplementedError(("integrand contains function $op")))
+        throw(NotImplementedError(("integrand contains function $op\n@ $(@__FILE__):$(@__LINE__)")))
     p = analyze_expr(a, funs, vars, args)
     tname = Symbol(:t, length(vars)) 
     t = SymbolicUtils.Sym{Number, Nothing}(tname, nothing)
@@ -326,13 +326,13 @@ function TowerOfDifferentialFields(terms::Vector{Term})  where
             u, ρ = InFieldDerivative(constant_coefficient(H), D)
             if ρ>0
                 #TODO: For this case there is always a remedy
-                throw(NotImplementedError("TowerOfDifferentialFields: D($t) is derviative of element of k for primitive $t over k"))
+                throw(NotImplementedError("TowerOfDifferentialFields: D($t) is derviative of element of k for primitive $t over k\n@ $(@__FILE__):$(@__LINE__)"))
             end
         elseif op == exp
             m, u, ρ = InFieldLogarithmicDerivativeOfRadical(coeff(H, 1), D)
             if ρ>0
                 #TODO: For this case there is a remedy if m=1 or m=-1
-                throw(NotImplementedError("TowerOfDifferentialFields: D($t)/$t is logarithmic derviative of k-radical for hyperexponential $t over k"))
+                throw(NotImplementedError("TowerOfDifferentialFields: D($t)/$t is logarithmic derviative of k-radical for hyperexponential $t over k\n@ $(@__FILE__):$(@__LINE__)"))
             end
         elseif op == tan
             #TODO

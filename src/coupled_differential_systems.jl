@@ -284,7 +284,7 @@ function CoupledDESystem(f1::F, f2::F, g1::F, g2::F, D::Derivation) where
         ρ>=1 || return no_solution
     else
         H = MonomialDerivative(D)
-        throw(NotImplementedError("CoupledDESystem: cancellation case, monomial derivative $H")) 
+        throw(NotImplementedError("CoupledDESystem: cancellation case, monomial derivative $H\n@ $(@__FILE__):$(@__LINE__)")) 
     end
 
     # Note: α, β, h0, h1, h2 are in k(√-1)(t) or k(√-1)[t]

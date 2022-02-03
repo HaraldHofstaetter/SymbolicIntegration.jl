@@ -350,7 +350,7 @@ function Integrate(f:: F, D::Derivation) where
     ss, Ss, ρ = ResidueReduce(h, D)
     g2, Dg2, ss1, Ss1 = ConstantPart(ss, Ss, D)
     if !isempty(ss1) 
-        throw(NotImplementedError("Integrate: solution involves algebraic numbers"))
+        throw(NotImplementedError("Integrate: solution involves algebraic numbers\n@ $(@__FILE__):$(@__LINE__)"))
         # TODO: from now on all computations have to be performed in extension fields        
         # over field of algebraic (instead of merely rational) numbers, i.e., replace
         # Nemo.QQ by Nemo.QQBar, see http://nemocas.github.io/Nemo.jl/latest/algebraic/
@@ -390,7 +390,7 @@ function Integrate(f:: F, D::Derivation) where
         end
     else
         H = MonomialDerivative(D)
-        throw(NotImplementedError("Integrate: monomial derivative = $H"))
+        throw(NotImplementedError("Integrate: monomial derivative = $H\n@ $(@__FILE__):$(@__LINE__)"))
     end
     if ρ<=0
         return g, f1, ρ
@@ -460,10 +460,10 @@ function InFieldDerivative(f::F, D::Derivation) where
                 return no_solution
             end
         elseif ishypertangent(D)
-            throw(NotImplementedError("InFieldDerivative: hypertangent case"))
+            throw(NotImplementedError("InFieldDerivative: hypertangent case\n@ $(@__FILE__):$(@__LINE__)"))
         else
             H = MonomialDerivative(D)
-            throw(NotImplementedError("InFieldDerivative: monomial deivative =$H"))
+            throw(NotImplementedError("InFieldDerivative: monomial deivative =$H\n@ $(@__FILE__):$(@__LINE__)"))
         end
         a0 = p-D(q)
         @assert isone(denominator(a0)) && degree(numerator(a0))<=0 # p-D(q) ∈ k
@@ -639,9 +639,9 @@ function InFieldLogarithmicDerivativeOfRadical(f::F, D::Derivation; expect_one::
         N = lcm(n, m)
         U = v^div(N, m)*(u+Z)^div(N, n)*(t^2+1+Z)^div(e*N, n)
         return N, U, 1
-        throw(NotImplementedError("InFieldLogarithmicDerivativeOfRadical: hypertangent case"))        
+        throw(NotImplementedError("InFieldLogarithmicDerivativeOfRadical: hypertangent case\n@ $(@__FILE__):$(@__LINE__)"))        
     else
-        throw(NotImplementedError("InFieldLogarithmicDerivativeOfRadical: monomial derivative $H"))        
+        throw(NotImplementedError("InFieldLogarithmicDerivativeOfRadical: monomial derivative $H\n@ $(@__FILE__):$(@__LINE__)"))        
     end
 end
 

@@ -106,8 +106,13 @@ end
 
 @syms Root(x::qqbar)
 
-function subst_tower(t::qqbar, subs::Vector, h::Int=0) 
-    Root(t)
+function subst_tower(t::qqbar, subs::Vector, h::Int=0)
+    if degree(t)==1 
+        return Rational(fmpq(t))
+        #todo: complex t with rational real/imag parts
+    else
+        return Root(t)
+    end
 end
 
 

@@ -121,13 +121,19 @@ function Complexify(R::PolyElem{T}; symbols=[:α, :β]) where T <: FieldElement
     v = uv[2]
     c = collect(coefficients(R))
     d = length(c)-1
-    P = sum([sum([(-1)^div(k,2)*binomial(n,k)*c[n+1]*u^(n-k)*v^k for k=0:n if iseven(k)]) for n=0:d])
-    if (d==0)
-        Q = zero(Fuv)
-    else
-        Q = sum([sum([(-1)^div(k,2)*binomial(n,k)*c[n+1]*u^(n-k)*v^k for k=1:n if isodd(k)]) for n=1:d])   
+    P = zero(Fuv)
+    for n=0:d
+        for k=0:2:n
+            P += (-1)^div(k,2)*binomial(n,k)*c[n+1]*u^(n-k)*v^k
+        end
     end
-    P,Q
+    Q = zero(Fuv)
+    for n=1:d
+        for k=1:2:n
+            Q += (-1)^div(k,2)*binomial(n,k)*c[n+1]*u^(n-k)*v^k
+        end
+    end
+    P, Q
 end
 
 function LogToAtan(A::PolyElem{T}, B::PolyElem{T}) where T <: FieldElement

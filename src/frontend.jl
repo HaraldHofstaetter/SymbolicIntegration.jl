@@ -94,7 +94,7 @@ to_symb(t::fmpq) = to_symb(Rational(t))
 
 function to_symb(t::qqbar)
     if degree(t)==1 
-        return Rational(fmpq(t))        
+        return to_symb(fmpq(t))
     end
     kx, _ = PolynomialRing(Nemo.QQ, :x)
     f = minpoly(kx, t)

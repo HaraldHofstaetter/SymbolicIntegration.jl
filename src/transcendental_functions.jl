@@ -140,28 +140,92 @@ and the corresponding `Sᵢ` are returned in `ss1` and `Ss1`.
 function ConstantPart(ss::Vector{P}, Ss::Vector{PP}, D::Derivation) where  {P<:PolyElem, PP<:PolyElem{P}}
     length(ss)==length(Ss) || error("lengths must match")
     if isempty(ss)
-        return Term[], ss, Ss
+        return Term[], 0,  ss, Ss
     end
     Ss1 = eltype(Ss)[]
     ss1 = eltype(ss)[]    
-    αs = zeros(constant_field(D), 0)
-    gs = P[]
+    gs = Term[]
+    Dg = 0
     D1 = CoefficientLiftingDerivation(parent(ss[1]), BaseDerivation(D))
     for i=1:length(ss)        
-        rs = constant_roots(ss[1], D1)
-        if length(rs)==degree(ss[i]) # all roots found
-            for α in rs                
-                push!(αs, α)                
-                g = map_coefficients(c->c(α), Ss[i])
-                push!(gs, g)
+        αs = constant_roots(ss[i], D1)
+        if length(αs)==degree(ss[i]) # all roots found
+            for α in αs                                
+                g = map_coefficients(c->c(α), Ss[i])                
+                push!(gs, FunctionTerm(log, α, positive_constant_coefficient(g)))
+                Dg += α*D(g)//g
             end
         else
-            push!(Ss1, Ss[i])
-            push!(ss1, ss[i])
+            RT = LogToReal(SumOfLogTerms(ss[i], Ss[i]))
+            αs = constant_roots(ss[i], D1, useQQBar=true)
+            if all([isrational(real(α)) && isrational(imag(α)) for α in αs])
+                for α in αs
+                    u = rationalize(real(α))
+                    v = rationalize(imag(α))
+                    if iszero(v)
+                        g = map_coefficients(c->c(u), Ss[i])                
+                        push!(gs, FunctionTerm(log, u, positive_constant_coefficient(g)))
+                        Dg += u*D(g)//g
+                    elseif v > 0
+                        var = string(symbols(parent(Ss[i]))[1])
+                        F = base_ring(ss[i])
+                        if !iszero(u)
+                            g = polynomial(F, [numerator(c)(u, v)//denominator(c)(u, v) for c in coefficients(r.LT.arg)], var)
+                            push!(gs, FunctionTerm(log, RT.LT.coeff*u, positive_constant_coefficient(g)))
+                            Dg += RT.LT.coeff*u*D(g)//g
+                        end
+                        for AT in RT.ATs
+                            g = polynomial(F, [numerator(c)(u, v)//denominator(c)(u, v) for c in coefficients(AT.arg)], var)
+                            push!(gs, FunctionTerm(atan, AT.coeff*v, g))
+                            Dg += AT.coeff*v*D(g)//(1 + g^2)
+                        end                    
+                    end        
+                end        
+            else
+                push!(Ss1, Ss[i])
+                push!(ss1, ss[i])
+            end
         end
     end
-    #αs, gs, ss1, Ss1
-    Term[FunctionTerm(log, αs[i], gs[i]) for i=1:length(αs) ], ss1, Ss1
+    gs, Dg, ss1, Ss1
+end
+
+
+function ConstantPart2(ss::Vector{P}, Ss::Vector{PP}, D::Derivation) where  {P<:PolyElem, PP<:PolyElem{P}}
+    length(ss)==length(Ss) || error("lengths must match")
+    if isempty(ss)
+        return Term[], ss, Ss
+    end
+    gs = Term[]
+    Dg = 0
+    D1 = CoefficientLiftingDerivation(parent(ss[1]), BaseDerivation(D))
+    for i=1:length(ss)     
+        RT = LogToReal(SumOfLogTerms(ss[i], Ss[i]))
+        rs = constant_roots(ss[i], D1, useQQBar=true) # useQQBar=true means inter alia that also complex roots are considered
+        for α in rs   
+            u = real(α)             
+            v = imag(α)
+            if iszero(v)
+                g = map_coefficients(c->c(u), Ss[i])                
+                push!(gs, FunctionTerm(log, u, positive_constant_coefficient(g)))
+                Dg += u*D(g)//g
+            elseif imag(v)>0
+                var = string(symbols(parent(Ss[i]))[1])
+                F = base_ring(ss[i])
+                if !iszero(u)
+                    g = polynomial(F, [numerator(c)(u, v)//denominator(c)(u, v) for c in coefficients(r.LT.arg)], var)
+                    push!(gs, FunctionTerm(log, RT.LT.coeff*u, positive_constant_coefficient(g)))
+                    Dg += RT.LT.coeff*u*D(g)//g
+                end
+                for AT in RT.ATs
+                    g = polynomial(F, [numerator(c)(u, v)//denominator(c)(u, v) for c in coefficients(AT.arg)], var)
+                    push!(gs, FunctionTerm(atan, AT.coeff*v, g))
+                    Dg += AT.coeff*v*D(g)//(1 + g^2)
+                end                    
+            end
+        end
+    end
+    gs, Dg
 end
 
 
@@ -322,17 +386,12 @@ function Integrate(f:: F, D::Derivation) where
     end
     g1, h, r = HermiteReduce(f, D)
     ss, Ss, ρ = ResidueReduce(h, D)
-    g2, ss1, Ss1 = ConstantPart(ss, Ss, D)
+    g2, Dg2, ss1, Ss1 = ConstantPart(ss, Ss, D)
     if !isempty(ss1) 
         throw(NotImplementedError("Integrate: solution involves algebraic numbers"))
         # TODO: from now on all computations have to be performed in extension fields        
         # over field of algebraic (instead of merely rational) numbers, i.e., replace
         # Nemo.QQ by Nemo.QQBar, see http://nemocas.github.io/Nemo.jl/latest/algebraic/
-    end
-    if isempty(g2)
-        Dg2 = zero(f)
-    else
-        Dg2 = sum([lt.coeff*D(lt.arg)//lt.arg for lt in g2])
     end
     if ρ<=0 
         g = vcat(IdTerm(g1), g2)

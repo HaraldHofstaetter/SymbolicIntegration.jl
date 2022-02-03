@@ -78,6 +78,49 @@ function transform_mpoly_to_tower(f::F, gs::Vector) where
     numerator(f)(gs...)//denominator(f)(gs...)
 end
 
+@syms Root(x::qqbar)
+
+to_symb(t::Number) = t
+
+function to_symb(t::Rational)
+    if isone(denominator(t))
+        return numerator(t)
+    else
+        return t
+    end
+end
+
+to_symb(t::fmpq) = to_symb(Rational(t))
+
+function to_symb(t::qqbar)
+    if degree(t)==1 
+        return Rational(fmpq(t))        
+    end
+    kx, _ = PolynomialRing(Nemo.QQ, :x)
+    f = minpoly(kx, t)
+    if degree(f)==2 && iszero(coeff(f,1))
+        y = to_symb(-coeff(f,0)//coeff(f, 2))
+        if y>=0
+            if t==maximum(conjugates(t))
+                return SymbolicUtils.Term(sqrt,y)
+            else
+                return -SymbolicUtils.Term(sqrt,y)
+            end
+        else
+            if imag(t)==maximum(imag.(conjugates(t)))
+                return SymbolicUtils.Term(sqrt,-y)*1im
+            else
+                return -SymbolicUtils.Term(sqrt,-y)*1im
+            end
+        end
+    elseif degree(f)==2 # coeff(f,1)!=0
+        s = coeff(f, 1)//(2*coeff(f,2))
+        return to_symb(t + s) - to_symb(s)
+    else
+        return Root(t)
+    end    
+end
+
 function height(K::F) where F<:AbstractAlgebra.Field
     0
 end
@@ -100,21 +143,9 @@ function subst_tower(t::Rational, subs::Vector, h::Int=0)
     end
 end
 
-function subst_tower(t::fmpq, subs::Vector, h::Int=0) 
-    subst_tower(Rational(t), subs, h)
-end
+subst_tower(t::fmpq, subs::Vector, h::Int=0) = to_symb(t)
 
-@syms Root(x::qqbar)
-
-function subst_tower(t::qqbar, subs::Vector, h::Int=0)
-    if degree(t)==1 
-        return Rational(fmpq(t))
-        #todo: complex t with rational real/imag parts
-    else
-        return Root(t)
-    end
-end
-
+subst_tower(t::qqbar, subs::Vector, h::Int=0) = to_symb(t)
 
 function subst_tower(f::F, vars::Vector, h::Int) where
     {T<:FieldElement, P<:PolyElem{T}, F<:FracElem{P}}
@@ -246,13 +277,17 @@ transform_symtree_to_mpoly(f::SymbolicUtils.Mul, vars::Vector, vars_mpoly::Vecto
 
 function transform_symtree_to_mpoly(f::SymbolicUtils.Div, vars::Vector, vars_mpoly::Vector) 
     as = arguments(f)
-    transform_symtree_to_mpoly(as[1], vars, vars_mpoly)//transform_symtree_to_mpoly(as[2], vars, vars_mpoly::Vector)
+    transform_symtree_to_mpoly(as[1], vars, vars_mpoly)//transform_symtree_to_mpoly(as[2], vars, vars_mpoly)
 end
 
 function transform_symtree_to_mpoly(f::SymbolicUtils.Pow, vars::Vector, vars_mpoly::Vector) 
     as = arguments(f)
     @assert isa(as[2], Integer)
-    transform_symtree_to_mpoly(as[1], vars, vars_mpoly)^as[2]
+    if as[2]>=0
+        return transform_symtree_to_mpoly(as[1], vars, vars_mpoly)^as[2]
+    else
+        return 1//transform_symtree_to_mpoly(as[1], vars, vars_mpoly)^(-as[2])
+    end
 end
 
 

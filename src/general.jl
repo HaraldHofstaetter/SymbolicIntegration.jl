@@ -104,8 +104,8 @@ rationalize(x::T) where T<:Rational = convert(Rational{BigInt}, x)
 rationalize(x::fmpq) = convert(Rational{BigInt}, x) # Nemo rational type
 
 function rationalize(x::qqbar) #Nemo algebraic number type
-    degree(x)==1 || error("not rational")
-    convert(Rational{BigInt}, fmpq(xx)) 
+    (degree(x)==1 && iszero(imag(x))) || error("not rational")
+    convert(Rational{BigInt}, fmpq(x)) 
 end
 
 function rationalize(x::P) where P<:PolyElem

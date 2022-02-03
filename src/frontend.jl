@@ -135,13 +135,7 @@ function height(R::P) where
     height(base_ring(R))+1
 end
 
-function subst_tower(t::Rational, subs::Vector, h::Int=0)     
-    if isone(denominator(t))
-        return numerator(t)
-    else
-        return t
-    end
-end
+subst_tower(t::Number, subs::Vector, h::Int=0) = to_symb(t)  
 
 subst_tower(t::fmpq, subs::Vector, h::Int=0) = to_symb(t)
 
@@ -149,7 +143,11 @@ subst_tower(t::qqbar, subs::Vector, h::Int=0) = to_symb(t)
 
 function subst_tower(f::F, vars::Vector, h::Int) where
     {T<:FieldElement, P<:PolyElem{T}, F<:FracElem{P}}
-    subst_tower(numerator(f), vars, h)//subst_tower(denominator(f), vars, h)
+    if isone(denominator(f))
+        subst_tower(numerator(f), vars, h)
+    else
+        subst_tower(numerator(f), vars, h)//subst_tower(denominator(f), vars, h)
+    end
 end
 
 function subst_tower(p::P, vars::Vector, h::Int) where

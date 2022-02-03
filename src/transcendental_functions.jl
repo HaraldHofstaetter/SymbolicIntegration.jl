@@ -152,7 +152,7 @@ function ConstantPart(ss::Vector{P}, Ss::Vector{PP}, D::Derivation) where  {P<:P
         if length(αs)==degree(ss[i]) # all roots found
             for α in αs                                
                 g = map_coefficients(c->c(α), Ss[i])                
-                push!(gs, FunctionTerm(log, α, positive_constant_coefficient(g)))
+                push!(gs, FunctionTerm(log, α, g))
                 Dg += α*D(g)//g
             end
         else
@@ -164,14 +164,14 @@ function ConstantPart(ss::Vector{P}, Ss::Vector{PP}, D::Derivation) where  {P<:P
                     v = rationalize(imag(α))
                     if iszero(v)
                         g = map_coefficients(c->c(u), Ss[i])                
-                        push!(gs, FunctionTerm(log, u, positive_constant_coefficient(g)))
+                        push!(gs, FunctionTerm(log, u, g))
                         Dg += u*D(g)//g
                     elseif v > 0
                         var = string(symbols(parent(Ss[i]))[1])
                         F = base_ring(ss[i])
                         if !iszero(u)
                             g = polynomial(F, [numerator(c)(u, v)//denominator(c)(u, v) for c in coefficients(r.LT.arg)], var)
-                            push!(gs, FunctionTerm(log, RT.LT.coeff*u, positive_constant_coefficient(g)))
+                            push!(gs, FunctionTerm(log, RT.LT.coeff*u, g))
                             Dg += RT.LT.coeff*u*D(g)//g
                         end
                         for AT in RT.ATs

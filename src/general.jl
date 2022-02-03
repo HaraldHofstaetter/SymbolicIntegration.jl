@@ -82,7 +82,7 @@ isrational(x::T) where T<:Rational = true
 
 isrational(x::fmpq) = true # Nemo rational type
 
-isrational(x::qqbar) = degree(x)==1 # Nemo algebraic number type
+isrational(x::qqbar) = degree(x)==1 && iszero(imag(x)) # Nemo algebraic number type
 
 function isrational(x::P) where P<:PolyElem
     if degree(x)>0
@@ -142,6 +142,26 @@ end
 function rational_roots(f::PolyElem{T}) where T<:FieldElement
     p = map_coefficients(c->fmpq(rationalize(c)), constant_factors(f)) # fmpq needs Nemo
     roots(p) 
+end
+
+function Nemo.roots(f::PolyElem{qqbar})
+    n = degree(f)
+    X = gen(parent(f))
+    _, xys= PolynomialRing(Nemo.QQBar, vcat(:x,  [Symbol("y$i") for i = 1:n]))
+    x = xys[1]
+    ys = xys[2:end]
+
+    as = reverse(collect(coefficients(f))[1:end-1])
+
+    G = x^n + sum([ys[i]*x^(n-i) for i=1:n])
+    for i=1:n
+        G = prod([ G(x, vcat(zeros(Int, i-1), α, ys[i+1:end])...) for α in conjugates(as[i])])
+    end
+
+    g = map_coefficients(c->fmpq(c), G(X, zeros(parent(X), n)...))
+    
+    rs = roots(g, QQBar)
+    [r for r in rs if iszero(f(r))]
 end
 
 

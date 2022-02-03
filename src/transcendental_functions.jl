@@ -191,44 +191,6 @@ function ConstantPart(ss::Vector{P}, Ss::Vector{PP}, D::Derivation) where  {P<:P
 end
 
 
-function ConstantPart2(ss::Vector{P}, Ss::Vector{PP}, D::Derivation) where  {P<:PolyElem, PP<:PolyElem{P}}
-    length(ss)==length(Ss) || error("lengths must match")
-    if isempty(ss)
-        return Term[], ss, Ss
-    end
-    gs = Term[]
-    Dg = 0
-    D1 = CoefficientLiftingDerivation(parent(ss[1]), BaseDerivation(D))
-    for i=1:length(ss)     
-        RT = LogToReal(SumOfLogTerms(ss[i], Ss[i]))
-        rs = constant_roots(ss[i], D1, useQQBar=true) # useQQBar=true means inter alia that also complex roots are considered
-        for α in rs   
-            u = real(α)             
-            v = imag(α)
-            if iszero(v)
-                g = map_coefficients(c->c(u), Ss[i])                
-                push!(gs, FunctionTerm(log, u, positive_constant_coefficient(g)))
-                Dg += u*D(g)//g
-            elseif imag(v)>0
-                var = string(symbols(parent(Ss[i]))[1])
-                F = base_ring(ss[i])
-                if !iszero(u)
-                    g = polynomial(F, [numerator(c)(u, v)//denominator(c)(u, v) for c in coefficients(r.LT.arg)], var)
-                    push!(gs, FunctionTerm(log, RT.LT.coeff*u, positive_constant_coefficient(g)))
-                    Dg += RT.LT.coeff*u*D(g)//g
-                end
-                for AT in RT.ATs
-                    g = polynomial(F, [numerator(c)(u, v)//denominator(c)(u, v) for c in coefficients(AT.arg)], var)
-                    push!(gs, FunctionTerm(atan, AT.coeff*v, g))
-                    Dg += AT.coeff*v*D(g)//(1 + g^2)
-                end                    
-            end
-        end
-    end
-    gs, Dg
-end
-
-
 """
     IntegratePrimitivePolynomial(p, D) -> (q, ρ)
 

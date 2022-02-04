@@ -229,19 +229,19 @@ function analyze_expr(f::SymbolicUtils.Term , funs::Vector, vars::Vector{Symboli
     op = operation(f)
     a = arguments(f)[1]
     if op == sinh
-        f = (exp(a) - 1/exp(a))/2
+        f = 1//2*(exp(a) - 1/exp(a))
         return analyze_expr(f, funs, vars, args)
     elseif op == cosh
-        f = (exp(a) + 1/exp(a))/2
+        f = 1//2*(exp(a) + 1/exp(a))
         return analyze_expr(f, funs, vars, args)
     elseif op == tanh
         f = (exp(a) - 1/exp(a))/(exp(a) + 1/exp(a))
         return analyze_expr(f, funs, vars, args)
     elseif op == sin # transform to half angle format
-        f = 2*tan(a/2)/(1 + tan(a/2)^2)
+        f = 2*tan(1//2*a)/(1 + tan(1//2*a)^2)
         return analyze_expr(f, funs, vars, args)
     elseif op == cos
-        f = (1 - tan(a/2)^2)/(1 + tan(a/2)^2)
+        f = (1 - tan(1//2*a)^2)/(1 + tan(1//2*a)^2)
         return analyze_expr(f, funs, vars, args)
     end
     i = findfirst(x -> hash(x)==hash(f), funs) 

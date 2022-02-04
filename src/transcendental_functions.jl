@@ -452,7 +452,8 @@ function InFieldDerivative(f::F, D::Derivation) where
         if ρ<=0
             return no_solution
         end
-        return g + q + v + c*MonomialDerivative(D), 1
+        t = gen(parent(p))
+        return g + q + v + c*t, 1
     else #  TODO: minor modification mentioned near the top of p.176
         if ishyperexponential(D)
             q, ρ = IntegrateHyperexponentialPolynomial(p, D)

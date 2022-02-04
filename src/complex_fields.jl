@@ -26,6 +26,21 @@ function Base.imag(f::AbstractAlgebra.ResFieldElem{P}) where {T<:FieldElement, P
     coeff(data(f), 1)
 end 
 
+import Base: (*)
+
+function (*)(c::F, f::K) where
+    {F<:AbstractAlgebra.ResFieldElem, T<:AbstractAlgebra.ResFieldElem, P<:PolyElem{T}, K<:FracElem{P}}
+    I = get_I(parent(f))
+    (real(c) + imag(c)*I)*f
+end
+
+function (*)(c::F, f::P) where
+    {F<:AbstractAlgebra.ResFieldElem, T<:AbstractAlgebra.ResFieldElem, P<:PolyElem{T}}
+    I = get_I(parent(f))
+    (real(c) + imag(c)*I)*f
+end
+
+
 Base.iszero(D::ComplexExtensionDerivation) = iszero(D.D)
 isbasic(D::ComplexExtensionDerivation) = isbasic(D.D)
 MonomialDerivative(D::ComplexExtensionDerivation) = MonomialDerivative(D.D)

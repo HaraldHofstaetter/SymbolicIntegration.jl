@@ -1086,15 +1086,8 @@ function LimitedIntegrate(f::F, ws::Vector{F}, D::Derivation) where
             cs = cds[1:m]
             ds = cds[m+1:m+r]
             y = Z 
-            if contains_I(parent(Z))
-                I = get_I(parent(Z))
-                for j=1:length(hs)
-                    y += (real(ds[j])+imag(ds[j])*I)*hs[j]
-                end
-            else
-                for j=1:length(hs)
-                    y +=  ds[j]*hs[j]
-                end 
+            for j=1:length(hs)
+                y +=  ds[j]*hs[j]
             end
             y = y//h
             return y, cs[2:m], 1

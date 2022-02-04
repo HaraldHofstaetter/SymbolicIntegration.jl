@@ -194,7 +194,7 @@ function InFieldDerivative(f::K, D::Derivation) where
     ktI = parent(f)
     I0 = ktI(gen(base_ring(ktI)))
     t0 = gen(base_ring(base_ring(base_ring(ktI))))
-    _, t, I, D =  switch_t_i(K, D)
+    _, t, I, D =  switch_t_i(ktI, D)
     f = transform(f, t, I)
     u, ρ = InFieldDerivative(f, D)
     backtransform(u, t0, I0), ρ

@@ -151,9 +151,11 @@ function ConstantPart(ss::Vector{P}, Ss::Vector{PP}, D::Derivation) where  {P<:P
         αs = constant_roots(ss[i], D1)
         if length(αs)==degree(ss[i]) # all roots found
             for α in αs                                
-                g = map_coefficients(c->c(α), Ss[i])                
-                push!(gs, FunctionTerm(log, α, g))
-                Dg += α*D(g)//g
+                g = map_coefficients(c->c(α), Ss[i])  
+                if !isconstant(g, D)              
+                    push!(gs, FunctionTerm(log, α, g))
+                    Dg += α*D(g)//g
+                end
             end
         else
             RT = LogToReal(SumOfLogTerms(ss[i], Ss[i]))
@@ -163,22 +165,29 @@ function ConstantPart(ss::Vector{P}, Ss::Vector{PP}, D::Derivation) where  {P<:P
                     u = rationalize(real(α))
                     v = rationalize(imag(α))
                     if iszero(v)
-                        g = map_coefficients(c->c(u), Ss[i])                
-                        push!(gs, FunctionTerm(log, u, g))
-                        Dg += u*D(g)//g
+                        g = map_coefficients(c->c(u), Ss[i])       
+                        if !isconstant(g, D)         
+                            push!(gs, FunctionTerm(log, u, g))
+                            Dg += u*D(g)//g
+                        end
                     elseif v > 0
                         var = string(symbols(parent(Ss[i]))[1])
                         F = base_ring(ss[i])
                         if !iszero(u)
-                            g = polynomial(F, [numerator(c)(u, v)//denominator(c)(u, v) for c in coefficients(RT.LT.arg)], var)
-                            push!(gs, FunctionTerm(log, RT.LT.coeff*u, g))
-                            Dg += RT.LT.coeff*u*D(g)//g
+                            # Ignore log terms with contstant arguments. In some cases the denominator of the constant argument
+                            # might be zero after substitutiong (u,v). So this avoids divison by zero in these cases.
+                            if degree(RT.LT.arg)>0 || (!isconstant(numerator(constant_coefficient(RT.LT.arg))(u,v), BaseDerivation(D)) &&
+                                                       !isconstant(denominator(constant_coefficient(RT.LT.arg))(u,v), BaseDerivation(D)))
+                                g = polynomial(F, [numerator(c)(u, v)//denominator(c)(u, v) for c in coefficients(RT.LT.arg)], var)
+                                push!(gs, FunctionTerm(log, RT.LT.coeff*u, g))
+                                Dg += RT.LT.coeff*u*D(g)//g
+                            end
                         end
                         for AT in RT.ATs    
-                            # Ignore atans with contstant arguments. In some cases the denominator of the constant argument
-                            # is zero after substitutiong (u,v). So this avoids divison by zero in these cases.
+                            # Ignore atan terms with contstant arguments. In some cases the denominator of the constant argument
+                            # might be zero after substitutiong (u,v). So this avoids divison by zero in these cases.
                             if degree(AT.arg)>0 || (!isconstant(numerator(constant_coefficient(AT.arg))(u,v), BaseDerivation(D)) &&
-                                                   !isconstant(denominator(constant_coefficient(AT.arg))(u,v), BaseDerivation(D)))
+                                                    !isconstant(denominator(constant_coefficient(AT.arg))(u,v), BaseDerivation(D)))
                                 g = polynomial(F, [numerator(c)(u, v)//denominator(c)(u, v) for c in coefficients(AT.arg)], var)
                                 push!(gs, FunctionTerm(atan, AT.coeff*v, g))
                                 Dg += AT.coeff*v*D(g)//(1 + g^2)

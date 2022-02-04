@@ -1085,7 +1085,19 @@ function LimitedIntegrate(f::F, ws::Vector{F}, D::Derivation) where
             r = length(hs)
             cs = cds[1:m]
             ds = cds[m+1:m+r]
-            return sum([ds[j]*hs[j] for j=1:length(hs)])//h, cs[2:m], 1
+            y = Z 
+            if contains_I(parent(Z))
+                I = get_I(parent(Z))
+                for j=1:length(hs)
+                    y += (real(ds[j])+imag(ds[j])*I)*hs[j]
+                end
+            else
+                for j=1:length(hs)
+                    y +=  ds[j]*hs[j]
+                end 
+            end
+            y = y//h
+            return y, cs[2:m], 1
         end
         # premature exit
         rg = size(A, 2)-size(A, 1)        

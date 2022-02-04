@@ -831,7 +831,7 @@ Given a field `k`, a derivation `D` on `k[t]`, `a`, `b` in `k[t]` with `a≠0`, 
 `gᵢ` in `k(t)` , return `hs=[h₁,...,hᵣ]` with 
 `hᵢ` in `k(t)` and  a matrix `A` in reduced row echelon form with entries in `Const(k)` such that
 `c₁`,...,`cₘ` in `Const(k)` and `q` in `k[t]` is a solution of 
-`a*D(q)+b*q=∑ᵢcᵢ*gᵢ` if and only if `y=∑ⱼdⱼ*hⱼ` for `d₁`,...,`dᵣ` in `Const(k)` with
+`a*D(q)+b*q=∑ᵢcᵢ*gᵢ` if and only if `q=∑ⱼdⱼ*hⱼ` for `d₁`,...,`dᵣ` in `Const(k)` with
 `A*[c₁,...,cₘ,d₁,...,dᵣ]=0`.
 
 See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 7.1, p. 222.

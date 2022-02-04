@@ -170,14 +170,19 @@ function ConstantPart(ss::Vector{P}, Ss::Vector{PP}, D::Derivation) where  {P<:P
                         var = string(symbols(parent(Ss[i]))[1])
                         F = base_ring(ss[i])
                         if !iszero(u)
-                            g = polynomial(F, [numerator(c)(u, v)//denominator(c)(u, v) for c in coefficients(r.LT.arg)], var)
+                            g = polynomial(F, [numerator(c)(u, v)//denominator(c)(u, v) for c in coefficients(RT.LT.arg)], var)
                             push!(gs, FunctionTerm(log, RT.LT.coeff*u, g))
                             Dg += RT.LT.coeff*u*D(g)//g
                         end
-                        for AT in RT.ATs
-                            g = polynomial(F, [numerator(c)(u, v)//denominator(c)(u, v) for c in coefficients(AT.arg)], var)
-                            push!(gs, FunctionTerm(atan, AT.coeff*v, g))
-                            Dg += AT.coeff*v*D(g)//(1 + g^2)
+                        for AT in RT.ATs    
+                            # Ignore atans with contstant arguments. In some cases the denominator of the constant argument
+                            # is zero after substitutiong (u,v). So this avoids divison by zero in these cases.
+                            if degree(AT.arg)>0 || (!isconstant(numerator(constant_coefficient(AT.arg))(u,v), BaseDerivation(D)) &&
+                                                   !isconstant(denominator(constant_coefficient(AT.arg))(u,v), BaseDerivation(D)))
+                                g = polynomial(F, [numerator(c)(u, v)//denominator(c)(u, v) for c in coefficients(AT.arg)], var)
+                                push!(gs, FunctionTerm(atan, AT.coeff*v, g))
+                                Dg += AT.coeff*v*D(g)//(1 + g^2)
+                            end
                         end                    
                     end        
                 end        

@@ -114,6 +114,10 @@ function ParametricLogarithmicDerivative(f::F, w::F, D::Derivation) where F<:Fie
     # base case f,w \in constant field, D must be the null derivation
     iszero(D) || error("base case only for null derivations")
     v = one(parent(f))
+    q = f//w
+    if !isrational(q) # could be complex for example
+        return 0, 0, zero(parent(f)), 0
+    end
     q = rationalize_over_Int(f//w)
     m = numerator(q)
     n = denominator(q)
@@ -267,9 +271,9 @@ function RdeSpecialDenomTan(a::P, b::F, c::F, D::Derivation) where
         αI_plus_β = Remainder(-b//a, p)
         α = coeff(αI_plus_β, 1)
         β = coeff(αI_plus_β, 0)
-        η = divexact(MonomialDerivative(D), p)
-        v, ρ = InFieldDerivative(2*β, D0)
+        η = constant_coefficient(divexact(MonomialDerivative(D), p))
         D0 = BaseDerivation(D)
+        v, ρ = InFieldDerivative(2*β, D0)
         if ρ>0 && !iszero(v)
             _, I, D0I = Complexify(parent(η), D0)
             n0, m, v, ρ = ParametricLogarithmicDerivative(α*I+β, 2*η*I, D0I)
@@ -525,8 +529,8 @@ function RdeBoundDegreeNonLinear(a::P, b::P, c::P, D::Derivation) where
     λ = leading_coefficient(D)
     n = max(0, dc - max(da + δ - 1, db))
     if db==da+δ-1
-        m0 = -leading_coefficient(b)/(λ*leading_coefficient(a))
-        if is_rational(m0)
+        m0 = -leading_coefficient(b)//(λ*leading_coefficient(a))
+        if isrational(m0)
             m = rationalize_over_Int(m0)
             if isone(denominator(m))
                 n = max(0, numerator(m), dc - db)
@@ -928,7 +932,7 @@ function PolyRischDECancelTan(b0::T, c::P, D::Derivation, n::Int=typemax(Int)) w
     if n==0
         if degree(c)<=0
             if !iszero(b0)
-                q, ρ = RischDE(b0, c0, BaseDerivation(D))
+                q, ρ = RischDE(b0, constant_coefficient(c), BaseDerivation(D))
                 if ρ<=0
                     return no_solution
                 else
@@ -1008,8 +1012,9 @@ function PolyRischDE(b::P, c::P, D::Derivation, n::Int=typemax(Int)) where
                 else
                     t = gen(parent(b))
                     η = divexact(MonomialDerivative(D), t^2+1)
-                    b0 = b1 + n*t*η
-                    return PolyRischDECancelTan(b0, c, D, n)
+                    b0 = b + n*t*η
+                    @assert degree(b0)<=0
+                    return PolyRischDECancelTan(constant_coefficient(b0), c, D, n)
                 end                
             else
                 H = MonomialDerivative(D)

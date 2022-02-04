@@ -33,7 +33,7 @@ function CoupledDECancelPrim(b1::T, b2::T,  c1::P, c2::P, D::Derivation, n::Int=
     # TODO: case (b1, b2)==(0, 0) !?
     t = gen(parent(c1))
     _, I, D0I = Complexify(parent(b1), D0)
-    z, ρ = InFieldLogarithmicDerivative(b + 0*I, D0I) 
+    z, ρ = InFieldLogarithmicDerivative(b1 + b2*I, D0I) 
     if ρ>0
         z1 = real(z)
         z2 = imag(z)
@@ -63,7 +63,7 @@ function CoupledDECancelPrim(b1::T, b2::T,  c1::P, c2::P, D::Derivation, n::Int=
         if n<m
             return no_solution
         end
-        s1, s2, ρ = CoupledDESystem(b1, b2, coefficient(c1, m), coefficient(c2, m), D0)
+        s1, s2, ρ = CoupledDESystem(b1, b2, coeff(c1, m), coeff(c2, m), D0)
         if ρ<=0
             return no_solution
         end
@@ -107,7 +107,7 @@ function CoupledDECancelExp(b1::T, b2::T,  c1::P, c2::P, D::Derivation, n::Int=t
     _, I, D0I = Complexify(parent(b1), D0)
     H = MonomialDerivative(D)
     w = coeff(H,1) # = Dt/t for hyperexponentialm case
-    n, m, z, ρ = ParametricLogarithmicDerivative(b+0*I, w+0*I, D0I)
+    n, m, z, ρ = ParametricLogarithmicDerivative(b1 + b2*I, w + 0*I, D0I)
     if  ρ>0 && n==1
         z1 = real(z)
         z2 = imag(z)                
@@ -145,7 +145,7 @@ function CoupledDECancelExp(b1::T, b2::T,  c1::P, c2::P, D::Derivation, n::Int=t
         if n<m
             return no_solution
         end
-        s1, s2, ρ = CoupledDESystem(b1 + m*w, b2, coefficient(c1, m), coefficient(c2, m), D0)
+        s1, s2, ρ = CoupledDESystem(b1 + m*w, b2, coeff(c1, m), coeff(c2, m), D0)
         if ρ<=0
             return no_solution
         end
@@ -267,20 +267,33 @@ function CoupledDESystem(f1::F, f2::F, g1::F, g2::F, D::Derivation) where
     
     @assert ρ>=100
     n = ρ - 101
-    c = backtransform(z, t0, I0)
+
+    #TODO: case b1=0 and b2=0: in-field integration algorithm. see p. 259
+    c = backtransform(z + Z, t0, I0)
     c1 = real(c)
     c2 = imag(c)
-    
+    @assert isone(denominator(c1)) && isone(denominator(c2))
+    c1 = numerator(c1)
+    c2 = numerator(c2)
+    b = backtransform(b + Z, t0, I0)
+    b1 = real(b)
+    b2 = imag(b)
+    @assert isone(denominator(b1)) && isone(denominator(b2))
+    b1 = numerator(b1)
+    b2 = numerator(b2)
     if isprimitive(D)
-        z1, z2, ρ = CoupledDECancelPrim(b1, b2, c1, c1,  D, n)
+        @assert degree(b1)<=0 && degree(b2)<=0
+        z1, z2, ρ = CoupledDECancelPrim(constant_coefficient(b1), constant_coefficient(b2), c1, c2,  D, n)
         ρ>=1 || return no_solution
     elseif ishyperexponential(D)
-        z1, z2, ρ = CoupledDECancelExp(b1, b2, c1, c1,  D, n)
+        @assert degree(b1)<=0 && degree(b2)<=0
+        z1, z2, ρ = CoupledDECancelExp(constant_coefficient(b1), constant_coefficient(b2), c1, c2,  D, n)
         ρ>=1 || return no_solution
     elseif ishypertangent(D)             
         η = divexact(MonomialDerivative(D), t0^2+1)
         b0 = b1 + n*t0*η
-        z1, z2, ρ = CoupledDECancelTan(b0, b2, c1, c1,  D, n)
+        @assert degree(b0)<=0 && degree(b2)<=0
+        z1, z2, ρ = CoupledDECancelTan(constant_coefficient(b0), constant_coefficient(b2), c1, c2,  D, n)
         ρ>=1 || return no_solution
     else
         H = MonomialDerivative(D)
@@ -288,9 +301,9 @@ function CoupledDESystem(f1::F, f2::F, g1::F, g2::F, D::Derivation) where
     end
 
     # Note: α, β, h0, h1, h2 are in k(√-1)(t) or k(√-1)[t]
-    α = backtransform(α, t0, I0) 
-    β = backtransform(β, t0, I0) 
-    h = backtransform(ho*h1*h2, t0, I0) 
+    α = backtransform(α + Z, t0, I0) 
+    β = backtransform(β + Z, t0, I0) 
+    h = backtransform(h0*h1*h2 + Z, t0, I0) 
     y = (α*(z1+z2*I0)+β)//h
     real(y), imag(y), 1
 end

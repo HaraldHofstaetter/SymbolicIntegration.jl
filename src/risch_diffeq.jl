@@ -320,14 +320,14 @@ function RdeSpecialDenomTanI(a::P, b::F, c::F, D::Derivation) where
     t = gen(parent(a))    
     degree(gcd(a, t^2 + 1))==0 || error("gcd(a, t^2+1) must be == 1")
     contains_I(parent(a)) || error("field k must contain I=sqrt(-1)")
-    I = get_I(parent(a))
+    I = get_I(base_ring(parent(a)))
     p = t-I
     nb = valuation(b, p)
     nc = valuation(c, p)
     n = min(0, nc - min(0, nb))
     if nb==0         
         α = constant_coefficient(Remainder(-b//a, p))
-        η = divexact(MonomialDerivative(D), t^2 + 1)
+        η = constant_coefficient(divexact(MonomialDerivative(D), t^2 + 1))
         n0, m, v, ρ = ParametricLogarithmicDerivative(α, 2*η*I, BaseDerivation(D))
         if  ρ>0 && n0==1 && !iszero(v)
             n = min(n, m)
@@ -464,7 +464,7 @@ function RdeBoundDegreeBase(a::P, b::P, c::P) where
     n = max(0, dc - max(db, da - 1))
     if db==da-1
         m0 = -leading_coefficient(b)//leading_coefficient(a)
-        if is_rational(m0)
+        if isrational(m0)
             m = rationalize_over_Int(m0)
             if isone(denominator(m))
                 n = max(0, numerator(m), dc - db)

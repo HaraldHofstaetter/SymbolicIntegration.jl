@@ -468,19 +468,33 @@ function InFieldDerivative(f::F, D::Derivation) where
         end
         t = gen(parent(p))
         return g + q + v + c*t, 1
-    else #  TODO: minor modification mentioned near the top of p.176
+    else
         if ishyperexponential(D)
             q, ρ = IntegrateHyperexponentialPolynomial(p, D)
             if ρ<=0
                 return no_solution
             end
+            a0 = p-D(q)
         elseif ishypertangent(D)
-            throw(NotImplementedError("InFieldDerivative: hypertangent case\n@ $(@__FILE__):$(@__LINE__)"))
+            q1, ρ = IntegrateHypertangentReduced(p, D)
+            if ρ<=0
+                return no_solution
+            end
+            p1 = p - D(q1)
+            @assert isone(denominator(p1))
+            q2, c = IntegrateHypertangentPolynomial(numerator(p1), D)
+            if !iszero(c)
+                # This is my (maybe too naive) interpretation of "prevent
+                # introducing a new logarithm". See parenthetical comment
+                # on top of p.176.
+                return no_solution
+            end
+            q = q1 + q2
+            a0 = p1 - D(q2)
         else
             H = MonomialDerivative(D)
             throw(NotImplementedError("InFieldDerivative: monomial deivative =$H\n@ $(@__FILE__):$(@__LINE__)"))
         end
-        a0 = p-D(q)
         @assert isone(denominator(a0)) && degree(numerator(a0))<=0 # p-D(q) ∈ k
         a = constant_coefficient(numerator(a0))
         v, ρ = InFieldDerivative(a, BaseDerivation(D))

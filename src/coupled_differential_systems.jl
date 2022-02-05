@@ -107,8 +107,8 @@ function CoupledDECancelExp(b1::T, b2::T,  c1::P, c2::P, D::Derivation, n::Int=t
     _, I, D0I = Complexify(parent(b1), D0)
     H = MonomialDerivative(D)
     w = coeff(H,1) # = Dt/t for hyperexponentialm case
-    n, m, z, ρ = ParametricLogarithmicDerivative(b1 + b2*I, w + 0*I, D0I)
-    if  ρ>0 && n==1
+    n1, m, z, ρ = ParametricLogarithmicDerivative(b1 + b2*I, w + 0*I, D0I)
+    if  ρ>0 && n1==1
         z1 = real(z)
         z2 = imag(z)                
         p1, ρ = InFieldDerivative((z1*c1 - z2*c2)*t^m, D)        

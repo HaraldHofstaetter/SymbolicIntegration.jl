@@ -234,14 +234,32 @@ function analyze_expr(f::SymbolicUtils.Term , funs::Vector, vars::Vector{Symboli
     elseif op == cosh
         f = 1//2*(exp(a) + 1/exp(a))
         return analyze_expr(f, funs, vars, args)
+    elseif op == csch # 1/sinh
+        f = 2/(exp(a) - 1/exp(a))
+        return analyze_expr(f, funs, vars, args)
+    elseif op == sech
+        f = 2/(exp(a) + 1/exp(a))
+        return analyze_expr(f, funs, vars, args)
     elseif op == tanh
         f = (exp(a) - 1/exp(a))/(exp(a) + 1/exp(a))
         return analyze_expr(f, funs, vars, args)
+    elseif op == coth
+        f = (exp(a) + 1/exp(a))/(exp(a) - 1/exp(a))
+        return analyze_expr(f, funs, vars, args)        
     elseif op == sin # transform to half angle format
         f = 2*tan(1//2*a)/(1 + tan(1//2*a)^2)
         return analyze_expr(f, funs, vars, args)
     elseif op == cos
         f = (1 - tan(1//2*a)^2)/(1 + tan(1//2*a)^2)
+        return analyze_expr(f, funs, vars, args)
+    elseif op == csc # 1/sin
+        f = 1//2*(1 + tan(1//2*a)^2)/tan(1//2*a)
+        return analyze_expr(f, funs, vars, args)
+    elseif op == sec # 1/cos
+        f = (1 + tan(1//2*a)^2)/(1 - tan(1//2*a)^2)
+        return analyze_expr(f, funs, vars, args)
+    elseif op == cot
+        f = 1/tan(a)
         return analyze_expr(f, funs, vars, args)
     end
     i = findfirst(x -> hash(x)==hash(f), funs) 

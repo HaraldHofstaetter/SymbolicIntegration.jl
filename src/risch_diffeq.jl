@@ -334,12 +334,13 @@ function RdeSpecialDenomTanI(a::P, b::F, c::F, D::Derivation) where
         end
     end
     N = max(0, -nb, n-nc)
-    p_power_N = p^N
-    b1 = (b+n*a*divexact(D(p), p))*p_power_N
+    pp = t^2 + 1
+    pp_power_N = pp^N
+    b1 = (b+n*a*divexact(D(pp), pp))*pp_power_N
     @assert isone(denominator(b1))
-    c1 = c*p^(N-n)
+    c1 = c*pp^(N-n)
     @assert isone(denominator(c1))
-    a*p_power_N, numerator(b1), numerator(c1), p^(-n)   
+    a*pp_power_N, numerator(b1), numerator(c1), pp^(-n)   
 end
 
 """

@@ -268,6 +268,18 @@ function constant_roots(f::PolyElem{T}, D::Derivation; useQQBar::Bool=false) whe
     end
 end
 
+function constant_roots(f::PolyElem{T}, D::Derivation; useQQBar::Bool=false) where 
+    {T<:AbstractAlgebra.ResFieldElem}
+    @assert iscompatible(f, D)
+    p = map_coefficients(c->constantize(c, BaseDerivation(D)), constant_factors(f)) 
+    pp = map_coefficients(c->real(c), p*map_coefficients(c->conj(c), p))
+    g = gcd(pp, derivative(pp))
+    if useQQBar
+        return roots(g, QQBar) 
+    else
+        return roots(g)
+    end
+end
 
 """
     SplitFactor(p, D) -> (pₙ, pₛ)

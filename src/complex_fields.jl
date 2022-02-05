@@ -104,7 +104,10 @@ function get_I(F::AbstractAlgebra.ResField{P}) where {T<:FieldElement, P<:PolyEl
     end
 end
 
-
+function conj(f::AbstractAlgebra.ResFieldElem{P}) where {T<:FieldElement, P<:PolyElem{T}}
+    I = get_I(parent(f))
+    real(f) - imag(f)*I
+end
 
 function (D::ComplexExtensionDerivation)(f::AbstractAlgebra.ResFieldElem{P}) where {T<:FieldElement, P<:PolyElem{T}}
     iscompatible(f, D) || error("f not in domain of D")

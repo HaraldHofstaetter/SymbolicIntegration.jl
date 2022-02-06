@@ -364,10 +364,13 @@ function Integrate(f:: F, D::Derivation) where
     ss, Ss, ρ = ResidueReduce(h, D)
     g2, Dg2, ss1, Ss1 = ConstantPart(ss, Ss, D)
     if !isempty(ss1) 
-        throw(NotImplementedError("Integrate: solution involves algebraic numbers\n@ $(@__FILE__):$(@__LINE__)"))
-        # TODO: from now on all computations have to be performed in extension fields        
+        throw(AlgebraicNumbersInvolved())        
+        # From this point on all computations have to be performed in extension fields        
         # over field of algebraic (instead of merely rational) numbers, i.e., replace
         # Nemo.QQ by Nemo.QQBar, see http://nemocas.github.io/Nemo.jl/latest/algebraic/
+        # For the time being, we start all over again, now with QQBar enabled
+        # and discard all results that have been obtained until now.
+        # TODO: transform the so far obtained results to fields over QQBar and proceed.
     end
     if ρ<=0 
         g = vcat(IdTerm(g1), g2)

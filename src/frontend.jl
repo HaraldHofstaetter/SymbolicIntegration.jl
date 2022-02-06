@@ -285,6 +285,10 @@ end
 
 transform_symtree_to_mpoly(f::Number, vars::Vector, vars_mpoly::Vector) = f
 
+(F::CalciumQQBarField)(x::Rational) = F(fmpq(x))
+Base.promote(x::fmpq, y::MPolyElem{Nemo.qqbar}) = promote(qqbar(x), y)
+Base.promote(x::MPolyElem{Nemo.qqbar}, y::fmpq) = promote(x, qqbar(y))
+
 transform_symtree_to_mpoly(f::SymbolicUtils.Add, vars::Vector, vars_mpoly::Vector) =
     sum([transform_symtree_to_mpoly(a, vars, vars_mpoly) for a in arguments(f)])
 
@@ -365,31 +369,52 @@ end
 
 @syms ∫(f, x)
 
-function integrate(f::SymbolicUtils.Symbolic, x::SymbolicUtils.Sym)
+struct AlgebraicNumbersInvolved <: Exception end
+
+function integrate(f::SymbolicUtils.Symbolic, x::SymbolicUtils.Sym; useQQBar=false,
+    catchNotImplementedError::Bool=true, catchAlgorithmFailedError::Bool=true)
     try
         p, funs, vars, args = analyze_expr(f, x)    
-        R, vars_mpoly = PolynomialRing(Nemo.QQ, Symbol.(vars))
+        if useQQBar
+            F = Nemo.QQBar
+        else
+            F = Nemo.QQ
+        end
+        R, vars_mpoly = PolynomialRing(F, Symbol.(vars))
         Z = zero(R)//one(R)
         args_mpoly = typeof(Z)[transform_symtree_to_mpoly(a, vars, vars_mpoly) + Z for a in args]    
         terms = vcat(IdTerm(args_mpoly[1]), Term[FunctionTerm(operation(funs[i]), 1, args_mpoly[i]) for i=2:length(funs)])
         p_mpoly = transform_symtree_to_mpoly(p, vars, vars_mpoly)           
         _, gs, D = TowerOfDifferentialFields(terms)
-        p = transform_mpoly_to_tower(p_mpoly + Z, gs)    
-        g, r, ρ = Integrate(p, D)
-        if ρ<=0
-            return subst_tower(g, funs) + ∫(subst_tower(r, funs), x)
-        else
-            return subst_tower(g, funs)
+        p = transform_mpoly_to_tower(p_mpoly + Z, gs)   
+        try 
+            g, r, ρ = Integrate(p, D)
+            if ρ<=0
+                return subst_tower(g, funs) + ∫(subst_tower(r, funs), x)
+            else
+                return subst_tower(g, funs)
+            end
+        catch e
+            if e isa AlgebraicNumbersInvolved
+                # try again now with algebraic numbers enabled
+                return integrate(f, x, useQQBar=true, 
+                    catchNotImplementedError=catchNotImplementedError, 
+                    catchAlgorithmFailedError=catchAlgorithmFailedError)
+            end
+            rethrow(e)
         end
     catch e
         if e isa NotImplementedError
-            @error "NotImplementedError: $(e.msg)"
-            return ∫(f, x)
+            if catchNotImplementedError
+                @warn "NotImplementedError: $(e.msg)"
+                return ∫(f, x)
+            end
         elseif e isa AlgorithmFailedError
-            @error "AlgorithmFailedError: $(e.msg)"
-            return ∫(f, x)
-        else
-            rethrow(e)
+            if catchAlgorithmFailedError
+                @warn "AlgorithmFailedError: $(e.msg)"
+                return ∫(f, x)
+            end
         end
+        rethrow(e)        
     end
 end

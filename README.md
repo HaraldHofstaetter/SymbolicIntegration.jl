@@ -42,6 +42,12 @@ julia> f = 1/(x*log(x))
 
 julia> integrate(f, x)
 log(log(x))
+
+julia> f = 1/(1+2*cos(x))
+1 / (1 + 2cos(x))
+
+julia> g = integrate(f, x)
+log(-4 - sqrt(16//3)*tan((1//2)*x))*sqrt(1//3) - log(sqrt(16//3)*tan((1//2)*x) - 4)*sqrt(1//3)
 ```
 
 ## Tests

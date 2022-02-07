@@ -59,7 +59,7 @@ function PolynomialReduce(p::P, D::Derivation) where
     λ = leading_coefficient(D)
     t = gen(domain(D))
     if degree(p)<δ
-        return (0, p)
+        return (zero(p), p)
     end
     m = degree(p) - δ +1
     q0 = (leading_coefficient(p)//(m*λ))*t^m

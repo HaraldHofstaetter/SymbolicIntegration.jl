@@ -186,37 +186,51 @@ function subst_tower(ts::Vector{Term}, subs::Vector)
     sum([subst_tower(t, subs) for t in ts])
 end
 
+struct NewTanArg <: Exception end
 
 function analyze_expr(f, x::SymbolicUtils.Sym)
-    funs = Any[x]
-    vars = SymbolicUtils.Sym[x]
-    args = Any[x]
-    p = analyze_expr(f, funs, vars, args)
-    p, funs, vars, args
+    tanArgs = []
+    restart = true
+    while restart        
+        funs = Any[x]
+        vars = SymbolicUtils.Sym[x]
+        args = Any[x]
+        try 
+            p = analyze_expr(f, funs, vars, args, tanArgs)
+            return p, funs, vars, args
+        catch e
+            if e isa NewTanArg
+                restart = true
+            else
+                rethrow(e)
+            end                
+        end
+    end
 end
 
-function analyze_expr(f::SymbolicUtils.Sym , funs::Vector, vars::Vector{SymbolicUtils.Sym}, args::Vector)
+function analyze_expr(f::SymbolicUtils.Sym , funs::Vector, vars::Vector{SymbolicUtils.Sym}, args::Vector, tanArgs::Vector)
     if hash(f) != hash(funs[1])
         throw(NotImplementedError(("integrand contains symbol $f not equal to the integration variable $(funs[1])\n@ $(@__FILE__):$(@__LINE__)")))
     end
     return f
 end
 
-function analyze_expr(f::Number , funs::Vector, vars::Vector{SymbolicUtils.Sym}, args::Vector)
+function analyze_expr(f::Number , funs::Vector, vars::Vector{SymbolicUtils.Sym}, args::Vector, tanArgs::Vector)
     # TODO distinguish types of number (rational, real,  complex, etc. )
     return f
 end
 
-function analyze_expr(f::Union{SymbolicUtils.Add, SymbolicUtils.Mul, SymbolicUtils.Div}, funs::Vector, vars::Vector{SymbolicUtils.Sym}, args::Vector)
+function analyze_expr(f::Union{SymbolicUtils.Add, SymbolicUtils.Mul, SymbolicUtils.Div}, funs::Vector, 
+                      vars::Vector{SymbolicUtils.Sym}, args::Vector, tanArgs::Vector)
     as = arguments(f)
-    ps = [analyze_expr(a, funs, vars, args) for a in as]
+    ps = [analyze_expr(a, funs, vars, args, tanArgs) for a in as]
     operation(f)(ps...) # apply f
 end
 
-function analyze_expr(f::SymbolicUtils.Pow, funs::Vector, vars::Vector{SymbolicUtils.Sym}, args::Vector)
+function analyze_expr(f::SymbolicUtils.Pow, funs::Vector, vars::Vector{SymbolicUtils.Sym}, args::Vector, tanArgs::Vector)
     as = arguments(f)
-    p1 = analyze_expr(as[1], funs, vars, args)
-    p2 = analyze_expr(as[2], funs, vars, args)
+    p1 = analyze_expr(as[1], funs, vars, args, tanArgs)
+    p2 = analyze_expr(as[2], funs, vars, args, tanArgs)
     if isa(p2, Integer)
         return p1^p2
     elseif isa(p2, Number)        
@@ -225,42 +239,52 @@ function analyze_expr(f::SymbolicUtils.Pow, funs::Vector, vars::Vector{SymbolicU
     exp(p2*log(p1))    
 end
 
-function analyze_expr(f::SymbolicUtils.Term , funs::Vector, vars::Vector{SymbolicUtils.Sym}, args::Vector)    
+function analyze_expr(f::SymbolicUtils.Term , funs::Vector, vars::Vector{SymbolicUtils.Sym}, args::Vector, tanArgs::Vector)    
     op = operation(f)
     a = arguments(f)[1]
+    if op==tan        
+        i = findfirst(x -> hash(x)==hash(a), tanArgs) 
+        if i === nothing
+            push!(tanArgs, a)
+            throw(NewTanArg())            
+        end    
+    end
     if op == sinh
         f = 1//2*(exp(a) - 1/exp(a))
-        return analyze_expr(f, funs, vars, args)
+        return analyze_expr(f, funs, vars, args, tanArgs)
     elseif op == cosh
         f = 1//2*(exp(a) + 1/exp(a))
-        return analyze_expr(f, funs, vars, args)
+        return analyze_expr(f, funs, vars, args, tanArgs)
     elseif op == csch # 1/sinh
         f = 2/(exp(a) - 1/exp(a))
-        return analyze_expr(f, funs, vars, args)
+        return analyze_expr(f, funs, vars, args, tanArgs)
     elseif op == sech
         f = 2/(exp(a) + 1/exp(a))
-        return analyze_expr(f, funs, vars, args)
+        return analyze_expr(f, funs, vars, args, tanArgs)
     elseif op == tanh
         f = (exp(a) - 1/exp(a))/(exp(a) + 1/exp(a))
-        return analyze_expr(f, funs, vars, args)
+        return analyze_expr(f, funs, vars, args, tanArgs)
     elseif op == coth
         f = (exp(a) + 1/exp(a))/(exp(a) - 1/exp(a))
-        return analyze_expr(f, funs, vars, args)        
+        return analyze_expr(f, funs, vars, args, tanArgs)        
     elseif op == sin # transform to half angle format
         f = 2*tan(1//2*a)/(1 + tan(1//2*a)^2)
-        return analyze_expr(f, funs, vars, args)
+        return analyze_expr(f, funs, vars, args, tanArgs)
     elseif op == cos
         f = (1 - tan(1//2*a)^2)/(1 + tan(1//2*a)^2)
-        return analyze_expr(f, funs, vars, args)
+        return analyze_expr(f, funs, vars, args, tanArgs)
     elseif op == csc # 1/sin
         f = 1//2*(1 + tan(1//2*a)^2)/tan(1//2*a)
-        return analyze_expr(f, funs, vars, args)
+        return analyze_expr(f, funs, vars, args, tanArgs)
     elseif op == sec # 1/cos
         f = (1 + tan(1//2*a)^2)/(1 - tan(1//2*a)^2)
-        return analyze_expr(f, funs, vars, args)
+        return analyze_expr(f, funs, vars, args, tanArgs)
+    elseif op == tan && hash(1//2*a) in hash.(tanArgs)
+        f = 2*tan(1//2*a)/(1 - tan(1//2*a)^2)
+        return analyze_expr(f, funs, vars, args, tanArgs)
     elseif op == cot
         f = 1/tan(a)
-        return analyze_expr(f, funs, vars, args)
+        return analyze_expr(f, funs, vars, args, tanArgs)
     end
     i = findfirst(x -> hash(x)==hash(f), funs) 
     if i !== nothing
@@ -268,7 +292,7 @@ function analyze_expr(f::SymbolicUtils.Term , funs::Vector, vars::Vector{Symboli
     end    
     op in [exp, log, atan, tan] ||        
         throw(NotImplementedError(("integrand contains function $op\n@ $(@__FILE__):$(@__LINE__)")))
-    p = analyze_expr(a, funs, vars, args)
+    p = analyze_expr(a, funs, vars, args, tanArgs)
     tname = Symbol(:t, length(vars)) 
     t = SymbolicUtils.Sym{Number, Nothing}(tname, nothing)
     push!(funs, f)
@@ -371,10 +395,10 @@ end
 
 struct AlgebraicNumbersInvolved <: Exception end
 
-function integrate(f::SymbolicUtils.Symbolic, x::SymbolicUtils.Sym; useQQBar=false,
+function integrate(f::SymbolicUtils.Symbolic, x::SymbolicUtils.Sym; useQQBar::Bool=false,
     catchNotImplementedError::Bool=true, catchAlgorithmFailedError::Bool=true)
     try
-        p, funs, vars, args = analyze_expr(f, x)    
+        p, funs, vars, args = analyze_expr(f, x)
         if useQQBar
             F = Nemo.QQBar
         else

@@ -59,7 +59,7 @@ problems = [
 [cos(x)*log(sin(x)),	x,	2,	-sin(x)+log(sin(x))*sin(x)],	
 [exp(x^2)*x^3,	x,	2,	-1//2*exp(x^2)+1//2*exp(x^2)*x^2],	
 [exp(x)*(3+2*x),	x,	2,	-2*exp(x)+exp(x)*(3+2*x)],	
-#[5^x*x,	x,	2,	-5^x/log(5)^2+5^x*x/log(5)],	
+[5^x*x,	x,	2,	-5^x/log(5)^2+5^x*x/log(5)],	
 [cos(log(x)),	x,	1,	1//2*x*cos(log(x))+1//2*x*sin(log(x))],	
 [exp(sqrt(x)),	x,	3,	-2*exp(sqrt(x))+2*exp(sqrt(x))*sqrt(x), SI.NotImplementedError],	
 [log(sqrt(x)),	x,	1,	-1//2*x+x*log(sqrt(x)), SI.NotImplementedError],	
@@ -379,7 +379,7 @@ problems = [
 [exp(x)*sech(exp(x)),	x,	2,	atan(sinh(exp(x)))],	
 [x^2*cos(3*x),	x,	3,	2//9*x*cos(3*x)-2//27*sin(3*x)+1//3*x^2*sin(3*x)],	
 [sqrt(5-4*x-x^2),	x,	3,	-9//2*asin(1//3*(-2-x))+1//2*(2+x)*sqrt(5-4*x-x^2), SI.NotImplementedError],	
-#[x^5//(x^2+sqrt(2)),	x,	3,	1//4*x^4+log(x^2+sqrt(2))-x^2/sqrt(2), SI.NotImplementedError],	# integrand contains algebraic number
+[x^5//(x^2+sqrt(2)),	x,	3,	1//4*x^4+log(x^2+sqrt(2))-x^2/sqrt(2), SI.NotImplementedError],	# integrand contains algebraic number
 [sec(x)^5,	x,	3,	3//8*atanh(sin(x))+3//8*sec(x)*tan(x)+1//4*sec(x)^3*tan(x)],	
 [sin(2*x)^6,	x,	4,	5//16*x-5//32*cos(2*x)*sin(2*x)-5//48*cos(2*x)*sin(2*x)^3-1//12*cos(2*x)*sin(2*x)^5],	
 [cos(x)*log(sin(x))*sin(x)^2,	x,	4,	-1//9*sin(x)^3+1//3*log(sin(x))*sin(x)^3],	
@@ -390,7 +390,7 @@ problems = [
 [x^4//exp(x),	x,	5,	(-24)//exp(x)-24*x//exp(x)-12*x^2//exp(x)-4*x^3//exp(x)-x^4//exp(x)],	
 [x^4//sqrt(-2+x^10),	x,	3,	1//5*atanh(x^5//sqrt(-2+x^10)), SI.NotImplementedError],
 [exp(x)*cos(4+3*x),	x,	1,	1//10*exp(x)*cos(4+3*x)+3//10*exp(x)*sin(4+3*x)],	
-#[exp(x)*log(1+exp(x)),	x,	4,	-exp(x)+(1+exp(x))*log(1+exp(x)),	-exp(x)+log(1+exp(x))+exp(x)*log(1+exp(x))],	
+[exp(x)*log(1+exp(x)),	x,	4,	-exp(x)+(1+exp(x))*log(1+exp(x))],	
 [x^2*atan(x),	x,	4,	-1//6*x^2+1//3*x^3*atan(x)+1//6*log(1+x^2)],	
 [sqrt(-1+exp(2*x)),	x,	4,	-atan(sqrt(-1+exp(2*x)))+sqrt(-1+exp(2*x)), SI.NotImplementedError],	
 [exp(sin(x))*sin(2*x),	x,	4,	-2*exp(sin(x))+2*exp(sin(x))*sin(x)],	
@@ -410,24 +410,30 @@ unexpected_exceptions = 0
 failed = 0
 passed = 0
 for prob in problems    
-    global k, passed, failed, expected_exceptions
+    global k, passed, failed, expected_exceptions, unexpected_exceptions
     k += 1
     println("--- #$k -----------------------------------------------------------------")
     print("∫", prob[1], "dx = ")        
     if length(prob)<=4
-        result = integrate(prob[1], prob[2], catchNotImplementedError=false, catchAlgorithmFailedError=false)
-        println(result)
-        arg = 1.123456789
-        err = abs(SymbolicUtils.substitute(prob[1]-Symbolics.derivative(result, prob[2]), prob[2]=>arg))
-        if !isa(err, Real) || err>1e-8
-            if isa(err, Real)
-                println("FAILED: wrong result, err=$err")
+        try
+            result = integrate(prob[1], prob[2], catchNotImplementedError=false, catchAlgorithmFailedError=false)
+            println(result)
+            arg = 1.123456789
+            err = abs(SymbolicUtils.substitute(prob[1]-Symbolics.derivative(result, prob[2]), prob[2]=>arg))
+            if !isa(err, Real) || err>1e-8
+                if isa(err, Real)
+                    println("FAILED: wrong result, err=$err")
+                else
+                    println("FAILED: wrong result, complete solution should exist")
+                end
+                failed += 1
             else
-                println("FAILED: wrong result, complete solution should exist")
+                passed += 1
             end
-            failed += 1
-        else
-            passed += 1
+        catch e
+            unexpected_exceptions += 1
+            failed += 1  
+            println("\nFAILED: unexpected exception $e")
         end
         println("expected: ", prob[4])    
     else
@@ -435,17 +441,19 @@ for prob in problems
             result = integrate(prob[1], prob[2], catchNotImplementedError=false, catchAlgorithmFailedError=false)
         catch e
             if e isa prob[5]
+                println(e.msg)
                 expected_exceptions += 1
                 passed += 1
             else
+                println("\nFAILED: unexpected exception $e")
                 unexpected_exceptions += 1
                 failed += 1                
             end
         end
-        println("\nexpected: ", prob[5])
+        println("expected: ", prob[5])
     end
 end
 
 println("----------------------------------------------------------")
 total = failed+passed
-println("passed: $passed, failed: $failed, expected exceptions: $expected_exceptions, unexpected exceptions: $unexpected_exceptions, total: $total")
+println("passed: $passed, of which expected exceptions: $expected_exceptions, failed: $failed, of which unexpected exceptions: $unexpected_exceptions, total: $total")

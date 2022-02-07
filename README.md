@@ -53,5 +53,9 @@ log(-4 - sqrt(16//3)*tan((1//2)*x))*sqrt(1//3) - log(sqrt(16//3)*tan((1//2)*x) -
 ## Tests
 Some test problems taken from the
 [Rubi Integration Test-suites](https://rulebasedintegration.org/testProblems.html)
-are provided by the [test_integrate_rational.jl](https://github.com/HaraldHofstaetter/SymbolicIntegration.jl/blob/main/test/test_integrate_rational.jl)
-program. This test program produces the following output: [test_integrate_rational.out](https://github.com/HaraldHofstaetter/SymbolicIntegration.jl/blob/main/test/test_integrate_rational.out). 
+are provided by  [test_integrate_rational.jl](https://github.com/HaraldHofstaetter/SymbolicIntegration.jl/blob/main/test/test_integrate_rational.jl) and
+[test_stewart.jl](https://github.com/HaraldHofstaetter/SymbolicIntegration.jl/blob/main/test/test_stewart.jl), 
+which produce the output
+[test_integrate_rational.out](https://github.com/HaraldHofstaetter/SymbolicIntegration.jl/blob/main/test/test_integrate_rational.out) and
+[test_stewart.out](https://github.com/HaraldHofstaetter/SymbolicIntegration.jl/blob/main/test/test_stewart.out), respectively.
+

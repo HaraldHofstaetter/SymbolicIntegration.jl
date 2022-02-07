@@ -1,6 +1,6 @@
 --- #1 -----------------------------------------------------------------
 ∫x^ndx = integrand contains symbol n not equal to the integration variable x
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:213
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:218
 expected: SymbolicIntegration.NotImplementedError
 --- #2 -----------------------------------------------------------------
 ∫exp(x)dx = exp(x)
@@ -10,7 +10,7 @@ expected: exp(x)
 expected: log(x)
 --- #4 -----------------------------------------------------------------
 ∫a^xdx = integrand contains symbol a not equal to the integration variable x
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:213
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:218
 expected: SymbolicIntegration.NotImplementedError
 --- #5 -----------------------------------------------------------------
 ∫sin(x)dx = -2 / (1 + tan((1//2)*x)^2)
@@ -80,7 +80,7 @@ expected: (1//4)*cos(2x) + (1//2)*x*sin(2x) - (1//2)*(x^2)*cos(2x)
 expected: 2x + x*(log(x)^2) - 2x*log(x)
 --- #27 -----------------------------------------------------------------
 ∫asin(x)dx = integrand contains function asin
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #28 -----------------------------------------------------------------
 ∫t*cos(t)*sin(t)dx = ((1//2)*tan((1//2)*t) + 2t*(tan((1//2)*t)^2) - (1//2)*(tan((1//2)*t)^3)) / (1 + 2(tan((1//2)*t)^2) + tan((1//2)*t)^4) - (1//4)*t
@@ -105,14 +105,14 @@ expected: ((-1//10)*cos(3t)) / exp(t) + ((3//10)*sin(3t)) / exp(t)
 expected: y*cosh(y) - sinh(y)
 --- #35 -----------------------------------------------------------------
 ∫y*cosh(a*y)dx = integrand contains symbol a not equal to the integration variable y
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:213
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:218
 expected: SymbolicIntegration.NotImplementedError
 --- #36 -----------------------------------------------------------------
 ∫t / exp(t)dx = (-1 - t) / exp(t)
 expected: (-t) / exp(t) + -1 / exp(t)
 --- #37 -----------------------------------------------------------------
 ∫log(t)*sqrt(t)dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #38 -----------------------------------------------------------------
 ∫x*cos(2x)dx = ((1//2) + x*tan(x)) / (1 + tan(x)^2)
@@ -122,7 +122,7 @@ expected: (1//4)*cos(2x) + (1//2)*x*sin(2x)
 expected: (-2x) / exp(x) + (-(x^2)) / exp(x) + -2 / exp(x)
 --- #40 -----------------------------------------------------------------
 ∫acos(x)dx = integrand contains function acos
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #41 -----------------------------------------------------------------
 ∫x*(csc(x)^2)dx = ((1//2)*x*(tan((1//2)*x)^2) - (1//2)*x) / tan((1//2)*x) + log(tan((1//2)*x)) - log(1 + tan((1//2)*x)^2)
@@ -152,18 +152,18 @@ expected: 0.6213349345596119x*(5^x) - 0.38605710090419715(5^x)
 expected: (1//2)*x*cos(log(x)) + (1//2)*x*sin(log(x))
 --- #49 -----------------------------------------------------------------
 ∫exp(sqrt(x))dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #50 -----------------------------------------------------------------
 ∫log(sqrt(x))dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #51 -----------------------------------------------------------------
 ∫sin(log(x))dx = (1//2)*x + (x*tan((1//2)*log(x)) - x) / (1 + tan((1//2)*log(x))^2)
 expected: (1//2)*x*sin(log(x)) - (1//2)*x*cos(log(x))
 --- #52 -----------------------------------------------------------------
 ∫sin(sqrt(x))dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #53 -----------------------------------------------------------------
 ∫(x^5)*cos(x^3)dx = ((2//3) + (2//3)*(x^3)*tan((1//2)*(x^3))) / (1 + tan((1//2)*(x^3))^2)
@@ -176,11 +176,11 @@ expected: (1//2)*(x^4)*exp(x^2) + exp(x^2) - (x^2)*exp(x^2)
 expected: (1//2)*atan(x) + (1//2)*(x^2)*atan(x) - (1//2)*x
 --- #56 -----------------------------------------------------------------
 ∫x*cos(Pi*x)dx = integrand contains symbol Pi not equal to the integration variable x
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:213
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:218
 expected: SymbolicIntegration.NotImplementedError
 --- #57 -----------------------------------------------------------------
 ∫log(x)*sqrt(x)dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #58 -----------------------------------------------------------------
 ∫sin(3x)^2dx = (1//2)*x + ((1//3)*(tan((3//2)*x)^3) - (1//3)*tan((3//2)*x)) / (1 + 2(tan((3//2)*x)^2) + tan((3//2)*x)^4)
@@ -211,7 +211,7 @@ expected: (1//8)*x + (1//8)*cos(x)*sin(x) - (1//4)*(cos(x)^3)*sin(x)
 expected: (3//2)*x + cos(2x) - (1//4)*cos(2x)*sin(2x)
 --- #67 -----------------------------------------------------------------
 ∫cos(x)*sin(x + (1//6)*Pi)dx = integrand contains symbol Pi not equal to the integration variable x
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:213
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:218
 expected: SymbolicIntegration.NotImplementedError
 --- #68 -----------------------------------------------------------------
 ∫(cos(x)^5)*(sin(x)^5)dx = ((32//3)*(tan((1//2)*x)^6) + (32//3)*(tan((1//2)*x)^14) + (192//5)*(tan((1//2)*x)^10) - (64//3)*(tan((1//2)*x)^8) - (64//3)*(tan((1//2)*x)^12)) / (1 + 10(tan((1//2)*x)^2) + 45(tan((1//2)*x)^4) + 10(tan((1//2)*x)^18) + 45(tan((1//2)*x)^16) + 120(tan((1//2)*x)^6) + 120(tan((1//2)*x)^14) + 210(tan((1//2)*x)^8) + 210(tan((1//2)*x)^12) + 252(tan((1//2)*x)^10) + tan((1//2)*x)^20)
@@ -233,15 +233,15 @@ expected: (2//3)*(cos(x)^3) - (1//5)*(cos(x)^5) - cos(x)
 expected: (3//128)*x + (1//64)*(cos(x)^3)*sin(x) + (3//128)*cos(x)*sin(x) - (1//8)*(cos(x)^5)*(sin(x)^3) - (1//16)*(cos(x)^5)*sin(x)
 --- #74 -----------------------------------------------------------------
 ∫(sin(x)^3)*sqrt(cos(x))dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #75 -----------------------------------------------------------------
 ∫(cos(x)^3)*sqrt(sin(x))dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #76 -----------------------------------------------------------------
 ∫(cos(sqrt(x))^2) / sqrt(x)dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #77 -----------------------------------------------------------------
 ∫x*(sin(x^2)^3)dx = ((-2//3) - 2(tan((1//2)*(x^2))^2)) / (1 + 3(tan((1//2)*(x^2))^2) + 3(tan((1//2)*(x^2))^4) + tan((1//2)*(x^2))^6)
@@ -368,142 +368,142 @@ expected: (1//3)*(sec(x)^3)
 expected: (1//5)*(sec(x)^5) - (1//3)*(sec(x)^3)
 --- #118 -----------------------------------------------------------------
 ∫sqrt(9 - (x^2)) / (x^2)dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #119 -----------------------------------------------------------------
 ∫1 / ((x^2)*sqrt(4 + x^2))dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #120 -----------------------------------------------------------------
 ∫x / sqrt(4 + x^2)dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #121 -----------------------------------------------------------------
 ∫1 / sqrt(x^2 - (a^2))dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #122 -----------------------------------------------------------------
 ∫(x^3) / ((9 + 4(x^2))^(3//2))dx = integrand contains not allowed exponent 3//2
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:237
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:242
 expected: SymbolicIntegration.NotImplementedError
 --- #123 -----------------------------------------------------------------
 ∫x / sqrt(3 - 2x - (x^2))dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #124 -----------------------------------------------------------------
 ∫1 / ((x^2)*sqrt(1 - (x^2)))dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #125 -----------------------------------------------------------------
 ∫(x^3)*sqrt(4 - (x^2))dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #126 -----------------------------------------------------------------
 ∫x / sqrt(1 - (x^2))dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #127 -----------------------------------------------------------------
 ∫x*sqrt(4 - (x^2))dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #128 -----------------------------------------------------------------
 ∫sqrt(1 - 4(x^2))dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #129 -----------------------------------------------------------------
 ∫(x^3) / sqrt(4 + x^2)dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #130 -----------------------------------------------------------------
 ∫1 / sqrt(9 + x^2)dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #131 -----------------------------------------------------------------
 ∫sqrt(1 + x^2)dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #132 -----------------------------------------------------------------
 ∫1 / ((x^3)*sqrt(x^2 - 16))dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #133 -----------------------------------------------------------------
 ∫sqrt(x^2 - (a^2)) / (x^4)dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #134 -----------------------------------------------------------------
 ∫sqrt(9(x^2) - 4) / xdx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #135 -----------------------------------------------------------------
 ∫1 / ((x^2)*sqrt(16(x^2) - 9))dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #136 -----------------------------------------------------------------
 ∫(x^2) / ((a^2 - (x^2))^(3//2))dx = integrand contains symbol a not equal to the integration variable x
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:213
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:218
 expected: SymbolicIntegration.NotImplementedError
 --- #137 -----------------------------------------------------------------
 ∫(x^2) / sqrt(5 - (x^2))dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #138 -----------------------------------------------------------------
 ∫1 / (x*sqrt(3 + x^2))dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #139 -----------------------------------------------------------------
 ∫x / ((4 + x^2)^(5//2))dx = integrand contains not allowed exponent 5//2
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:237
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:242
 expected: SymbolicIntegration.NotImplementedError
 --- #140 -----------------------------------------------------------------
 ∫(x^3)*sqrt(4 - 9(x^2))dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #141 -----------------------------------------------------------------
 ∫(x^2)*sqrt(9 - (x^2))dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #142 -----------------------------------------------------------------
 ∫5x*sqrt(1 + x^2)dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #143 -----------------------------------------------------------------
 ∫1 / ((4(x^2) - 25)^(3//2))dx = integrand contains not allowed exponent 3//2
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:237
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:242
 expected: SymbolicIntegration.NotImplementedError
 --- #144 -----------------------------------------------------------------
 ∫sqrt(2x - (x^2))dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #145 -----------------------------------------------------------------
 ∫1 / sqrt(8 + x^2 + 4x)dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #146 -----------------------------------------------------------------
 ∫1 / sqrt(6x + 9(x^2) - 8)dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #147 -----------------------------------------------------------------
 ∫(x^2) / sqrt(4x - (x^2))dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #148 -----------------------------------------------------------------
 ∫1 / ((2 + x^2 + 2x)^2)dx = ((1//2) + (1//2)*x) / (2 + x^2 + 2x) + (1//2)*atan(1 + x)
 expected: ((1//2) + (1//2)*x) / (2 + x^2 + 2x) + (1//2)*atan(1 + x)
 --- #149 -----------------------------------------------------------------
 ∫1 / ((5 - 4x - (x^2))^(5//2))dx = integrand contains not allowed exponent 5//2
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:237
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:242
 expected: SymbolicIntegration.NotImplementedError
 --- #150 -----------------------------------------------------------------
 ∫exp(t)*sqrt(9 - exp(2t))dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #151 -----------------------------------------------------------------
 ∫sqrt(exp(2t) - 9)dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #152 -----------------------------------------------------------------
 ∫1 / sqrt(a^2 + x^2)dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #153 -----------------------------------------------------------------
 ∫(5 + x) / (x + x^2 - 2)dx = 2log(1 - x) - log(2 + x)
@@ -591,7 +591,7 @@ expected: log(1 + x) - log(2 + x)
 expected: 3x - 7log(3 + 2x)
 --- #181 -----------------------------------------------------------------
 ∫1 / ((a + x)*(b + x))dx = integrand contains symbol a not equal to the integration variable x
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:213
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:218
 expected: SymbolicIntegration.NotImplementedError
 --- #182 -----------------------------------------------------------------
 ∫(1 + x^2) / (x^2 - x)dx = x + 2log(1 - x) - log(x)
@@ -706,97 +706,96 @@ expected: 0.0668549467793789atan(0.22941573387056174 + 0.4588314677411235x) + (1
 expected: ((-313//1452) - (251//726)*x) / (1 + 2(x^2)) + (5828//9075) / (2 - 5x) + 0.044537279105538896atan(1.4142135623730951x) + (2843//7986)*log(1 + 2(x^2)) - (59096//99825)*log(2 - 5x)
 --- #219 -----------------------------------------------------------------
 ∫sqrt(4 + x) / xdx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #220 -----------------------------------------------------------------
 ∫1 / (-1 / (x^(1//3)) + sqrt(x))dx = integrand contains not allowed exponent 1//3
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:237
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:242
 expected: SymbolicIntegration.NotImplementedError
 --- #221 -----------------------------------------------------------------
 ∫1 / (3sin(x) - 4cos(x))dx = (1//5)*log((1//2) - tan((1//2)*x)) - (1//5)*log((1//2) + (1//4)*tan((1//2)*x))
 expected: (-1//5)*atanh((3//5)*cos(x) + (4//5)*sin(x))
 --- #222 -----------------------------------------------------------------
 ∫1 / (1 + sqrt(x))dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #223 -----------------------------------------------------------------
 ∫1 / (1 + 1 / (x^(1//3)))dx = integrand contains not allowed exponent 1//3
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:237
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:242
 expected: SymbolicIntegration.NotImplementedError
 --- #224 -----------------------------------------------------------------
 ∫sqrt(x) / (1 + x)dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #225 -----------------------------------------------------------------
 ∫1 / (x*sqrt(1 + x))dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #226 -----------------------------------------------------------------
 ∫1 / (x - (x^(1//3)))dx = integrand contains not allowed exponent 1//3
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:237
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:242
 expected: SymbolicIntegration.NotImplementedError
 --- #227 -----------------------------------------------------------------
 ∫1 / (x - sqrt(2 + x))dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #228 -----------------------------------------------------------------
 ∫(x^2) / sqrt(x - 1)dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #229 -----------------------------------------------------------------
 ∫sqrt(x - 1) / (1 + x)dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #230 -----------------------------------------------------------------
 ∫1 / sqrt(1 + sqrt(x))dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #231 -----------------------------------------------------------------
 ∫sqrt(x) / (x + x^2)dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #232 -----------------------------------------------------------------
 ∫(1 + sqrt(x)) / (sqrt(x) - 1)dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #233 -----------------------------------------------------------------
 ∫(1 + 1 / (x^(1//3))) / (1 / (x^(1//3)) - 1)dx = integrand contains not allowed exponent 1//3
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:237
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:242
 expected: SymbolicIntegration.NotImplementedError
 --- #234 -----------------------------------------------------------------
 ∫(x^3) / ((1 + x^2)^(1//3))dx = integrand contains not allowed exponent 1//3
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:237
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:242
 expected: SymbolicIntegration.NotImplementedError
 --- #235 -----------------------------------------------------------------
 ∫sqrt(x) / (-1 / (x^(1//3)) + sqrt(x))dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #236 -----------------------------------------------------------------
 ∫1 / (1 / (x^(1//4)) + sqrt(x))dx = integrand contains not allowed exponent 1//4
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:237
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:242
 expected: SymbolicIntegration.NotImplementedError
 --- #237 -----------------------------------------------------------------
 ∫1 / (1 / (x^(1//4)) + 1 / (x^(1//3)))dx = integrand contains not allowed exponent 1//4
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:237
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:242
 expected: SymbolicIntegration.NotImplementedError
 --- #238 -----------------------------------------------------------------
 ∫sqrt((1 - x) / x)dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #239 -----------------------------------------------------------------
 ∫cos(x) / (sin(x)^2 + sin(x))dx = log(-3tan((1//2)*x)) - 2log((3//2) + (3//2)*tan((1//2)*x))
 expected: log(sin(x)) - log(1 + sin(x))
 --- #240 -----------------------------------------------------------------
-∫exp(2x) / (2 + 3exp(x) + exp(2x))dx = TowerOfDifferentialFields: D(t2)/t2 is logarithmic derviative of k-radical for hyperexponential t2 over k
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:379
-expected: SymbolicIntegration.NotImplementedError
+∫exp(2x) / (2 + 3exp(x) + exp(2x))dx = 2log(6 + 3exp(x)) - log(-6 - 6exp(x))
+expected: 2log(2 + exp(x)) - log(1 + exp(x))
 --- #241 -----------------------------------------------------------------
 ∫1 / sqrt(1 + exp(x))dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #242 -----------------------------------------------------------------
 ∫sqrt(1 - exp(x))dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #243 -----------------------------------------------------------------
 ∫1 / (3 - 5sin(x))dx = (1//4)*log((5//6) - (5//18)*tan((1//2)*x)) - (1//4)*log((5//2)*tan((1//2)*x) - (5//6))
@@ -821,18 +820,18 @@ expected: (1//8)*(tan((1//2)*x)^2) + (1//4)*log(tan((1//2)*x))
 expected: (-1//2) / (1 + sin(x)) + (1//2)*atanh(sin(x))
 --- #250 -----------------------------------------------------------------
 ∫1 / (b*cos(x) + a*sin(x))dx = integrand contains symbol b not equal to the integration variable x
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:213
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:218
 expected: SymbolicIntegration.NotImplementedError
 --- #251 -----------------------------------------------------------------
 ∫1 / ((a^2)*(sin(x)^2) + (b^2)*(cos(x)^2))dx = integrand contains symbol a not equal to the integration variable x
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:213
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:218
 expected: SymbolicIntegration.NotImplementedError
 --- #252 -----------------------------------------------------------------
 ∫x / (x^2 - 1)dx = (1//2)*log(1 - (x^2))
 expected: (1//2)*log(1 - (x^2))
 --- #253 -----------------------------------------------------------------
 ∫(1 + sqrt(x))*sqrt(x)dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #254 -----------------------------------------------------------------
 ∫1 / (1 - cos(x))dx = -1 / tan((1//2)*x)
@@ -845,14 +844,14 @@ expected: (1//2)*sec(x)*tan(x) - (1//2)*atanh(sin(x))
 expected: (1//5)*(sec(x)^5) - (1//3)*(sec(x)^3)
 --- #257 -----------------------------------------------------------------
 ∫exp(sqrt(x))dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #258 -----------------------------------------------------------------
 ∫(1 + x^5) / (x^3 - 10x - 3(x^2))dx = (1//3)*(x^3) + 19x + (3//2)*(x^2) + (3126//35)*log(5 - x) - (1//10)*log(x) - (31//14)*log(2 + x)
 expected: (1//3)*(x^3) + 19x + (3//2)*(x^2) + (3126//35)*log(5 - x) - (1//10)*log(x) - (31//14)*log(2 + x)
 --- #259 -----------------------------------------------------------------
 ∫1 / (x*sqrt(log(x)))dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #260 -----------------------------------------------------------------
 ∫(5 + 2x) / (x - 3)dx = 2x + 11log(3 - x)
@@ -868,14 +867,14 @@ expected: (1//8)*x + (1//8)*cos(x)*sin(x) - (1//4)*(cos(x)^3)*sin(x)
 expected: -log(cos(x) + sin(x))
 --- #264 -----------------------------------------------------------------
 ∫x / sqrt(1 - (x^2))dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #265 -----------------------------------------------------------------
 ∫(x^3)*log(x)dx = (1//4)*(x^4)*log(x) - (1//16)*(x^4)
 expected: (1//4)*(x^4)*log(x) - (1//16)*(x^4)
 --- #266 -----------------------------------------------------------------
 ∫sqrt(x - 2) / (2 + x)dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #267 -----------------------------------------------------------------
 ∫x / ((2 + x)^2)dx = 2 / (2 + x) + log(2 + x)
@@ -885,11 +884,11 @@ expected: 2 / (2 + x) + log(2 + x)
 expected: 2atan(x) + x*log(1 + x^2) - 2x
 --- #269 -----------------------------------------------------------------
 ∫sqrt(1 + log(x)) / (x*log(x))dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #270 -----------------------------------------------------------------
 ∫(1 + sqrt(x))^8dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #271 -----------------------------------------------------------------
 ∫(sec(x)^4)*(tan(x)^3)dx = (4(tan((1//2)*x)^4) + (8//3)*(tan((1//2)*x)^6) + 4(tan((1//2)*x)^8)) / (1 + 15(tan((1//2)*x)^4) + 15(tan((1//2)*x)^8) + tan((1//2)*x)^12 - 6(tan((1//2)*x)^2) - 6(tan((1//2)*x)^10) - 20(tan((1//2)*x)^6))
@@ -899,11 +898,11 @@ expected: (1//6)*(sec(x)^6) - (1//4)*(sec(x)^4)
 expected: (1//2)*log(2 + x^2 - 2x) - atan(1 - x)
 --- #273 -----------------------------------------------------------------
 ∫x*asin(x)dx = integrand contains function asin
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #274 -----------------------------------------------------------------
 ∫sqrt(9 - (x^2)) / xdx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #275 -----------------------------------------------------------------
 ∫x / (2 + x^2 + 3x)dx = 2log(2 + x) - log(1 + x)
@@ -919,16 +918,15 @@ expected: (1//4)*log(x^4 + 4x + 2(x^2))
 expected: atan(sin(x))
 --- #279 -----------------------------------------------------------------
 ∫cos(sqrt(x))dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #280 -----------------------------------------------------------------
 ∫sin(Pi*x)dx = integrand contains symbol Pi not equal to the integration variable x
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:213
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:218
 expected: SymbolicIntegration.NotImplementedError
 --- #281 -----------------------------------------------------------------
-∫exp(2x) / (1 + exp(x))dx = TowerOfDifferentialFields: D(t2)/t2 is logarithmic derviative of k-radical for hyperexponential t2 over k
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:379
-expected: SymbolicIntegration.NotImplementedError
+∫exp(2x) / (1 + exp(x))dx = exp(x) - log(1 + exp(x))
+expected: exp(x) - log(1 + exp(x))
 --- #282 -----------------------------------------------------------------
 ∫exp(3x)*cos(5x)dx = ((3//17)*exp(3x) + (5//17)*tan((5//2)*x)*exp(3x)) / (1 + tan((5//2)*x)^2) - (3//34)*exp(3x)
 expected: (3//34)*exp(3x)*cos(5x) + (5//34)*exp(3x)*sin(5x)
@@ -949,14 +947,14 @@ expected: ((-1//3)*(x^3)) / exp(x^3) + (-1//3) / exp(x^3)
 expected: (1//4)*tan(4x) - x
 --- #288 -----------------------------------------------------------------
 ∫1 / sqrt(12x + 9(x^2) - 5)dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #289 -----------------------------------------------------------------
 ∫(x^2)*atan(x)dx = (1//6)*log(1 + x^2) + (1//3)*(x^3)*atan(x) - (1//6)*(x^2)
 expected: (1//6)*log(1 + x^2) + (1//3)*(x^3)*atan(x) - (1//6)*(x^2)
 --- #290 -----------------------------------------------------------------
 ∫(1 - sqrt(x)) / (x^(1//3))dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #291 -----------------------------------------------------------------
 ∫1 / (-1 / exp(x) + exp(x))dx = (1//2)*log(exp(x) - 1) - (1//2)*log(1 + exp(x))
@@ -966,26 +964,25 @@ expected: -atanh(exp(x))
 expected: (1//6)*atan((1//3) + (1//3)*(x^2))
 --- #293 -----------------------------------------------------------------
 ∫1 / (x + 1 / (x^(1//3)))dx = integrand contains not allowed exponent 1//3
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:237
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:242
 expected: SymbolicIntegration.NotImplementedError
 --- #294 -----------------------------------------------------------------
 ∫(cos(x)^4)*(sin(x)^2)dx = (1//16)*x + ((47//24)*(tan((1//2)*x)^3) + (1//8)*(tan((1//2)*x)^11) + (13//4)*(tan((1//2)*x)^7) - (13//4)*(tan((1//2)*x)^5) - (47//24)*(tan((1//2)*x)^9) - (1//8)*tan((1//2)*x)) / (1 + 6(tan((1//2)*x)^2) + 15(tan((1//2)*x)^4) + 15(tan((1//2)*x)^8) + 6(tan((1//2)*x)^10) + 20(tan((1//2)*x)^6) + tan((1//2)*x)^12)
 expected: (1//16)*x + (1//24)*(cos(x)^3)*sin(x) + (1//16)*cos(x)*sin(x) - (1//6)*(cos(x)^5)*sin(x)
 --- #295 -----------------------------------------------------------------
 ∫1 / sqrt(5 - 4x - (x^2))dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #296 -----------------------------------------------------------------
 ∫x / (1 + sqrt(1 - (x^2)) - (x^2))dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #297 -----------------------------------------------------------------
 ∫(1 + cos(x))*csc(x)dx = 2log(tan((1//2)*x)) - log(1 + tan((1//2)*x)^2)
 expected: log(1 - cos(x))
 --- #298 -----------------------------------------------------------------
-∫exp(x) / (exp(2x) - 1)dx = TowerOfDifferentialFields: D(t2)/t2 is logarithmic derviative of k-radical for hyperexponential t2 over k
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:379
-expected: SymbolicIntegration.NotImplementedError
+∫exp(x) / (exp(2x) - 1)dx = (1//2)*log(exp(x) - 1) - (1//2)*log(1 + exp(x))
+expected: -atanh(exp(x))
 --- #299 -----------------------------------------------------------------
 ∫1 / (x^3 - 8)dx = (1//12)*log(2 - x) + atan(-sqrt(1//3) - x*sqrt(1//3))*sqrt(1//48) - (1//24)*log(4 + x^2 + 2x)
 expected: (1//12)*log(2 - x) - 0.14433756729740646atan(0.5773502691896258 + 0.5773502691896258x) - (1//24)*log(4 + x^2 + 2x)
@@ -1009,15 +1006,15 @@ expected: (1//6)*log(1 + x^2) - (1//6)*log(4 + x^2)
 expected: (1//3)*log(2cos((1//2)*x) - sin((1//2)*x)) - (1//3)*log(cos((1//2)*x) - 2sin((1//2)*x))
 --- #306 -----------------------------------------------------------------
 ∫x*((c + x)^(1//3))dx = integrand contains symbol c not equal to the integration variable x
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:213
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:218
 expected: SymbolicIntegration.NotImplementedError
 --- #307 -----------------------------------------------------------------
 ∫exp(x^(1//3))dx = integrand contains not allowed exponent 1//3
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:237
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:242
 expected: SymbolicIntegration.NotImplementedError
 --- #308 -----------------------------------------------------------------
 ∫1 / (4 + x + sqrt(1 + x))dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #309 -----------------------------------------------------------------
 ∫(1 + x^3) / (x^3 - (x^2))dx = x + 1 / x + 2log(1 - x) - log(x)
@@ -1030,7 +1027,7 @@ expected: (7//4)*cos(2x) + (1//2)*x*sin(2x) + sin(2x) - (1//2)*(x^2)*cos(2x) - 2
 expected: -sin(cos(x))
 --- #312 -----------------------------------------------------------------
 ∫1 / sqrt(16 - (x^2))dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #313 -----------------------------------------------------------------
 ∫(x^3) / ((1 + x)^10)dx = ((-1//504) - (1//56)*x - (1//14)*(x^2) - (1//6)*(x^3)) / (1 + x^9 + 9x + 9(x^8) + 36(x^2) + 84(x^3) + 36(x^7) + 84(x^6) + 126(x^4) + 126(x^5))
@@ -1052,7 +1049,7 @@ expected: log(x) - (1//4)*log(1 + x^4)
 expected: ((-3//4)*t) / exp(2t) + ((-3//4)*(t^2)) / exp(2t) + ((-1//2)*(t^3)) / exp(2t) + (-3//8) / exp(2t)
 --- #319 -----------------------------------------------------------------
 ∫sqrt(t) / (1 + t^(1//3))dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #320 -----------------------------------------------------------------
 ∫sin(x)*sin(2x)*sin(3x)dx = (((13//8)*(tan((1//2)*x)^4) + (7//24)*(tan((1//2)*x)^6) + 3x*(tan((1//2)*x)^5) + 3x*tan((1//2)*x) - (7//24) - (13//8)*(tan((1//2)*x)^2) - 10x*(tan((1//2)*x)^3)) / (1 + 3(tan((1//2)*x)^2) + 3(tan((1//2)*x)^4) + tan((1//2)*x)^6) + (((7//6)*(tan((1//2)*x)^3) + (15//2)*x*(tan((1//2)*x)^2) + (1//2)*x*(tan((1//2)*x)^6) - (1//2)*x - (3//4)*(tan((1//2)*x)^5) - (3//4)*tan((1//2)*x) - (15//2)*x*(tan((1//2)*x)^4))*tan((3//2)*x)) / (1 + 3(tan((1//2)*x)^2) + 3(tan((1//2)*x)^4) + tan((1//2)*x)^6)) / (1 + tan((3//2)*x)^2) + ((7//24) + (5//4)*(tan((1//2)*x)^2) + 5x*(tan((1//2)*x)^3) - (3//8)*(tan((1//2)*x)^4) - (3//2)*x*(tan((1//2)*x)^5) - (3//2)*x*tan((1//2)*x)) / (1 + 3(tan((1//2)*x)^2) + 3(tan((1//2)*x)^4) + tan((1//2)*x)^6)
@@ -1062,19 +1059,19 @@ expected: (1//24)*cos(6x) - (1//8)*cos(2x) - (1//16)*cos(4x)
 expected: x*log((1//2)*x) - x
 --- #322 -----------------------------------------------------------------
 ∫sqrt((1 + x) / (1 - x))dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #323 -----------------------------------------------------------------
 ∫(x*log(x)) / sqrt(x^2 - 1)dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #324 -----------------------------------------------------------------
 ∫(a + x) / (a^2 + x^2)dx = integrand contains symbol a not equal to the integration variable x
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:213
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:218
 expected: SymbolicIntegration.NotImplementedError
 --- #325 -----------------------------------------------------------------
 ∫sqrt(1 + x - (x^2))dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #326 -----------------------------------------------------------------
 ∫(x^4) / (16 + x^10)dx = (1//20)*atan((1//4)*(x^5))
@@ -1087,47 +1084,46 @@ expected: 1.1338934190276815atan(0.3779644730092272 + 0.7559289460184544x) + (1/
 expected: x*sec(x) - atanh(sin(x))
 --- #329 -----------------------------------------------------------------
 ∫x / (x^4 - (a^4))dx = integrand contains symbol a not equal to the integration variable x
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:213
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:218
 expected: SymbolicIntegration.NotImplementedError
 --- #330 -----------------------------------------------------------------
 ∫1 / (sqrt(x) + sqrt(1 + x))dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #331 -----------------------------------------------------------------
 ∫1 / (1 + -1 / exp(x) + 2exp(x))dx = (1//3)*log((2//3)*exp(x) - (1//3)) - (1//3)*log((1//3) + (1//3)*exp(x))
 expected: (1//3)*log(1 - 2exp(x)) - (1//3)*log(1 + exp(x))
 --- #332 -----------------------------------------------------------------
 ∫atan(sqrt(x)) / sqrt(x)dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #333 -----------------------------------------------------------------
 ∫log(1 + x) / (x^2)dx = (-log(1 + x)) / x + log(x) - log(1 + x)
 expected: (-log(1 + x)) / x + log(x) - log(1 + x)
 --- #334 -----------------------------------------------------------------
-∫1 / (exp(3x) - exp(x))dx = TowerOfDifferentialFields: D(t2)/t2 is logarithmic derviative of k-radical for hyperexponential t2 over k
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:379
-expected: SymbolicIntegration.NotImplementedError
+∫1 / (exp(3x) - exp(x))dx = 1 / exp(x) + (1//2)*log(exp(x) - 1) - (1//2)*log(1 + exp(x))
+expected: exp(-x) - atanh(exp(x))
 --- #335 -----------------------------------------------------------------
 ∫(1 + cos(x)^2) / (1 - (cos(x)^2))dx = (tan((1//2)*x)^2 - 1) / tan((1//2)*x) - x
 expected: -x - 2cot(x)
 --- #336 -----------------------------------------------------------------
 ∫1 / (x*sqrt(2x - 25))dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #337 -----------------------------------------------------------------
 ∫sin(2x) / sqrt(9 - (cos(x)^4))dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #338 -----------------------------------------------------------------
 ∫(x^2) / sqrt(5 - 4(x^2))dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #339 -----------------------------------------------------------------
 ∫(x^3)*sin(x)dx = x^3 + (12x + (6(x^2) - 12)*tan((1//2)*x) - 2(x^3)) / (1 + tan((1//2)*x)^2) - 6x
 expected: 3(x^2)*sin(x) + 6x*cos(x) - 6sin(x) - (x^3)*cos(x)
 --- #340 -----------------------------------------------------------------
 ∫x*sqrt(4 + x^2 + 2x)dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #341 -----------------------------------------------------------------
 ∫x*((5 + x^2)^8)dx = 50(x^14) + 21875(x^8) + (1750//3)*(x^12) + (1//18)*(x^18) + 4375(x^10) + (390625//2)*(x^2) + (5//2)*(x^16) + (218750//3)*(x^6) + 156250(x^4)
@@ -1143,26 +1139,26 @@ expected: ((-3//25)*cos(4x)) / exp(3x) + ((4//25)*sin(4x)) / exp(3x)
 expected: -atanh(cos((1//2)*x)) - cot((1//2)*x)*csc((1//2)*x)
 --- #345 -----------------------------------------------------------------
 ∫sqrt(9(x^2) - 1) / (x^2)dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #346 -----------------------------------------------------------------
 ∫sqrt(4 - 3(x^2)) / xdx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #347 -----------------------------------------------------------------
 ∫(x^2)*exp(3x)dx = ((2//27) + (1//3)*(x^2) - (2//9)*x)*exp(3x)
 expected: (2//27)*exp(3x) + (1//3)*(x^2)*exp(3x) - (2//9)*x*exp(3x)
 --- #348 -----------------------------------------------------------------
 ∫(cos(x)*sin(x)) / sqrt(1 + sin(x))dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #349 -----------------------------------------------------------------
 ∫x*asin(x^2)dx = integrand contains function asin
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #350 -----------------------------------------------------------------
 ∫(x^3)*asin(x^2)dx = integrand contains function asin
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #351 -----------------------------------------------------------------
 ∫exp(x)*sech(exp(x))dx = 2atan(exp(exp(x)))
@@ -1172,7 +1168,7 @@ expected: atan(sinh(exp(x)))
 expected: (2//9)*x*cos(3x) + (1//3)*(x^2)*sin(3x) - (2//27)*sin(3x)
 --- #353 -----------------------------------------------------------------
 ∫sqrt(5 - 4x - (x^2))dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #354 -----------------------------------------------------------------
 ∫(x^5) / (1.4142135623730951 + x^2)dx = 
@@ -1193,11 +1189,11 @@ expected: (1//3)*(sin(x)^3)*log(sin(x)) - (1//9)*(sin(x)^3)
 expected: -1 / exp(x) + 2log(1 + 2exp(x)) - 2x
 --- #359 -----------------------------------------------------------------
 ∫tan(x)*sqrt(2 + 3cos(x))dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #360 -----------------------------------------------------------------
 ∫x / sqrt(x^2 - 4x)dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #361 -----------------------------------------------------------------
 ∫cos(x)^5dx = ((8//3)*(tan((1//2)*x)^3) + (116//15)*(tan((1//2)*x)^5) + 2(tan((1//2)*x)^9) + 2tan((1//2)*x) + (8//3)*(tan((1//2)*x)^7)) / (1 + 5(tan((1//2)*x)^2) + 10(tan((1//2)*x)^4) + 5(tan((1//2)*x)^8) + 10(tan((1//2)*x)^6) + tan((1//2)*x)^10)
@@ -1207,7 +1203,7 @@ expected: (1//5)*(sin(x)^5) + sin(x) - (2//3)*(sin(x)^3)
 expected: (-4(x^3)) / exp(x) + (-12(x^2)) / exp(x) + (-24x) / exp(x) + (-(x^4)) / exp(x) + -24 / exp(x)
 --- #363 -----------------------------------------------------------------
 ∫(x^4) / sqrt(x^10 - 2)dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #364 -----------------------------------------------------------------
 ∫exp(x)*cos(4 + 3x)dx = ((1//5)*exp(x) + (3//5)*exp(x)*tan((2//1) + (3//2)*x)) / (1 + tan((2//1) + (3//2)*x)^2) - (1//10)*exp(x)
@@ -1221,14 +1217,14 @@ expected: (1 + exp(x))*log(1 + exp(x)) - exp(x)
 expected: (1//6)*log(1 + x^2) + (1//3)*(x^3)*atan(x) - (1//6)*(x^2)
 --- #367 -----------------------------------------------------------------
 ∫sqrt(exp(2x) - 1)dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #368 -----------------------------------------------------------------
 ∫sin(2x)*exp(sin(x))dx = ((4tan((1//2)*x) - 2 - 2(tan((1//2)*x)^2))*exp(sin(x))) / (1 + tan((1//2)*x)^2)
 expected: 2sin(x)*exp(sin(x)) - 2exp(sin(x))
 --- #369 -----------------------------------------------------------------
 ∫(x^2)*sqrt(5 - (x^2))dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #370 -----------------------------------------------------------------
 ∫(x^2)*((1 + x^3)^4)dx = (1//3)*(x^3) + (1//3)*(x^12) + (1//15)*(x^15) + (2//3)*(x^6) + (2//3)*(x^9)
@@ -1241,7 +1237,7 @@ expected: (1//4)*(sin(x)^4) - (1//6)*(sin(x)^6)
 expected: (1//5)*(tan(x)^5) + (1//3)*(tan(x)^3)
 --- #373 -----------------------------------------------------------------
 ∫x*sqrt(1 + 2x)dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 --- #374 -----------------------------------------------------------------
 ∫sin(x)^4dx = (3//8)*x + ((11//4)*(tan((1//2)*x)^5) + (3//4)*(tan((1//2)*x)^7) - (11//4)*(tan((1//2)*x)^3) - (3//4)*tan((1//2)*x)) / (1 + 4(tan((1//2)*x)^2) + 6(tan((1//2)*x)^4) + 4(tan((1//2)*x)^6) + tan((1//2)*x)^8)
@@ -1251,7 +1247,7 @@ expected: (3//8)*x - (1//4)*(sin(x)^3)*cos(x) - (3//8)*cos(x)*sin(x)
 expected: (1//2)*(tan(x)^2) + log(cos(x))
 --- #376 -----------------------------------------------------------------
 ∫(x^5)*sqrt(1 + x^2)dx = integrand contains function sqrt
-@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:294
+@ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 ----------------------------------------------------------
-passed: 371, of which expected exceptions: 122, failed: 5, of which unexpected exceptions: 3, total: 376
+passed: 371, of which expected exceptions: 118, failed: 5, of which unexpected exceptions: 3, total: 376

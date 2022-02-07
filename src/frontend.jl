@@ -367,19 +367,28 @@ function TowerOfDifferentialFields(terms::Vector{Term})  where
         end
 
         if op==log || op==atan
+            # Check condition of Theorem 5.1.1
             u, ρ = InFieldDerivative(constant_coefficient(H), D)
             if ρ>0
                 #TODO: For this case there is always a remedy
                 throw(NotImplementedError("TowerOfDifferentialFields: D($t) is derviative of element of k for primitive $t over k\n@ $(@__FILE__):$(@__LINE__)"))
             end
         elseif op == exp
+            # Check condition of Theorem 5.1.2
             m, u, ρ = InFieldLogarithmicDerivativeOfRadical(coeff(H, 1), D)
             if ρ>0
                 #TODO: For this case there is a remedy if m=1 or m=-1
                 throw(NotImplementedError("TowerOfDifferentialFields: D($t)/$t is logarithmic derviative of k-radical for hyperexponential $t over k\n@ $(@__FILE__):$(@__LINE__)"))
             end
         elseif op == tan
-            #TODO
+            # Check condition of Theorem 5.10.1
+            _, I, DI = Complexify(K, D)            
+            η = I*constant_coefficient(divexact(H, t^2 + 1)) 
+            m, u, ρ = InFieldLogarithmicDerivativeOfRadical(η, DI)
+            if ρ>0
+                #TODO: For this case there is a remedy if m=1 or m=-1 √-1
+                throw(NotImplementedError("TowerOfDifferentialFields: √-1*D($t)/($t^2+1) is logarithmic derviative of k-radical for hyperexponential $t over k\n@ $(@__FILE__):$(@__LINE__)"))
+            end
         else
             @assert false # never reach this point
         end

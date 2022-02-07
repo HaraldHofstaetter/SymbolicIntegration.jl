@@ -260,7 +260,7 @@ problems = [
 [1//(1//x^(1//3)+1//x^(1//4)),	x,	4,	12*x^(1//12)-6*x^(1//6)+4*x^(1//4)-3*x^(1//3)+12//5*x^(5//12)+12//7*x^(7//12)-3//2*x^(2//3)+4//3*x^(3//4)-6//5*x^(5//6)+12//11*x^(11//12)-x+12//13*x^(13//12)-6//7*x^(7//6)+4//5*x^(5//4)-12*log(1+x^(1//12))-2*sqrt(x), SI.NotImplementedError],	# exponent 1//3, 1/4
 [sqrt((1-x)//x),	x,	5,	-atan(sqrt(-1+1//x))+x*sqrt(-1+1//x), SI.NotImplementedError],	
 [cos(x)//(sin(x)+sin(x)^2),	x,	2,	log(sin(x))-log(1+sin(x))],	
-[exp(2*x)//(2+3*exp(x)+exp(2*x)),	x,	4,	-log(1+exp(x))+2*log(2+exp(x)), SI.NotImplementedError], # logarithmic derviative of k-radical
+[exp(2*x)//(2+3*exp(x)+exp(2*x)),	x,	4,	-log(1+exp(x))+2*log(2+exp(x))],
 [1//sqrt(1+exp(x)),	x,	3,	-2*atanh(sqrt(1+exp(x))), SI.NotImplementedError],	
 [sqrt(1-exp(x)),	x,	4,	-2*atanh(sqrt(1-exp(x)))+2*sqrt(1-exp(x)), SI.NotImplementedError],	
 [1//(3-5*sin(x)),	x,	4,	-1//4*log(cos(1//2*x)-3*sin(1//2*x))+1//4*log(3*cos(1//2*x)-sin(1//2*x))],	
@@ -304,7 +304,7 @@ problems = [
 [cos(x)//(1+sin(x)^2),	x,	2,	atan(sin(x))],	
 [cos(sqrt(x)),	x,	3,	2*cos(sqrt(x))+2*sin(sqrt(x))*sqrt(x), SI.NotImplementedError],	
 [sin(Pi*x),	x,	1,	-cos(Pi*x)//Pi, SI.NotImplementedError], #Pi
-[exp(2*x)//(1+exp(x)),	x,	3,	exp(x)-log(1+exp(x)), SI.NotImplementedError],	# logarithmic derviative of k-radical
+[exp(2*x)//(1+exp(x)),	x,	3,	exp(x)-log(1+exp(x))],
 [exp(3*x)*cos(5*x),	x,	1,	3//34*exp(3*x)*cos(5*x)+5//34*exp(3*x)*sin(5*x)],	
 [cos(3*x)*cos(5*x),	x,	1,	1//4*sin(2*x)+1//16*sin(8*x)],	
 [1//(1+x+x^2+x^3),	x,	5,	1//2*atan(x)+1//2*log(1+x)-1//4*log(1+x^2)],	
@@ -321,7 +321,7 @@ problems = [
 [1//sqrt(5-4*x-x^2),	x,	2,	-asin(1//3*(-2-x)), SI.NotImplementedError],	
 [x//(1-x^2+sqrt(1-x^2)),	x,	3,	-log(1+sqrt(1-x^2)), SI.NotImplementedError],	
 [(1+cos(x))*csc(x),	x,	2,	log(1-cos(x))],	
-[exp(x)//(-1+exp(2*x)),	x,	2,	-atanh(exp(x)), SI.NotImplementedError], #  logarithmic derviative of k-radical
+[exp(x)//(-1+exp(2*x)),	x,	2,	-atanh(exp(x))], 
 [1//(-8+x^3),	x,	6,	1//12*log(2-x)-1//24*log(4+2*x+x^2)-1//4*atan((1+x)/sqrt(3))/sqrt(3)],	
 [x^5*cosh(x),	x,	6,	-120*cosh(x)-60*x^2*cosh(x)-5*x^4*cosh(x)+120*x*sinh(x)+20*x^3*sinh(x)+x^5*sinh(x)],	
 [log(tan(x))//(cos(x)*sin(x)),	x,	1,	1//2*log(tan(x))^2],	
@@ -357,7 +357,7 @@ problems = [
 [1//(1+(-1)//exp(x)+2*exp(x)),	x,	4,	1//3*log(1-2*exp(x))-1//3*log(1+exp(x))],	
 [atan(sqrt(x))//sqrt(x),	x,	2,	-log(1+x)+2*atan(sqrt(x))*sqrt(x), SI.NotImplementedError],	
 [log(1+x)//x^2,	x,	4,	log(x)-log(1+x)-log(1+x)//x],	
-[1//(-exp(x)+exp(3*x)),	x,	3,	exp(-x)-atanh(exp(x)), SI.NotImplementedError],	# logarithmic derviative of k-radical
+[1//(-exp(x)+exp(3*x)),	x,	3,	exp(-x)-atanh(exp(x))],
 [(1+cos(x)^2)//(1-cos(x)^2),	x,	4,	-x-2*cot(x)],	
 
 # Section 7.?

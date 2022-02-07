@@ -387,7 +387,7 @@ function TowerOfDifferentialFields(terms::Vector{Term})  where
             m, u, ρ = InFieldLogarithmicDerivativeOfRadical(η, DI)
             if ρ>0
                 #TODO: For this case there is a remedy if m=1 or m=-1 √-1
-                throw(NotImplementedError("TowerOfDifferentialFields: √-1*D($t)/($t^2+1) is logarithmic derviative of k-radical for hyperexponential $t over k\n@ $(@__FILE__):$(@__LINE__)"))
+                throw(NotImplementedError("TowerOfDifferentialFields: √-1*D($t)/($t^2+1) is logarithmic derviative of k-radical for hypertangent $t over k\n@ $(@__FILE__):$(@__LINE__)"))
             end
         else
             @assert false # never reach this point

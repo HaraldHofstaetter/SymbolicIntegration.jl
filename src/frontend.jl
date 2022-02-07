@@ -301,13 +301,13 @@ function analyze_expr(f::SymbolicUtils.Term , funs::Vector, vars::Vector{Symboli
         for i=1:length(expArgs)
             if is_integer_multiple(a, expArgs[i]) 
                 n = integer_multiple(a, expArgs[i])
-                if n>nmax
+                if abs(n)>abs(nmax)
                     imax = i
                     nmax = n
                 end
             end            
         end
-        if nmax>=2            
+        if abs(nmax)>=2            
             f = exp(expArgs[imax])^nmax
             return analyze_expr(f, funs, vars, args, tanArgs, expArgs)
         end        

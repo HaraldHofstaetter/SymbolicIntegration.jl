@@ -406,6 +406,7 @@ problems = [
 
 k = 0
 expected_exceptions = 0
+unexpected_exceptions = 0
 failed = 0
 passed = 0
 for prob in problems    
@@ -435,8 +436,10 @@ for prob in problems
         catch e
             if e isa prob[5]
                 expected_exceptions += 1
+                passed += 1
             else
-                rethrow(e)
+                unexpected_exceptions += 1
+                failed += 1                
             end
         end
         println("\nexpected: ", prob[5])
@@ -444,5 +447,5 @@ for prob in problems
 end
 
 println("----------------------------------------------------------")
-total = failed+passed+expected_exceptions
-println("passed: $passed, failed: $failed, expected exceptions: $expected_exceptions, total: $total")
+total = failed+passed
+println("passed: $passed, failed: $failed, expected exceptions: $expected_exceptions, unexpected exceptions: $unexpected_exceptions, total: $total")

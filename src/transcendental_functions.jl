@@ -138,6 +138,7 @@ return  `αs=[α₁,...,αᵣ]` consisting of the roots of those `sᵢ` that hav
 and the corresponding `Sᵢ` are returned in `ss1` and `Ss1`.
 """
 function ConstantPart(ss::Vector{P}, Ss::Vector{PP}, D::Derivation) where  {P<:PolyElem, PP<:PolyElem{P}}
+    #TODO: better name for this function...
     length(ss)==length(Ss) || error("lengths must match")
     if isempty(ss)
         return Term[], 0,  ss, Ss
@@ -178,6 +179,8 @@ function ConstantPart(ss::Vector{P}, Ss::Vector{PP}, D::Derivation) where  {P<:P
                             # might be zero after substitutiong (u,v). So this avoids divison by zero in these cases.
                             if degree(RT.LT.arg)>0 || (!isconstant(numerator(constant_coefficient(RT.LT.arg))(u,v), BaseDerivation(D)) &&
                                                        !isconstant(denominator(constant_coefficient(RT.LT.arg))(u,v), BaseDerivation(D)))
+                                # TODO: Think about avoiding division by zero like below for atan term.
+                                # But maybe this case cannot occur anyway, at least I know of no example where it does.
                                 g = polynomial(F, [numerator(c)(u, v)//denominator(c)(u, v) for c in coefficients(RT.LT.arg)], var)
                                 push!(gs, FunctionTerm(log, RT.LT.coeff*u, g))
                                 Dg += RT.LT.coeff*u*D(g)//g
@@ -188,9 +191,13 @@ function ConstantPart(ss::Vector{P}, Ss::Vector{PP}, D::Derivation) where  {P<:P
                             # might be zero after substitutiong (u,v). So this avoids divison by zero in these cases.
                             if degree(AT.arg)>0 || (!isconstant(numerator(constant_coefficient(AT.arg))(u,v), BaseDerivation(D)) &&
                                                     !isconstant(denominator(constant_coefficient(AT.arg))(u,v), BaseDerivation(D)))
-                                g = polynomial(F, [numerator(c)(u, v)//denominator(c)(u, v) for c in coefficients(AT.arg)], var)
-                                push!(gs, FunctionTerm(atan, AT.coeff*v, g))
-                                Dg += AT.coeff*v*D(g)//(1 + g^2)
+                                if all([!iszero(denominator(c)(u, v)) for c in coefficients(AT.arg)])
+                                    # Ignore atan term if substitution of (u,v) in argument would cause divion by zero. 
+                                    # This requires more thought, but it seems to work...
+                                    g = polynomial(F, [numerator(c)(u, v)//denominator(c)(u, v) for c in coefficients(AT.arg)], var)
+                                    push!(gs, FunctionTerm(atan, AT.coeff*v, g))
+                                    Dg += AT.coeff*v*D(g)//(1 + g^2)
+                                end
                             end
                         end                    
                     end        

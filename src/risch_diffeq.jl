@@ -940,8 +940,8 @@ function PolyRischDECancelTan(b0::T, c::P, D::Derivation, n::Int=typemax(Int)) w
                     return q + Z, 1
                 end
             end
-            q, ρ = InFieldDerivative(c, BaseDerivation(D))
-            if ρ<=0
+            q, ρ = InFieldDerivative(constant_coefficient(c), BaseDerivation(D))
+            if ρ<=0 
                 return no_solution
             else
                 return q + Z, 1

@@ -134,8 +134,7 @@ expected: (1//4)*cos(2x) - (1//16)*cos(8x)
 ∫sin(2x)*sin(4x)dx = ((8//3)*(tan(x)^3)) / (1 + 3(tan(x)^2) + 3(tan(x)^4) + tan(x)^6)
 expected: (1//4)*sin(2x) - (1//12)*sin(6x)
 --- #44 -----------------------------------------------------------------
-∫cos(x)*log(sin(x))dx = ∫(((1 - (tan((1//2)*x)^2))*log(sin(x))) / (1 + tan((1//2)*x)^2), x)
-FAILED: wrong result, complete solution should exist
+∫cos(x)*log(sin(x))dx = (-2tan((1//2)*x)) / (1 + tan((1//2)*x)^2) + (2tan((1//2)*x)*log(sin(x))) / (1 + tan((1//2)*x)^2)
 expected: sin(x)*log(sin(x)) - sin(x)
 --- #45 -----------------------------------------------------------------
 ∫(x^3)*exp(x^2)dx = ((1//2)*(x^2) - (1//2))*exp(x^2)
@@ -1181,8 +1180,7 @@ expected: (3//8)*atanh(sin(x)) + (1//4)*(sec(x)^3)*tan(x) + (3//8)*sec(x)*tan(x)
 ∫sin(2x)^6dx = (5//16)*x + ((5//16)*(tan(x)^11) + (85//48)*(tan(x)^9) + (33//8)*(tan(x)^7) - (5//16)*tan(x) - (85//48)*(tan(x)^3) - (33//8)*(tan(x)^5)) / (1 + 6(tan(x)^2) + 6(tan(x)^10) + 15(tan(x)^4) + 20(tan(x)^6) + 15(tan(x)^8) + tan(x)^12)
 expected: (5//16)*x - (1//12)*(sin(2x)^5)*cos(2x) - (5//48)*(sin(2x)^3)*cos(2x) - (5//32)*cos(2x)*sin(2x)
 --- #357 -----------------------------------------------------------------
-∫(sin(x)^2)*cos(x)*log(sin(x))dx = ∫(((4(tan((1//2)*x)^2) - 4(tan((1//2)*x)^4))*log(sin(x))) / (1 + 3(tan((1//2)*x)^2) + 3(tan((1//2)*x)^4) + tan((1//2)*x)^6), x)
-FAILED: wrong result, complete solution should exist
+∫(sin(x)^2)*cos(x)*log(sin(x))dx = ((-8//9)*(tan((1//2)*x)^3)) / (1 + 3(tan((1//2)*x)^2) + 3(tan((1//2)*x)^4) + tan((1//2)*x)^6) + ((8//3)*(tan((1//2)*x)^3)*log(sin(x))) / (1 + 3(tan((1//2)*x)^2) + 3(tan((1//2)*x)^4) + tan((1//2)*x)^6)
 expected: (1//3)*(sin(x)^3)*log(sin(x)) - (1//9)*(sin(x)^3)
 --- #358 -----------------------------------------------------------------
 ∫1 / ((1 + 2exp(x))*exp(x))dx = -1 / exp(x) + 2log((1//2) + exp(x)) - 2x
@@ -1209,8 +1207,7 @@ expected: SymbolicIntegration.NotImplementedError
 ∫exp(x)*cos(4 + 3x)dx = ((1//5)*exp(x) + (3//5)*exp(x)*tan((2//1) + (3//2)*x)) / (1 + tan((2//1) + (3//2)*x)^2) - (1//10)*exp(x)
 expected: (1//10)*exp(x)*cos(4 + 3x) + (3//10)*exp(x)*sin(4 + 3x)
 --- #365 -----------------------------------------------------------------
-∫exp(x)*log(1 + exp(x))dx = 
-FAILED: unexpected exception StackOverflowError()
+∫exp(x)*log(1 + exp(x))dx = exp(x)*log(1 + exp(x)) + log(1 + exp(x)) - exp(x)
 expected: (1 + exp(x))*log(1 + exp(x)) - exp(x)
 --- #366 -----------------------------------------------------------------
 ∫(x^2)*atan(x)dx = (1//6)*log(1 + x^2) + (1//3)*(x^3)*atan(x) - (1//6)*(x^2)
@@ -1250,4 +1247,4 @@ expected: (1//2)*(tan(x)^2) + log(cos(x))
 @ /home/hofi/.julia/dev/SymbolicIntegration/src/frontend.jl:356
 expected: SymbolicIntegration.NotImplementedError
 ----------------------------------------------------------
-passed: 371, of which expected exceptions: 118, failed: 5, of which unexpected exceptions: 3, total: 376
+passed: 374, of which expected exceptions: 118, failed: 2, of which unexpected exceptions: 2, total: 376

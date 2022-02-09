@@ -980,6 +980,10 @@ See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 
 """
 function LimitedIntegrateReduce(f::F, ws::Vector{F}, D::Derivation) where 
     {T<:FieldElement, P<:PolyElem{T}, F<:FracElem{P}}
+    # Note: LimitedIntegrateReduce seems to be the only algorithm in Bronstein's book,
+    # where he messed something up. Already in equation (7.32) of Corollary 7.2.1 (p.247)
+    # the coefficient of D(p) contains a factor hs too many. This then reproduces in the
+    # algoritm.
     iscompatible(f, D) && all(iscompatible(w, D) for w in ws) || 
         error("rational functions f and w_i must be in the domain of derivation D")
     dn, ds = SplitFactor(denominator(f), D)
@@ -991,13 +995,14 @@ function LimitedIntegrateReduce(f::F, ws::Vector{F}, D::Derivation) where
     N = 0
     if is_Sirr1_eq_Sirr(D)
        hs = lcm(vcat(ds, [es for (en, es) in eness]))
-       a = hn*hs
+       h = hn*hs # in Bronsteins's book, wrongly a = hn*hs
        b = -D(hn)-divexact(hn*D(hs),hs)
        μ = min(valuation_infinity(f), minimum([valuation_infinity(w) for w in ws]))
        N = degree(hn) + degree(hs) + max(0, 1 - degree(D) - μ)
     end
-    ahn = a*hn
-    a, b, a, N, ahn*f, [-ahn*w for w in ws] 
+    hhn = h*hn 
+    # in Bronsteins'book, wrongly always the factor a*hn instead of h*hn
+    a, b, h, N, hhn*f, [-hhn*w for w in ws] 
 end
 
 function solve_x1_eq_1(A::Matrix{T}) where T<:FieldElement
@@ -1058,7 +1063,7 @@ function LimitedIntegrate(f::F, ws::Vector{F}, D::Derivation) where F <: FieldEl
     A = RowEchelon(A)
     cs = solve_x1_eq_1(A)
     if isone(cs[1])
-        return Z, cs, 1
+        return Z, cs[2:end], 1
     else
         return Z, fill(Z, m), 0
     end
@@ -1102,8 +1107,7 @@ function LimitedIntegrate(f::F, ws::Vector{F}, D::Derivation) where
         if iszero(cs[1])
             return no_solution
         end
-        m = length(gs)
-        @assert isone(cs[1])
+        m = length(qs)
         c = sum([cs[i]*qs[i] for i=1:m])        
         b, c, n, α, β, ρ = SPDE(a, b, c, D, n)
         ρ>=1 || return Z, F[], ρ

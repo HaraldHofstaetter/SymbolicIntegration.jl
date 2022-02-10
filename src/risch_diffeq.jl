@@ -870,13 +870,13 @@ function PolyRischDECancelExp(b::T, c::P, D::Derivation, n::Int=typemax(Int)) wh
     t = gen(parent(c))
     H = MonomialDerivative(D)
     w = coeff(H,1) # = Dt/t for hyperexponentialm case
-    n, m, z, ρ = ParametricLogarithmicDerivative(b, w, D0)
-    if  ρ>0 && n==1
-        p, ρ = InFieldDerivative(c*z*t^m, D)
+    n1, m, z, ρ = ParametricLogarithmicDerivative(b, w, D0)
+    if  ρ>0 && n1==1
+        p, ρ = InFieldDerivative(c*z*(t//1)^m, D) # t//1 in k(t) 
         if ρ<=0 || !isreduced(p, D)
             return no_solution             
         end
-        q0 = p//(z*t^m)
+        q0 = p//(z*(t//1)^m) # t((1 in k(t)))
         q = numerator(q0)
         if isone(denominator(q0)) && degree(q)<=n
             return q, 1

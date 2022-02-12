@@ -91,7 +91,7 @@ function ResidueReduce(f::F, D::Derivation; symbol=:α) where
     if isone(d)
         return PolyElem[], PolyElem{PolyElem}[], 1
     end
-    (p,a) = divrem(numerator(f), d)
+    p, a = divrem(numerator(f), d)
     # For SubResultant with respect to t we have to construct the 
     # polynomial ring k[z][t] with z, t in this order (!)
     kz, z = PolynomialRing(base_ring(d), symbol)
@@ -123,8 +123,8 @@ function ResidueReduce(f::F, D::Derivation; symbol=:α) where
             ii+=1                          
         end
     end
-    b = degree(prod(ns))==0
-    ss, Ss, b
+    ρ = degree(prod(ns))<=0 ? 1 : 0
+    ss, Ss, ρ
 end
 
 
@@ -662,23 +662,48 @@ function InFieldLogarithmicDerivativeOfRadical(f::F, D::Derivation; expect_one::
         a = coeff(p0, 0)
         b = coeff(p0, 1)
         t = gen(parent(H))
-        c = b//2*(t^2+1)//H
-        if !isrational(c)
-            return no_solution
+        η = constant_coefficient(divexact(H, t^2+1))
+        if !contains_I(parent(f))
+            c = (1//2)*b//η
+            if !isrational(c)
+                return no_solution
+            end
+            n, u, ρ = InFieldLogarithmicDerivativeOfRadical(a, BaseDerivation(D))
+            if ρ<=0
+                return no_solution
+            end
+            e0 = n*rationalize_over_Int(c)
+            if !isone(denominator(e0))
+                return no_solution
+            end
+            e = numerator(e0)
+            N = lcm(n, m)
+            U = v^div(N, m)*(u+Z)^div(N, n)*(t^2+1+Z)^div(e*N, n)
+            return N, U, 1
+        elseif iszero(real(a)) 
+            # Note: This case is not treated in 5.12 of Bronsteins's book, altough it seems
+            # to be the one relevant for checking the condition of Theorem 5.10.1.
+            # I did not proof that in the case of Theorem 5.12 real(a)=0 always holds true.
+            ai = imag(a)
+            c1 = (1//2)*(b+ai)//η
+            c2 = (1//2)*(b-ai)//η
+            if !isrational(c1) || !isrational(c2)
+                return no_solution
+            end
+            # implicitely set u = 1 => D(u)//u = 0            
+            c1 = rationalize_over_Int(c1)
+            c2 = rationalize_over_Int(c2)
+            n = lcm(denominator(c1), denominator(c2))
+            e1 = numerator(c1*n)
+            e2 = numerator(c2*n)
+            N = lcm(n, m)
+            I = get_I(parent(Z))
+            U = v^div(N, m)*(t-I)^div(e1*N, n)*(t+I)^div(e2*N, n)
+            return N, U, 1
+        else
+            # TODO... 
+            throw(NotImplementedError("InFieldLogarithmicDerivativeOfRadical: hypertangent case with I in K and real(a)!=0\n@ $(@__FILE__):$(@__LINE__)"))        
         end
-        n, u, ρ = InFieldLogarithmicDerivativeOfRadical(a, BaseDerivation(D))
-        if ρ<=0
-            return no_solution
-        end
-        e0 = n*rationalize_over_Int(c)
-        if !isone(denominator(e0))
-            return no_solution
-        end
-        e = numerator(e0)
-        N = lcm(n, m)
-        U = v^div(N, m)*(u+Z)^div(N, n)*(t^2+1+Z)^div(e*N, n)
-        return N, U, 1
-        throw(NotImplementedError("InFieldLogarithmicDerivativeOfRadical: hypertangent case\n@ $(@__FILE__):$(@__LINE__)"))        
     else
         throw(NotImplementedError("InFieldLogarithmicDerivativeOfRadical: monomial derivative $H\n@ $(@__FILE__):$(@__LINE__)"))        
     end

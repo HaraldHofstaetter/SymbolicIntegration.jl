@@ -828,7 +828,7 @@ end
 Parametric Risch differential equation with polynomial coefficients.
 
 Given a field `k`, a derivation `D` on `k[t]`, `a`, `b` in `k[t]` with `a≠0`, and `gs=[g₁,...,gₘ]` with
-`gᵢ` in `k(t)` , return `hs=[h₁,...,hᵣ]` with 
+`gᵢ` in `k(t)`, return `hs=[h₁,...,hᵣ]` with 
 `hᵢ` in `k(t)` and  a matrix `A` in reduced row echelon form with entries in `Const(k)` such that
 `c₁`,...,`cₘ` in `Const(k)` and `q` in `k[t]` is a solution of 
 `a*D(q)+b*q=∑ᵢcᵢ*gᵢ` if and only if `q=∑ⱼdⱼ*hⱼ` for `d₁`,...,`dᵣ` in `Const(k)` with
@@ -1078,6 +1078,12 @@ function LimitedIntegrate(f::F, ws::Vector{F}, D::Derivation) where
     (a, b, h, n, g, vs) = LimitedIntegrateReduce(f, ws, D)
     if is_Sirr1_eq_Sirr(D)
         gs = vcat(g, vs)
+        # Note:  ParamPolyCoeffsRischDE does the following division by gcd(a,b) anyway.
+        # But in case of small_nullspace==true we need these *reduced* a, b, so we compute them here.
+        d = gcd(a, b)
+        a = divexact(a, d)
+        b = divexact(b, d)
+        gs = [g//d for g in gs]
         hs, A, qs, small_nullspace = ParamPolyCoeffsRischDE(a, b, gs, D, n=n, exit_if_small_nullspace=true)
         # A in reduced echelon form
         if !small_nullspace # regular exit 

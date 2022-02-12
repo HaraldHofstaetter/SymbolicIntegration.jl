@@ -203,7 +203,7 @@ function backtransform(f::K, t, I) where
     z = map_coefficients(c->real(c), denominator(f))(t)
     w = map_coefficients(c->imag(c), denominator(f))(t)
     d = z^2 + w^2
-    (u*z-v*w)//d  + ((v*z-u*w)//d)*I
+    (u*z + v*w)//d  + ((v*z - u*w)//d)*I
 end
 
 

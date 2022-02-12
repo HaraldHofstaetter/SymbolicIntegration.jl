@@ -173,7 +173,7 @@ end
 
 isnormal(p::PolyElem, D::Derivation) =
     # see Def. 3.4.2
-    iscompatible(p, D) && degree(gcd(p, MonomialDerivative(D)))==0
+    iscompatible(p, D) && degree(gcd(p, D(p)))==0
 
 isspecial(p::PolyElem, D::Derivation) =
     # see Def. 3.4.2

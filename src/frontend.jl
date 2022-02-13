@@ -186,10 +186,7 @@ function subst_tower(ts::Vector{Term}, subs::Vector)
     sum([subst_tower(t, subs) for t in ts])
 end
 
-struct NewTanArg <: Exception end
-
-struct NewExpArg <: Exception end
-
+struct UpdatedArgList <: Exception end
 
 function analyze_expr(f, x::SymbolicUtils.Sym)
     tanArgs = []
@@ -203,7 +200,7 @@ function analyze_expr(f, x::SymbolicUtils.Sym)
             p = analyze_expr(f, funs, vars, args, tanArgs, expArgs)
             return p, funs, vars, args
         catch e
-            if (e isa NewTanArg) || (e isa NewExpArg)
+            if e isa UpdatedArgList
                 restart = true
             else
                 rethrow(e)
@@ -244,6 +241,43 @@ function analyze_expr(f::SymbolicUtils.Pow, funs::Vector, vars::Vector{SymbolicU
     exp(p2*log(p1))    
 end
 
+is_rational_multiple(a, b) = false
+
+is_rational_multiple(a::SymbolicUtils.Mul, b::SymbolicUtils.Mul) =
+    a.dict == b.dict && (isa(a.coeff, Integer) || isa(a.coeff, Rational)) &&
+                        (isa(b.coeff, Integer) || isa(b.coeff, Rational))
+
+is_rational_multiple(a::SymbolicUtils.Mul, b::SymbolicUtils.Symbolic) =
+    (isa(a.coeff, Integer) || isa(a.coeff, Rational)) && (b in keys(a.dict)) && isone(a.dict[b])
+
+is_rational_multiple(a::SymbolicUtils.Symbolic, b::SymbolicUtils.Mul) =
+    (isa(b.coeff, Integer) || isa(b.coeff, Rational)) && (a in keys(b.dict)) && isone(b.dict[a])
+
+rational_multiple(a, b) = error("not a rational multiple")
+
+function rational_multiple(a::SymbolicUtils.Mul, b::SymbolicUtils.Mul)  
+    if !is_rational_multiple(a, b)
+        error("not a rational multiple")        
+    end
+    a.coeff//b.coeff
+end
+
+function rational_multiple(a::SymbolicUtils.Mul, b::SymbolicUtils.Symbolic) 
+    if !is_rational_multiple(a, b)
+        error("not a rational multiple")        
+    end
+    return a.coeff//1
+end
+
+function rational_multiple(a::SymbolicUtils.Symbolic, b::SymbolicUtils.Mul)
+    if !is_rational_multiple(a, b)
+        error("not a rational multiple")        
+    end
+    return 1//b.coeff
+end
+
+
+#=
 is_integer_multiple(a, b) = false
 
 function is_integer_multiple(a::SymbolicUtils.Mul, b::SymbolicUtils.Mul)  
@@ -278,39 +312,77 @@ function integer_multiple(a::SymbolicUtils.Mul, b::SymbolicUtils.Symbolic)
     return a.coeff
 end
 
+function max_integer_multiple(a::SymbolicUtils.Symbolic, args::Vector)
+    imax = 0
+    nmax = 0
+    for i=1:length(args)
+        if is_integer_multiple(a, args[i]) 
+            n = integer_multiple(a, args[i])
+            if abs(n)>abs(nmax)
+                imax = i
+                nmax = n
+            end
+        end            
+    end
+    imax, nmax
+end
+=#
+
+function tan_nx(n::Int, x)
+    sign_n = sign(n)
+    n = abs(n)
+    a = zero(x)    
+    s = +1
+    for k=1:2:n
+        a += s*binomial(n, k)*tan(x)^k
+        s = -s
+    end
+    b = zero(x)
+    s = +1
+    for k=0:2:n
+        b += s*binomial(n, k)*tan(x)^k
+        s = -s
+    end
+    sign_n*a/b
+end
+
 function analyze_expr(f::SymbolicUtils.Term , funs::Vector, vars::Vector{SymbolicUtils.Sym}, args::Vector, tanArgs::Vector, expArgs::Vector)    
     op = operation(f)
     a = arguments(f)[1]
-    if op==tan        
-        i = findfirst(x -> hash(x)==hash(a), tanArgs) 
+    if op == exp
+        i = findfirst(x -> is_rational_multiple(a, x), expArgs)
+        n = 1
+        if i === nothing
+            push!(expArgs, a)
+        else
+            n = rational_multiple(a, expArgs[i])
+            if !isone(denominator(n)) # n not an integer
+                expArgs[i] = 1//denominator(n)*expArgs[i]
+                throw(UpdatedArgList())            
+            end
+            n = numerator(n)
+        end
+        if n != 1
+            f = exp(expArgs[i])^n
+            return analyze_expr(f, funs, vars, args, tanArgs, expArgs)
+        end
+    elseif op==tan        
+        i = findfirst(x -> is_rational_multiple(a, x), tanArgs)
+        n = 1
         if i === nothing
             push!(tanArgs, a)
-            throw(NewTanArg())            
-        end    
-    elseif op==exp
-        i = findfirst(x -> hash(x)==hash(a), expArgs) 
-        if i === nothing
-            @assert length(expArgs)<=10
-            push!(expArgs, a)
-            throw(NewExpArg())            
-        end    
-    end
-    if op == exp
-        imax = 0
-        nmax = 0
-        for i=1:length(expArgs)
-            if is_integer_multiple(a, expArgs[i]) 
-                n = integer_multiple(a, expArgs[i])
-                if abs(n)>abs(nmax)
-                    imax = i
-                    nmax = n
-                end
-            end            
+        else
+            n = rational_multiple(a, tanArgs[i])
+            if !isone(denominator(n)) # n not an integer
+                tanArgs[i] = 1//denominator(n)*tanArgs[i]
+                throw(UpdatedArgList())            
+            end
+            n = numerator(n) 
         end
-        if abs(nmax)>=2            
-            f = exp(expArgs[imax])^nmax
+        if n != 1
+            f = tan_nx(n, tanArgs[i])
             return analyze_expr(f, funs, vars, args, tanArgs, expArgs)
-        end        
+        end
     elseif op == sinh
         f = 1//2*(exp(a) - 1/exp(a))
         return analyze_expr(f, funs, vars, args, tanArgs, expArgs)
@@ -340,9 +412,6 @@ function analyze_expr(f::SymbolicUtils.Term , funs::Vector, vars::Vector{Symboli
         return analyze_expr(f, funs, vars, args, tanArgs, expArgs)
     elseif op == sec # 1/cos
         f = (1 + tan(1//2*a)^2)/(1 - tan(1//2*a)^2)
-        return analyze_expr(f, funs, vars, args, tanArgs, expArgs)
-    elseif op == tan && hash(1//2*a) in hash.(tanArgs)
-        f = 2*tan(1//2*a)/(1 - tan(1//2*a)^2)
         return analyze_expr(f, funs, vars, args, tanArgs, expArgs)
     elseif op == cot
         f = 1/tan(a)
@@ -444,7 +513,7 @@ function TowerOfDifferentialFields(terms::Vector{Term})  where
             end
         elseif op == tan
             # Check condition of Theorem 5.10.1
-            _, I, DI = Complexify(K, D)            
+            _, I, DI = Complexify(K, D)
             η = I*constant_coefficient(divexact(H, t^2 + 1)) 
             m, u, ρ = InFieldLogarithmicDerivativeOfRadical(η, DI)
             if ρ>0

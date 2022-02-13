@@ -683,7 +683,7 @@ function InFieldLogarithmicDerivativeOfRadical(f::F, D::Derivation; expect_one::
         elseif iszero(real(a)) 
             # Note: This case is not treated in 5.12 of Bronsteins's book, altough it seems
             # to be the one relevant for checking the condition of Theorem 5.10.1.
-            # I did not proof that in the case of Theorem 5.12 real(a)=0 always holds true.
+            # I did not prove that in the case of Theorem 5.12 real(a)=0 always holds true.
             ai = imag(a)
             c1 = (1//2)*(b+ai)//η
             c2 = (1//2)*(b-ai)//η

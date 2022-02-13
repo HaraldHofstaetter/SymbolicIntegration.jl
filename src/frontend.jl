@@ -276,58 +276,6 @@ function rational_multiple(a::SymbolicUtils.Symbolic, b::SymbolicUtils.Mul)
     return 1//b.coeff
 end
 
-
-#=
-is_integer_multiple(a, b) = false
-
-function is_integer_multiple(a::SymbolicUtils.Mul, b::SymbolicUtils.Mul)  
-    if a.dict != b.dict
-        return false
-    end
-    n = a.coeff//b.coeff
-    isone(denominator(n))
-end
-
-is_integer_multiple(a::SymbolicUtils.Mul, b::SymbolicUtils.Symbolic) =
-     (b in keys(a.dict)) && isone(a.dict[b])
-
-integer_multiple(a, b) = error("not an integer_multiple")
-
-function integer_multiple(a::SymbolicUtils.Mul, b::SymbolicUtils.Mul)  
-    if a.dict != b.dict
-        error("not an integer_multiple")        
-    end
-    n = a.coeff//b.coeff
-    if isone(denominator(n))
-        return numerator(n)
-    else
-        error("not an integer_multiple")        
-    end
-end
-
-function integer_multiple(a::SymbolicUtils.Mul, b::SymbolicUtils.Symbolic) 
-    if !(b in keys(a.dict)) || !isone(a.dict[b])        
-        error("not an integer_multiple")
-    end
-    return a.coeff
-end
-
-function max_integer_multiple(a::SymbolicUtils.Symbolic, args::Vector)
-    imax = 0
-    nmax = 0
-    for i=1:length(args)
-        if is_integer_multiple(a, args[i]) 
-            n = integer_multiple(a, args[i])
-            if abs(n)>abs(nmax)
-                imax = i
-                nmax = n
-            end
-        end            
-    end
-    imax, nmax
-end
-=#
-
 function tan_nx(n::Int, x)
     sign_n = sign(n)
     n = abs(n)

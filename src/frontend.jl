@@ -153,10 +153,16 @@ end
 function subst_tower(p::P, vars::Vector, h::Int) where
     {T<:FieldElement, P<:PolyElem{T}}
     if iszero(p)
-        return zero(vars[1])
+        return zero(vars[h])
     end
-    c = collect(coefficients(p))        
-    sum([subst_tower(c[i], vars, h - 1)*vars[h]^(i-1) for i=1:length(c)])
+    cs = [subst_tower(c, vars, h - 1) for c in coefficients(p)]    
+    if isa(vars[h], SymbolicUtils.Term) && operation(vars[h])==exp
+        # Write polynomial in exp(a) as sum_i c_i*exp(i*a) instead sum_i c_i*exp(a)^i
+        a = arguments(vars[h])[1]
+        return sum([cs[i]*(i==0 ? 1 : exp((i - 1)*a)) for i=1:length(cs)])
+    else
+        return sum([cs[i]*vars[h]^(i - 1) for i=1:length(cs)])
+    end
 end
 
 function subst_tower(f::F, vars::Vector) where

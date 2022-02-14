@@ -218,7 +218,7 @@ end
 function analyze_expr(f::SymbolicUtils.Sym , funs::Vector, vars::Vector{SymbolicUtils.Sym}, 
                       args::Vector, tanArgs::Vector, expArgs::Vector)
     if hash(f) != hash(funs[1])
-        throw(NotImplementedError(("integrand contains symbol $f not equal to the integration variable $(funs[1])\n@ $(@__FILE__):$(@__LINE__)")))
+        throw(NotImplementedError("integrand contains unsupported symbol $f different from the integration variable $(funs[1])"))
     end
     return f
 end
@@ -242,7 +242,7 @@ function analyze_expr(f::SymbolicUtils.Pow, funs::Vector, vars::Vector{SymbolicU
     if isa(p2, Integer)
         return p1^p2
     elseif isa(p2, Number)        
-        throw(NotImplementedError(("integrand contains not allowed exponent $p2\n@ $(@__FILE__):$(@__LINE__)")))
+        throw(NotImplementedError("integrand contains power with unsupported exponent $p2"))
     end
     exp(p2*log(p1))    
 end
@@ -376,7 +376,7 @@ function analyze_expr(f::SymbolicUtils.Term , funs::Vector, vars::Vector{Symboli
         return vars[i]
     end    
     op in [exp, log, atan, tan] ||        
-        throw(NotImplementedError(("integrand contains function $op\n@ $(@__FILE__):$(@__LINE__)")))
+        throw(NotImplementedError("integrand contains unsupported function $op"))
     p = analyze_expr(a, funs, vars, args, tanArgs, expArgs)
     tname = Symbol(:t, length(vars)) 
     t = SymbolicUtils.Sym{Number, Nothing}(tname, nothing)
@@ -456,14 +456,14 @@ function TowerOfDifferentialFields(terms::Vector{Term})  where
             u, ρ = InFieldDerivative(constant_coefficient(H), D)
             if ρ>0
                 #TODO: For this case there is always a remedy
-                throw(NotImplementedError("TowerOfDifferentialFields: D($t) is derviative of element of k for primitive $t over k\n@ $(@__FILE__):$(@__LINE__)"))
+                throw(NotImplementedError("integrand seems to contain logarithms with hidden algebraic dependency"))                
             end
         elseif op == exp
             # Check condition of Theorem 5.1.2
             m, u, ρ = InFieldLogarithmicDerivativeOfRadical(coeff(H, 1), D)
             if ρ>0
                 #TODO: For this case there is a remedy if m=1 or m=-1
-                throw(NotImplementedError("TowerOfDifferentialFields: D($t)/$t is logarithmic derviative of k-radical for hyperexponential $t over k\n@ $(@__FILE__):$(@__LINE__)"))
+                throw(NotImplementedError("integrand seems to contain exponentials with hidden algebraic dependency"))
             end
         elseif op == tan
             # Check condition of Theorem 5.10.1
@@ -471,8 +471,8 @@ function TowerOfDifferentialFields(terms::Vector{Term})  where
             η = I*constant_coefficient(divexact(H, t^2 + 1)) 
             m, u, ρ = InFieldLogarithmicDerivativeOfRadical(η, DI)
             if ρ>0
-                #TODO: For this case there is a remedy if m=1 or m=-1 √-1
-                throw(NotImplementedError("TowerOfDifferentialFields: √-1*D($t)/($t^2+1) is logarithmic derviative of k-radical for hypertangent $t over k\n@ $(@__FILE__):$(@__LINE__)"))
+                #TODO: For this case there is a remedy if m=1 or m=-1 
+                throw(NotImplementedError("integrand seems to contain trigonometric functions with hidden algebraic dependency"))
             end
         else
             @assert false # never reach this point

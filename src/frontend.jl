@@ -567,6 +567,17 @@ end
 
 struct AlgebraicNumbersInvolved <: Exception end
 
+function integrate(f::SymbolicUtils.Add, x::SymbolicUtils.Sym; useQQBar::Bool=false,
+    catchNotImplementedError::Bool=true, catchAlgorithmFailedError::Bool=true)
+    # For efficiency compute integral of sum as sum of integrals
+    g = f.coeff*x
+    for (h, c) in f.dict
+        g += c*integrate(h, x, useQQBar=useQQBar, catchNotImplementedError=catchNotImplementedError,
+                         catchAlgorithmFailedError=catchAlgorithmFailedError)
+    end
+    g
+end
+
 function integrate(f::SymbolicUtils.Symbolic, x::SymbolicUtils.Sym; useQQBar::Bool=false,
     catchNotImplementedError::Bool=true, catchAlgorithmFailedError::Bool=true)
     try

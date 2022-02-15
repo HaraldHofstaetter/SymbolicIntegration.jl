@@ -141,12 +141,75 @@ subst_tower(t::fmpq, subs::Vector, h::Int=0) = to_symb(t)
 
 subst_tower(t::qqbar, subs::Vector, h::Int=0) = to_symb(t)
 
+function convolution(a::Vector{T}, b::Vector{T}, s::Int; output_size::Int=0) where T<:RingElement
+    @assert s==1 || s==-1
+    m = length(a)
+    n = length(b)
+    if m==0 && n==0
+        return T[]
+    end
+    R = m!=0 ? parent(a[1]) : parent(b[1])
+    c = zeros(R, output_size<=0 ? max(m, n) : output_size)
+    for t = (s==+1 ? 0 : 1):(m-1)
+        for k=1:min(m-t, n)
+            c[t+1] += a[k+t]*b[k]
+        end
+    end
+    for t=1:n-1
+        for k=1:min(m, n-t)
+            c[t+1] += s*a[k]*b[k+t]
+        end
+    end
+    c
+end
+
+function tan2sincos(f::K, arg::SymbolicUtils.Symbolic, vars::Vector, h::Int=0) where 
+    {T<:FieldElement, P<:PolyElem{T}, K<:FracElem{P}}
+    k = base_ring(base_ring(parent(f)))
+    kz, I = PolynomialRing(k, :I)
+    kI = ResidueField(kz, I^2+1)
+    kIE, E = PolynomialRing(kI, :E)
+
+    t = I*(1-E)//(1+E)
+    F = numerator(f)(t)//denominator(f)(t)
+    as = [coeff(data(c), 0) for c in coefficients(numerator(F))] # = real(numerator(F))
+    bs = [coeff(data(c), 1) for c in coefficients(numerator(F))] # = imag(numerator(F))
+    cs = [coeff(data(c), 0) for c in coefficients(denominator(F))] # = real(denominator(F))
+    ds = [coeff(data(c), 1) for c in coefficients(denominator(F))] # = real(denominator(F))
+
+    N = maximum([length(as), length(bs), length(cs), length(ds)])
+    num_cos = convolution(as, cs, +1, output_size=N) + convolution(bs, ds, +1, output_size=N)
+    num_sin = -convolution(bs, cs, -1, output_size=N) + convolution(as, ds, -1, output_size=N)
+    den_cos = convolution(cs, cs, +1, output_size=N) + convolution(ds, ds, +1, output_size=N)
+    den_sin = 2*convolution(cs, ds, -1)
+
+    arg2 = 2*arg
+    num = subst_tower(num_cos[1], vars, h - 1)
+    for i=2:length(num_cos)
+        num += subst_tower(num_cos[i], vars, h - 1)*cos((i-1)*arg2)
+    end
+    for i=2:length(num_sin)        
+        num += subst_tower(num_sin[i], vars, h - 1)*sin((i-1)*arg2)    
+    end
+    den = subst_tower(den_cos[1], vars, h - 1)
+    for i=2:length(den_cos)
+        den += subst_tower(den_cos[i], vars, h - 1)*cos((i-1)*arg2)
+    end
+    for i=2:length(den_sin)
+        den += subst_tower(den_sin[i], vars, h - 1)*sin((i-1)*arg2)    
+    end
+    num//den
+end
+
 function subst_tower(f::F, vars::Vector, h::Int) where
     {T<:FieldElement, P<:PolyElem{T}, F<:FracElem{P}}
+    if isa(vars[h], SymbolicUtils.Term) && operation(vars[h])==tan
+        return tan2sincos(f, arguments(vars[h])[1], vars, h)
+    end
     if isone(denominator(f))
-        subst_tower(numerator(f), vars, h)
+        return subst_tower(numerator(f), vars, h)
     else
-        subst_tower(numerator(f), vars, h)//subst_tower(denominator(f), vars, h)
+        return subst_tower(numerator(f), vars, h)//subst_tower(denominator(f), vars, h)
     end
 end
 
@@ -507,10 +570,14 @@ function integrate(f::SymbolicUtils.Symbolic, x::SymbolicUtils.Sym; useQQBar::Bo
         p = transform_mpoly_to_tower(p_mpoly + Z, gs)   
         try 
             g, r, ρ = Integrate(p, D)
+            g = subst_tower(g, funs)
+            if isa(g, SymbolicUtils.Add)
+                g -= g.coeff # remove constant term
+            end
             if ρ<=0
-                return subst_tower(g, funs) + ∫(subst_tower(r, funs), x)
+                return g + ∫(subst_tower(r, funs), x)
             else
-                return subst_tower(g, funs)
+                return g
             end
         catch e
             if e isa AlgebraicNumbersInvolved

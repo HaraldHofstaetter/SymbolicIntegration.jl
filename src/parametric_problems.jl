@@ -104,8 +104,8 @@ function ParamRdeSpecialDenomTan(a::P, b::F, gs::Vector{F}, D::Derivation) where
         error("monomial of derivation D must be hypertangent")
     iscompatible(a, D) && iscompatible(b, D) && all([iscompatible(g, D) for g in gs]) ||         
         error("polynomial a and rational functions b and g_i must be in the domain of derivation D")
-    isreduced(b, D) && isreduced(c, D) || 
-        error("rational functions b and c must be reduced with respect to derivation D")
+    isreduced(b, D) || 
+        error("rational function b must be reduced with respect to derivation D")
     t = gen(parent(a))
     p = t^2+1
     degree(gcd(a, p))==0 || error("gcd(a, t^2+1) must be == 1")

@@ -165,38 +165,53 @@ end
 
 function tan2sincos(f::K, arg::SymbolicUtils.Symbolic, vars::Vector, h::Int=0) where 
     {T<:FieldElement, P<:PolyElem{T}, K<:FracElem{P}}
+    # This function transforms a Nemo/AbstractAlgebra rational funktion with
+    # varibale t representing tan(arg) to a SymbolicUtils expression which is
+    # a quotient in which both numerator and denominator are linear combinations
+    # of expressions of the form cos(2*j*arg) or sin(2*j*arg) where j is an integer >=0.
     k = base_ring(base_ring(parent(f)))
     kz, I = PolynomialRing(k, :I)
     kI = ResidueField(kz, I^2+1)
     kIE, E = PolynomialRing(kI, :E)
+    # I represents sqrt(-1), E represents exp(2*I*arg), so that t = I*(1-E)//(1+E) represents tan(arg)
+    t = I*(1 - E)//(1 + E)   
+    F = numerator(f)(t)//denominator(f)(t)  # F is f as expression in I and E
 
-    t = I*(1-E)//(1+E)
-    F = numerator(f)(t)//denominator(f)(t)
+    # Compute as = [a_1, a_2,...] and bs, cs, ds similarly, such that
+    #      ∑_j a_j*E^j + I*∑_j b_j*E^j
+    # F = -----------------------------
+    #      ∑_j c_j*E^j + I*∑_j d_j*E^j    
     as = [coeff(data(c), 0) for c in coefficients(numerator(F))] # = real(numerator(F))
     bs = [coeff(data(c), 1) for c in coefficients(numerator(F))] # = imag(numerator(F))
     cs = [coeff(data(c), 0) for c in coefficients(denominator(F))] # = real(denominator(F))
     ds = [coeff(data(c), 1) for c in coefficients(denominator(F))] # = real(denominator(F))
 
+    # In the above representation of F we multiply both numerator and denominator with
+    # the complex conjugate of the denominator ∑_j c_j*E^(-j) - I*∑_j d_j*E^(-j)
+    # and take the real part. We obtain a representation of F of the form
+    #             ∑_j p_j*cos(2*j*arg) + ∑_j q_j*sin(2*j*arg) 
+    # real(F) = ----------------------------------------------
+    #             ∑_j r_j*cos(2*j*arg) + ∑_j s_j*sin(2*j*arg) 
     N = maximum([length(as), length(bs), length(cs), length(ds)])
-    num_cos = convolution(as, cs, +1, output_size=N) + convolution(bs, ds, +1, output_size=N)
-    num_sin = -convolution(bs, cs, -1, output_size=N) + convolution(as, ds, -1, output_size=N)
-    den_cos = convolution(cs, cs, +1, output_size=N) + convolution(ds, ds, +1, output_size=N)
-    den_sin = 2*convolution(cs, ds, -1)
+    ps = convolution(as, cs, +1, output_size=N) + convolution(bs, ds, +1, output_size=N)
+    qs = -convolution(bs, cs, -1, output_size=N) + convolution(as, ds, -1, output_size=N)
+    rs = convolution(cs, cs, +1, output_size=N) + convolution(ds, ds, +1, output_size=N)
+    ss = 2*convolution(cs, ds, -1)
 
     arg2 = 2*arg
-    num = subst_tower(num_cos[1], vars, h - 1)
-    for i=2:length(num_cos)
-        num += subst_tower(num_cos[i], vars, h - 1)*cos((i-1)*arg2)
+    num = subst_tower(ps[1], vars, h - 1)
+    for j=2:length(ps)
+        num += subst_tower(ps[j], vars, h - 1)*cos((j - 1)*arg2)
     end
-    for i=2:length(num_sin)        
-        num += subst_tower(num_sin[i], vars, h - 1)*sin((i-1)*arg2)    
+    for j=2:length(qs)        
+        num += subst_tower(qs[j], vars, h - 1)*sin((j - 1)*arg2)    
     end
-    den = subst_tower(den_cos[1], vars, h - 1)
-    for i=2:length(den_cos)
-        den += subst_tower(den_cos[i], vars, h - 1)*cos((i-1)*arg2)
+    den = subst_tower(rs[1], vars, h - 1)
+    for j=2:length(rs)
+        den += subst_tower(rs[j], vars, h - 1)*cos((j - 1)*arg2)
     end
-    for i=2:length(den_sin)
-        den += subst_tower(den_sin[i], vars, h - 1)*sin((i-1)*arg2)    
+    for j=2:length(ss)
+        den += subst_tower(ss[j], vars, h - 1)*sin((j - 1)*arg2)    
     end
     num//den
 end

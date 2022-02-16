@@ -60,8 +60,8 @@ function ParamRdeSpecialDenomExp(a::P, b::F, gs::Vector{F}, D::Derivation) where
     t = gen(parent(a))
     degree(gcd(t, a))==0 || error("gcd(a, t) must be == 1")
     p = t
-    nb = valuation(b, p)
-    nc = minimum([valuation(g, p) for g in gs])
+    nb = iszero(b) ? typemax(Int) : valuation(b, p)
+    nc = minimum([iszero(g) ? typemax(Int) : valuation(g, p) for g in gs])
     n = min(0, nc - min(0, nb))
     if nb==0 
         α = constant_coefficient(Remainder(-b//a, p))
@@ -109,8 +109,8 @@ function ParamRdeSpecialDenomTan(a::P, b::F, gs::Vector{F}, D::Derivation) where
     t = gen(parent(a))
     p = t^2+1
     degree(gcd(a, p))==0 || error("gcd(a, t^2+1) must be == 1")
-    nb = valuation(b, p)
-    nc = minimum([valuation(g, p) for g in gs])
+    nb = iszero(b) ? typemax(Int) : valuation(b, p)
+    nc = minimum([iszero(g) ? typemax(Int) : valuation(g, p) for g in gs])
     n = min(0, nc - min(0, nb))
     if nb==0         
         αI_plus_β = Remainder(-b//a, p)
@@ -997,7 +997,7 @@ function LimitedIntegrateReduce(f::F, ws::Vector{F}, D::Derivation) where
        hs = lcm(vcat(ds, [es for (en, es) in eness]))
        h = hn*hs # in Bronsteins's book, wrongly a = hn*hs
        b = -D(hn)-divexact(hn*D(hs),hs)
-       μ = min(valuation_infinity(f), minimum([valuation_infinity(w) for w in ws]))
+       μ = min(iszero(f) ? typemax(Int) : valuation_infinity(f), minimum([iszero(w) ? typemax(Int) : valuation_infinity(w) for w in ws]))
        N = degree(hn) + degree(hs) + max(0, 1 - degree(D) - μ)
     end
     hhn = h*hn 

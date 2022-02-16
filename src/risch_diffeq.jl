@@ -218,8 +218,8 @@ function RdeSpecialDenomExp(a::P, b::F, c::F, D::Derivation) where
     t = gen(parent(a))
     degree(gcd(t, a))==0 || error("gcd(a, t) must be == 1")
     p = t
-    nb = valuation(b, p)
-    nc = valuation(c, p)
+    nb = iszero(b) ? typemax(Int) : valuation(b, p)
+    nc = iszero(c) ? typemax(Int) : valuation(c, p)
     n = min(0, nc - min(0, nb))
     if nb==0 
         α = constant_coefficient(Remainder(-b//a, p))
@@ -264,8 +264,8 @@ function RdeSpecialDenomTan(a::P, b::F, c::F, D::Derivation) where
     t = gen(parent(a))
     p = t^2+1
     degree(gcd(a, p))==0 || error("gcd(a, t^2+1) must be == 1")
-    nb = valuation(b, p)
-    nc = valuation(c, p)
+    nb = iszero(b) ? typemax(Int) : valuation(b, p)
+    nc = iszero(c) ? typemax(Int) : valuation(c, p)
     n = min(0, nc - min(0, nb))
     if nb==0         
         αI_plus_β = Remainder(-b//a, p)
@@ -322,8 +322,8 @@ function RdeSpecialDenomTanI(a::P, b::F, c::F, D::Derivation) where
     contains_I(parent(a)) || error("field k must contain I=sqrt(-1)")
     I = get_I(base_ring(parent(a)))
     p = t-I
-    nb = valuation(b, p)
-    nc = valuation(c, p)
+    nb = iszero(b) ? typemax(Int) : valuation(b, p) 
+    nc = iszero(c) ? typemax(Int) : valuation(c, p)
     n = min(0, nc - min(0, nb))
     if nb==0         
         α = constant_coefficient(Remainder(-b//a, p))

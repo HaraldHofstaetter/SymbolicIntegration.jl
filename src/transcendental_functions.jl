@@ -329,7 +329,7 @@ function IntegrateHypertangentReduced(p::F, D::Derivation) where
     end
     t = gen(base_ring(parent(p)))    
     Q = t^2+1
-    m = -valuation(p, Q)
+    m = -(iszero(p) ? typemax(Int) : valuation(p, Q))
     if m<=0
         return Z, 1
     end

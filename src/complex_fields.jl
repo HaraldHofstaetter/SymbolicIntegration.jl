@@ -207,7 +207,7 @@ function backtransform(f::K, t, I) where
 end
 
 
-function InFieldDerivative(f::K, D::Derivation) where 
+function InFieldDerivative(f::K, D::ComplexExtensionDerivation) where 
     {T<:FieldElement, R<:PolyElem{T}, F<:FracElem{R}, P<:PolyElem{F}, K<:AbstractAlgebra.ResFieldElem{P}}
     ktI = parent(f)
     I0 = ktI(gen(base_ring(ktI)))
@@ -220,7 +220,7 @@ end
 
 #Note: InFieldLogarithmicDerivative is merely a wrapper for InFieldLogarithmicDerivativeOfRadical
 
-function InFieldLogarithmicDerivativeOfRadical(f::K, D::Derivation; expect_one::Bool=false) where 
+function InFieldLogarithmicDerivativeOfRadical(f::K, D::ComplexExtensionDerivation; expect_one::Bool=false) where 
     {T<:FieldElement, R<:PolyElem{T}, F<:FracElem{R}, P<:PolyElem{F}, K<:AbstractAlgebra.ResFieldElem{P}}
     ktI = parent(f)
     I0 = ktI(gen(base_ring(ktI)))
@@ -231,7 +231,7 @@ function InFieldLogarithmicDerivativeOfRadical(f::K, D::Derivation; expect_one::
     n, backtransform(u, t0, I0), ρ
 end
 
-function RischDE(f::K, g::K, D::Derivation) where 
+function RischDE(f::K, g::K, D::ComplexExtensionDerivation) where 
     {T<:FieldElement, R<:PolyElem{T}, F<:FracElem{R}, P<:PolyElem{F}, K<:AbstractAlgebra.ResFieldElem{P}}
     ktI = parent(f)
     I0 = ktI(gen(base_ring(ktI)))
@@ -243,7 +243,7 @@ function RischDE(f::K, g::K, D::Derivation) where
     backtransform(y, t0, I0), ρ
 end
 
-function ParamRischDE(f::K, gs::Vector{K}, D::Derivation) where 
+function ParamRischDE(f::K, gs::Vector{K}, D::ComplexExtensionDerivation) where 
     {T<:FieldElement, R<:PolyElem{T}, F<:FracElem{R}, P<:PolyElem{F}, K<:AbstractAlgebra.ResFieldElem{P}}
     ktI = parent(f)
     I0 = ktI(gen(base_ring(ktI)))
@@ -255,7 +255,7 @@ function ParamRischDE(f::K, gs::Vector{K}, D::Derivation) where
     [backtransform(h, t0, I0) for h in hs], A
 end
 
-function LimitedIntegrate(f::K, w::K, D::Derivation) where 
+function LimitedIntegrate(f::K, w::K, D::ComplexExtensionDerivation) where 
     {T<:FieldElement, R<:PolyElem{T}, F<:FracElem{R}, P<:PolyElem{F}, K<:AbstractAlgebra.ResFieldElem{P}}
     ktI = parent(f)
     I0 = ktI(gen(base_ring(ktI)))
@@ -267,7 +267,7 @@ function LimitedIntegrate(f::K, w::K, D::Derivation) where
     backtransform(v, t0, I0), cs, ρ
 end
 
-function ParametricLogarithmicDerivative(f::K, w::K, D::Derivation) where
+function ParametricLogarithmicDerivative(f::K, w::K, D::ComplexExtensionDerivation) where
     {T<:FieldElement, R<:PolyElem{T}, F<:FracElem{R}, P<:PolyElem{F}, K<:AbstractAlgebra.ResFieldElem{P}}
     ktI = parent(f)
     I0 = ktI(gen(base_ring(ktI)))

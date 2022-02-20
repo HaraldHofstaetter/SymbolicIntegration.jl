@@ -282,15 +282,21 @@ function SubResultant(A::PolyElem{T}, B::PolyElem{T}) where T <: RingElement
         return constant_coefficient(Rs[k+1]), vcat(Rs[1:k+1], zero_poly)
     end
     s = 1
-    c = T_one
+    c_num = T_one
+    c_den = T_one
     for j=1:k-1
         if isodd(degree(Rs[j-1+1])) && isodd(degree(Rs[j+1]))
             s = -s
+        end        
+        d = -(1+δ[j])*degree(Rs[j+1]) + degree(Rs[j-1+1]) - degree(Rs[j+1+1])
+        c_num *= β[j]^degree(Rs[j+1])
+        if d>=0
+            c_num *= r[j]^d
+        else
+            c_den *= r[j]^(-d)
         end
-        q = divexact(β[j], r[j]^(1+δ[j]))   # only exact if T is field     
-        c = c*q^degree(Rs[j+1])*r[j]^(degree(Rs[j-1+1])-degree(Rs[j+1+1]))            
     end
-    constant_coefficient((s*c)*Rs[k+1]^degree(Rs[k-1+1])), vcat(Rs[1:k+1], zero_poly)
+    constant_coefficient(divexact(s*c_num*Rs[k+1]^degree(Rs[k-1+1]), c_den)), vcat(Rs[1:k+1], zero_poly)
 end
 
 function Squarefree_Musser(A::PolyElem{T}) where T <: RingElement

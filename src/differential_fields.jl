@@ -162,8 +162,7 @@ end
 
 function (D::AlgebraicExtensionDerivation)(f::AbstractAlgebra.ResFieldElem{P}) where {T<:FieldElement, P<:PolyElem{T}}
     iscompatible(f, D) || error("f not in domain of D")
-    E = parent(f)
-    map_coefficients(derivative, data(f))(y) + derivative(data(f))(y)*D.dy
+    map_coefficients(derivative, data(f)) + derivative(data(f))*D.dy
 end
 
 BaseDerivation(D::AlgebraicExtensionDerivation) = D.D 

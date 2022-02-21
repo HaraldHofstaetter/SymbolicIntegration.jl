@@ -147,6 +147,34 @@ Base.show(io::IO, D::ExtensionDerivation) = print(io, "Extension by D",
     " of ", BaseDerivation(D), " on ", domain(D))
 
 
+struct AlgebraicExtensionDerivation{T<:FieldElement, P<:PolyElem{T}} <: Derivation
+    domain::AbstractAlgebra.ResField{P}
+    D::Derivation
+    dy::AbstractAlgebra.ResFieldElem{P}
+    function AlgebraicExtensionDerivation(domain::AbstractAlgebra.ResField{P}, D::Derivation) where {T<:FieldElement, P<:PolyElem{T}}
+        base_ring(base_ring(base_ring(domain)))==D.domain || error("base ring of domain must be domain of D")
+        p = modulus(domain)
+        y = domain(gen(base_ring(domain)))
+        dy = -map_coefficients(derivative, p)(y)//derivative(p)(y)
+        new{T,P}(domain, D, dy)
+    end
+end
+
+function (D::AlgebraicExtensionDerivation)(f::AbstractAlgebra.ResFieldElem{P}) where {T<:FieldElement, P<:PolyElem{T}}
+    iscompatible(f, D) || error("f not in domain of D")
+    E = parent(f)
+    map_coefficients(derivative, data(f))(y) + derivative(data(f))(y)*D.dy
+end
+
+BaseDerivation(D::AlgebraicExtensionDerivation) = D.D 
+#Note: implementation of constant_field requires further thought ...
+#constant_field(D::AlgebraicExtensionDerivation) = constant_field(D.D)
+
+Base.show(io::IO, D::AlgebraicExtensionDerivation) = print(io, "Algebraic extension of ", 
+    BaseDerivation(D), " on ", domain(D))
+
+
+
 AbstractAlgebra.degree(D::Derivation) = 
     degree(MonomialDerivative(D)) # \delta(t), see Def. 3.4.1
 AbstractAlgebra.leading_coefficient(D::Derivation) = 

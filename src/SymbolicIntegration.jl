@@ -10,6 +10,7 @@ include("transcendental_functions.jl")
 include("risch_diffeq.jl")
 include("parametric_problems.jl")
 include("coupled_differential_systems.jl")
+include("algebraic_functions.jl")
 include("frontend.jl")
 
 end # module

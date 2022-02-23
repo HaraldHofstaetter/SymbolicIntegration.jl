@@ -1,6 +1,8 @@
 
 function HermiteReduce(f::AbstractAlgebra.ResFieldElem{P}, DE::AlgebraicExtensionDerivation) where 
-    {T<:FieldElement, P<:PolyElem{T}}    
+    {T<:FieldElement, P<:PolyElem{T}}   
+    # "Lazy" Hermite reduction, see Section 2.1 of:
+    # Manuel Bronstein. Symbolic integration tutorial. ISSAC’98, 1998.
     iscompatible(f, DE) || error("rational function f must be in the domain of derivation D")
 
     E = parent(f)
@@ -10,10 +12,10 @@ function HermiteReduce(f::AbstractAlgebra.ResFieldElem{P}, DE::AlgebraicExtensio
     n = degree(p)
     M_n_n = MatrixSpace(F, n, n)
     M_n = MatrixSpace(F, n, 1)   
-
     g = zero(E)
 
     if all([iszero(coeff(p, j)) for j=1:n-1]) # simple radical extension    
+        # Simpler method for simple radical extensions, see Section 2.2. of Bronstein's tutorial.
         @assert isone(leading_coefficient(p))
         a = constant_coefficient(p)
         A = numerator(a)
@@ -128,4 +130,73 @@ function HermiteReduce(f::AbstractAlgebra.ResFieldElem{P}, DE::AlgebraicExtensio
         ws = [sum([C[i,j]*ws[j] for j=1:n])*1//F for i=1:n]                
         Winv = inv(M_n_n([coeff(data(w), j) for j=0:n-1, w in ws]))        
     end    
+end
+
+
+function IntegralBasis(E::AbstractAlgebra.ResField{P}) where {T<:FieldElement, P<:PolyElem{T}}
+    # Trager's algorithm, see Chapter 2 of
+    # B.M. Trager. On the integration of algebraic functions. PhD thesis, MIT, Computer Science, 1984.
+    Ky = base_ring(E)
+    K = base_ring(Ky)
+    y = E(gen(Ky))
+    f = modulus(E)
+    n = degree(f)
+    M_n_n = MatrixSpace(K, n, n)    
+    MP_n_n = MatrixSpace(base_ring(K), n, n)
+    D = resultant(f, derivative(f))
+    println()
+    @assert isone(denominator(D))
+    D = numerator(D)
+    D = 1//leading_coefficient(D) * D    
+    k = D
+    bs = [y^j for j=0:n-1]    
+    B = M_n_n([coeff(data(bs[j]), i) for i=0:n-1, j=1:n])
+    while true
+        Ds = SI.Squarefree(D)
+        if length(Ds)<2
+            return bs
+        end
+        Q = gcd(prod(SI.Squarefree(D)[2:end]), k)
+        if degree(Q)<=0
+            return bs
+        end
+
+        # Compute J, the Q-trace radical of V     
+        ZE = zero(E)
+        S = [p<=q ? bs[p]*bs[q] : ZE  for p=1:n, q=1:n] # only upper triangle needed
+        ZK = zero(K)
+        # TODO: optimize computation of TM, which is one of the bottlenecks.
+        # Compute only upper triangle of TM, lower triangle by symmetry:
+        TM = [p<=q ? numerator(sum([coeff(data(S[p,q]*y^j), j) for j=0:n-1])) : ZK for p=1:n, q=1:n]
+        for p=1:n 
+            for q=1:p-1
+                TM[p,q]=TM[q,p]
+            end
+        end
+        H = hnf(vcat(MP_n_n(TM), MP_n_n(Q)))[1:n,:] # Hermite normal form       
+        J = inv(map(x->x//1, H)) # map(x->x/1, H) is H as element in FractionField          
+        
+        # Compute the idealizer of J         
+        JB = J*B
+        ms = [E(Ky(reshape(Matrix(JB[:,k]), n))) for k=1:n]  
+        Minv = inv(M_n_n([coeff(data(m), i) for i=0:n-1, m in ms]))   
+        MM = 0
+        for k=1:n            
+            mbs = [data(ms[k]*b) for b in bs]
+            Mk = Minv*M_n_n([coeff(mbs[j], i) for i=0:n-1, j=1:n])
+            MM = k==1 ? Mk : vcat(MM, Mk)
+        end     
+        Mhat = hnf(map(x->numerator(x), MM))[1:n,:] # Hermite normal form
+        Mhatinv = inv(map(x->x//1, Mhat))        
+        k = det(Mhat)
+                
+        if degree(k)<=0 # is k a unit ?
+            return bs
+        end
+
+        #Update bs by applying the change of basis        
+        B = transpose(Mhatinv)*B        
+        bs = [E(Ky(reshape(Matrix(B[:,k]), n))) for k=1:n]         
+        D = divexact(D, k^2)        
+    end
 end

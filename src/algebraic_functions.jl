@@ -3,6 +3,7 @@ function HermiteReduce(f::AbstractAlgebra.ResFieldElem{P}, DE::AlgebraicExtensio
     {T<:FieldElement, P<:PolyElem{T}}   
     # "Lazy" Hermite reduction, see Section 2.1 of:
     # Manuel Bronstein. Symbolic integration tutorial. ISSAC’98, 1998.
+    # http://www-sop.inria.fr/cafe/Manuel.Bronstein/publications/issac98.pdf
     iscompatible(f, DE) || error("rational function f must be in the domain of derivation D")
 
     E = parent(f)
@@ -136,6 +137,7 @@ end
 function IntegralBasis(E::AbstractAlgebra.ResField{P}) where {T<:FieldElement, P<:PolyElem{T}}
     # Trager's algorithm, see Chapter 2 of
     # B.M. Trager. On the integration of algebraic functions. PhD thesis, MIT, Computer Science, 1984.
+    # https://dspace.mit.edu/bitstream/handle/1721.1/15391/12487590-MIT.pdf
     Ky = base_ring(E)
     K = base_ring(Ky)
     y = E(gen(Ky))
@@ -143,8 +145,7 @@ function IntegralBasis(E::AbstractAlgebra.ResField{P}) where {T<:FieldElement, P
     n = degree(f)
     M_n_n = MatrixSpace(K, n, n)    
     MP_n_n = MatrixSpace(base_ring(K), n, n)
-    D = resultant(f, derivative(f))
-    println()
+    D = resultant(f, derivative(f))    
     @assert isone(denominator(D))
     D = numerator(D)
     D = 1//leading_coefficient(D) * D    
@@ -163,14 +164,14 @@ function IntegralBasis(E::AbstractAlgebra.ResField{P}) where {T<:FieldElement, P
 
         # Compute J, the Q-trace radical of V     
         ZE = zero(E)
-        S = [p<=q ? bs[p]*bs[q] : ZE  for p=1:n, q=1:n] # only upper triangle needed
+        S = [i<=j ? bs[i]*bs[j] : ZE  for i=1:n, j=1:n] # only upper triangle needed
         ZK = zero(K)
         # TODO: optimize computation of TM, which is one of the bottlenecks.
         # Compute only upper triangle of TM, lower triangle by symmetry:
-        TM = [p<=q ? numerator(sum([coeff(data(S[p,q]*y^j), j) for j=0:n-1])) : ZK for p=1:n, q=1:n]
-        for p=1:n 
-            for q=1:p-1
-                TM[p,q]=TM[q,p]
+        TM = [i<=j ? numerator(sum([coeff(data(S[i, j]*y^l), l) for l=0:n-1])) : ZK for i=1:n, j=1:n]
+        for i=1:n 
+            for j=1:p-1
+                TM[i, j] = TM[j, i]
             end
         end
         H = hnf(vcat(MP_n_n(TM), MP_n_n(Q)))[1:n,:] # Hermite normal form       

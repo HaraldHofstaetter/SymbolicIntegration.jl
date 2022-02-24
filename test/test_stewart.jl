@@ -2,7 +2,11 @@ using SymbolicIntegration, SymbolicUtils
 using Symbolics # fopr derivative
 SI = SymbolicIntegration
 
-@syms x a b c n t y Pi
+@syms x t y Pi p q r 
+n =7
+a = 2//3
+b = -1//5
+c = 5//4
 
 #Integration Test Problems from 
 #https:////rulebasedintegration.org//testProblems.html
@@ -13,10 +17,10 @@ SI = SymbolicIntegration
 problems = [
 
 # Section 7.1 - Integration by Parts
-[x^n,	x,	1,	x^(1+n)/(1+n), SI.NotImplementedError],	# n
+[x^n,	x,	1,	x^(1+n)/(1+n)],
 [exp(x),	x,	1,	exp(x)],	
 [1/x,	x,	1,	log(x)],	
-[a^x,	x,	1,	a^x/log(a), SI.NotImplementedError],	# a
+[a^x,	x,	1,	a^x/log(a)],	
 [sin(x),	x,	1,	-cos(x)],	
 [cos(x),	x,	1,	sin(x)],	
 [sec(x)^2,	x,	2,	tan(x)],	
@@ -47,7 +51,7 @@ problems = [
 [exp(2*t)*sin(3*t),	t,	1,	-3//13*exp(2*t)*cos(3*t)+2//13*exp(2*t)*sin(3*t)],	
 [cos(3*t)/exp(t),	t,	1,	-1//10*cos(3*t)/exp(t)+3//10*sin(3*t)/exp(t)],	
 [y*sinh(y),	y,	2,	y*cosh(y)-sinh(y)],	
-[y*cosh(a*y),	y,	2,	-cosh(a*y)/a^2+y*sinh(a*y)/a, SI.NotImplementedError],	# a
+[y*cosh(a*y),	y,	2,	-cosh(a*y)/a^2+y*sinh(a*y)/a],	
 [t/exp(t),	t,	2,	(-1)/exp(t)-t/exp(t)],	
 [log(t)*sqrt(t),	t,	1,	-4//9*t^(3//2)+2//3*t^(3//2)*log(t),    SI.NotImplementedError],	
 [x*cos(2*x),	x,	2,	1//4*cos(2*x)+1//2*x*sin(2*x)],	
@@ -199,7 +203,7 @@ problems = [
 [(-1+4*x)//((-1+x)*(2+x)),	x,	2,	log(1-x)+3*log(2+x)],	
 [1//((1+x)*(2+x)),	x,	3,	log(1+x)-log(2+x)],	
 [(-5+6*x)//(3+2*x),	x,	2,	3*x-7*log(3+2*x)],	
-[1//((a+x)*(b+x)),	x,	3,	-log(a+x)//(a-b)+log(b+x)//(a-b), SI.NotImplementedError], # a, b	
+[1//((a+x)*(b+x)),	x,	3,	-log(a+x)/(a-b)+log(b+x)/(a-b)], 
 [(1+x^2)//(-x+x^2),	x,	3,	x+2*log(1-x)-log(x)],	
 [(1-12*x+x^2+x^3)//(-12+x+x^2),	x,	5,	1//2*x^2+1//7*log(3-x)-1//7*log(4+x)],	
 [(3+2*x)//(1+x)^2,	x,	2,	(-1)//(1+x)+2*log(1+x)],	
@@ -270,8 +274,8 @@ problems = [
 [1//(sin(x)+tan(x)),	x,	6,	-1//2*atanh(cos(x))+1//2*cot(x)*csc(x)-1//2*csc(x)^2],	
 [1//(2*sin(x)+sin(2*x)),	x,	4,	1//4*log(tan(1//2*x))+1//8*tan(1//2*x)^2],	
 [sec(x)//(1+sin(x)),	x,	4,	1//2*atanh(sin(x))+(-1//2)//(1+sin(x))],	
-[1//(b*cos(x)+a*sin(x)),	x,	2,	-atanh((a*cos(x)-b*sin(x))//sqrt(a^2+b^2))//sqrt(a^2+b^2), SI.NotImplementedError], #a, b
-[1//(b^2*cos(x)^2+a^2*sin(x)^2),	x,	2,	atan(a*tan(x)//b)//(a*b), SI.NotImplementedError],	 # a, b
+[1//(b*cos(x)+a*sin(x)),	x,	2,	-atanh((a*cos(x)-b*sin(x))/sqrt(a^2+b^2))/sqrt(a^2+b^2)], 
+[1//(b^2*cos(x)^2+a^2*sin(x)^2),	x,	2,	atan(a*tan(x)/b)/(a*b)],	 
 
 # Section 7.6 - Strategy for Integration
 [x//(-1+x^2),	x,	1,	1//2*log(1-x^2)],	
@@ -347,12 +351,12 @@ problems = [
 [log(1//2*x),	x,	1,	-x+x*log(1//2*x)],	
 [sqrt((1+x)//(1-x)),	x,	3,	2*atan(sqrt((1+x)//(1-x)))-(1-x)*sqrt((1+x)//(1-x)), SI.NotImplementedError],	
 [x*log(x)//sqrt(-1+x^2),	x,	5,	atan(sqrt(-1+x^2))-sqrt(-1+x^2)+log(x)*sqrt(-1+x^2), SI.NotImplementedError],	
-[(a+x)//(a^2+x^2),	x,	3,	atan(x//a)+1//2*log(a^2+x^2), SI.NotImplementedError],	# a
+[(a+x)//(a^2+x^2),	x,	3,	atan(x//a)+1//2*log(a^2+x^2)],	
 [sqrt(1+x-x^2),	x,	3,	-5//8*asin((1-2*x)/sqrt(5))-1//4*(1-2*x)*sqrt(1+x-x^2), SI.NotImplementedError],	
 [x^4//(16+x^10),	x,	2,	1//20*atan(1//4*x^5)],	
 [(2+x)//(2+x+x^2),	x,	4,	1//2*log(2+x+x^2)+3*atan((1+2*x)/sqrt(7))/sqrt(7)],	
 [x*sec(x)*tan(x),	x,	2,	-atanh(sin(x))+x*sec(x)],	
-[x//(-a^4+x^4),	x,	2,	-1//2*atanh(x^2//a^2)//a^2, SI.NotImplementedError],	# a
+[x//(-a^4+x^4),	x,	2,	-1//2*atanh(x^2//a^2)//a^2],	
 [1//(sqrt(x)+sqrt(1+x)),	x,	3,	-2//3*x^(3//2)+2//3*(1+x)^(3//2), SI.NotImplementedError],	
 [1//(1+(-1)//exp(x)+2*exp(x)),	x,	4,	1//3*log(1-2*exp(x))-1//3*log(1+exp(x))],	
 [atan(sqrt(x))//sqrt(x),	x,	2,	-log(1+x)+2*atan(sqrt(x))*sqrt(x), SI.NotImplementedError],	
@@ -401,8 +405,46 @@ problems = [
 [x*sqrt(1+2*x),	x,	2,	-1//6*(1+2*x)^(3//2)+1//10*(1+2*x)^(5//2), SI.NotImplementedError],	
 [sin(x)^4,	x,	3,	3//8*x-3//8*cos(x)*sin(x)-1//4*cos(x)*sin(x)^3],	
 [tan(x)^3,	x,	2,	log(cos(x))+1//2*tan(x)^2],	
-[x^5*sqrt(1+x^2),	x,	3,	1//3*(1+x^2)^(3//2)-2//5*(1+x^2)^(5//2)+1//7*(1+x^2)^(7//2), SI.NotImplementedError] 
+[x^5*sqrt(1+x^2),	x,	3,	1//3*(1+x^2)^(3//2)-2//5*(1+x^2)^(5//2)+1//7*(1+x^2)^(7//2), SI.NotImplementedError],
+
+#=
+# David Jeffrey - Rectifying Transformations for Trig Integration (1997)
+# Problem (1.2)
+[3/(5-4*cos(x)),    x,  2,  x+2*atan(sin(x)/(2-cos(x)))],
+# Problem (1.4)
+[(1+cos(x)+2*sin(x))/(3+cos(x)^2+2*sin(x)-2*cos(x)*sin(x)), x,  -43,    -atan((2*cos(x)-sin(x))/(2+sin(x)))],
+# Problem (1.5)
+[(2+cos(x)+5*sin(x))/(4*cos(x)-2*sin(x)+cos(x)*sin(x)-2*sin(x)^2),  x,  -25,    -log(1-3*cos(x)+sin(x))+log(3+cos(x)+sin(x))],
+# Problem (3.3)
+[(3+7*cos(x)+2*sin(x))/(1+4*cos(x)+3*cos(x)^2-5*sin(x)-cos(x)*sin(x)),  x   ,   -32,    -log(1+cos(x)-2*sin(x))+log(3+cos(x)+sin(x))],
+# Problem 
+[(-1+4*cos(x)+5*cos(x)^2)/(-1-4*cos(x)-3*cos(x)^2+4*cos(x)^3),  x,  -2, x-2*atan(sin(x)/(3+cos(x)))-2*atan((3*sin(x)+7*cos(x)*sin(x))/(1+2*cos(x)+5*cos(x)^2))],
+# Problem 
+[(-5+2*cos(x)+7*cos(x)^2)/(-1+2*cos(x)-9*cos(x)^2+4*cos(x)^3),  x,  -2, x-2*atan(2*cos(x)*sin(x)/(1-cos(x)+2*cos(x)^2))],
+# Problem (3.4)
+[3/(5+4*sin(x)),    x,  2,  x+2*atan(cos(x)/(2+sin(x)))],
+# Problem (3.6)
+[2/(1+cos(x)^2),    x,  3,  x*sqrt(2)-atan(cos(x)*sin(x)/(1+cos(x)^2+sqrt(2)))*sqrt(2)],
+# Problem (3.8)
+[1/(p+q*cos(x)+r*sin(x)),   x,  3,  2*atan((r+(p-q)*tan(1/2*x))/sqrt(p^2-q^2-r^2))/sqrt(p^2-q^2-r^2), SI.NotImplementedError],
+
+# Waldek Hebisch - email May 2013
+
+# Problem #1
+[(1-x^3+x^4-x^5+x^6)*exp(x),    x,  25, 871*exp(x)-870*exp(x)*x+435*exp(x)*x^2-145*exp(x)*x^3+36*exp(x)*x^4-7*exp(x)*x^5+exp(x)*x^6],
+# Problem #2
+#[(2-x^2)*exp(x/(2+x^2))/(2*x+x^3),  x,  -5,Ei(x/(2+x^2))],
+#[(2+2*x+3*x^2-x^3+2*x^4)*exp(x/(2+x^2))/(2*x+x^3),  x,  -5, exp(x/(2+x^2))*(2+x^2)+Ei(x/(2+x^2))],
+# Problem #3
+#[(1+exp(x))*exp(x+exp(x))/(x+exp(x)),  x,   2, Ei(exp(x)+x)],
+# Problem #4
+[(1-3*x-x^2+x^3)*exp(1/(-1+x^2))/(1-x-x^2+x^3), x,  -6, exp(1/(-1+x^2))*(1+x)],
+# Problem #5
+[exp(1+1/log(x))*(-1+log(x)^2)/log(x)^2,    x,  1,  exp(1+1/log(x))*x],
+[exp(x+1/log(x))*(-1+(1+x)*log(x)^2)/log(x)^2,  x,  -2, exp(x+1/log(x))*x]
+=#
 ]
+
 
 k = 0
 expected_exceptions = 0

@@ -18,7 +18,7 @@ using Test
     expected = (-x*1//t, 0, -x)
     @test (g, h, r) == expected
 
-    
+ 
     @info "PolynomialReduce, example 5.4.1, p. 141"
     QQx, x = PolynomialRing(Nemo.QQ, :x)
     k = FractionField(QQx)
@@ -31,7 +31,7 @@ using Test
     expected = (t, x*t)
     @test (q, r) == expected
 
-
+#=
     @info "ResidueReduce, ConstantPart, example 5.6.3, p. 151"
     QQx, x = PolynomialRing(Nemo.QQ, :x)
     k = FractionField(QQx)
@@ -50,7 +50,7 @@ using Test
     @test gs == [-(2*x^2+3*x+1)*(t-x)//2, -(2*x^2-3*x+1)*(t+x)//2]
     Dg = sum([αs[i]*D(gs[i])//gs[i] for i=1:length(αs) ])
     @test f-Dg == 1//t - (6*x^2-3)//(4*x^4-5*x^2+1)
-
+=#
 
     @info "IntegratePrimitivePolynomial, example 5.8.1, p. 158"    
     QQx, x = PolynomialRing(Nemo.QQ, :x)

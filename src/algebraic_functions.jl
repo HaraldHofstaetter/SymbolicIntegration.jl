@@ -170,7 +170,7 @@ function IntegralBasis(E::AbstractAlgebra.ResField{P}) where {T<:FieldElement, P
         # Compute only upper triangle of TM, lower triangle by symmetry:
         TM = [i<=j ? numerator(sum([coeff(data(S[i, j]*y^l), l) for l=0:n-1])) : ZK for i=1:n, j=1:n]
         for i=1:n 
-            for j=1:p-1
+            for j=1:i-1
                 TM[i, j] = TM[j, i]
             end
         end

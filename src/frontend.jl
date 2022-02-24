@@ -218,7 +218,7 @@ end
 
 function subst_tower(f::F, vars::Vector, h::Int) where
     {T<:FieldElement, P<:PolyElem{T}, F<:FracElem{P}}
-    if isa(vars[h], SymbolicUtils.Term) && operation(vars[h])==tan
+    if isa(vars[h], SymbolicUtils.Term) && operation(vars[h])==tan && !isone(denominator(f))
         return tan2sincos(f, arguments(vars[h])[1], vars, h)
     end
     if isone(denominator(f))

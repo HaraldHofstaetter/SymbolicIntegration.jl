@@ -1,7 +1,7 @@
 using SymbolicIntegration, SymbolicUtils
 @syms x
 
-#Integration Test Problems from 
+#Integration Test Problems from
 #https://rulebasedintegration.org/testProblems.html
 
 #1 Algebraic functions\1.3 Miscellaneous\1.3.1 Rational functions.input

@@ -1,8 +1,8 @@
-# This file contains algorithms needed for the integratiorn of 
+# This file contains algorithms needed for the integratiorn of
 # coupled Risch differential systems from chapter 8 of the book
 #
 #    Manuel Bronstein, Symbolic Integration I: Transcendental Functions,
-#    2nd ed., Springer 2005. 
+#    2nd ed., Springer 2005.
 #
 
 """
@@ -24,28 +24,28 @@ function CoupledDECancelPrim(b1::T, b2::T,  c1::P, c2::P, D::Derivation, n::Int=
     isprimitive(D) ||
         error("monomial of derivation D must be primitive")
     D0 = BaseDerivation(D)
-    (iscompatible(b1, D0) && iscompatible(b2, D0)) || 
+    (iscompatible(b1, D0) && iscompatible(b2, D0)) ||
         error("coefficients b1 and b2 must be in the domain of the base derivation of D")
-    (iscompatible(c1, D) && iscompatible(c2, D)) || 
+    (iscompatible(c1, D) && iscompatible(c2, D)) ||
         error("polynomials c1 and c2 must be in the domain of derivation D")
     Z = zero(c1)
     no_solution = (Z, Z, 0)
     # TODO: case (b1, b2)==(0, 0) !?
     t = gen(parent(c1))
     _, I, D0I = Complexify(parent(b1), D0)
-    z, ρ = InFieldLogarithmicDerivative(b1 + b2*I, D0I) 
+    z, ρ = InFieldLogarithmicDerivative(b1 + b2*I, D0I)
     if ρ>0
         z1 = real(z)
         z2 = imag(z)
         p10, ρ = InFieldDerivative(z1*c1 - z2*c2, D)
         p1 = numerator(p10)
         if ρ<=0 || !isone(denominator(p10)) || degree(p1)>n
-            return no_solution 
+            return no_solution
         end
         p20, ρ = InFieldDerivative(z2*c1 + z1*c2, D)
         p2 = numerator(p20)
         if ρ<=0 || !isone(denominator(p20)) || degree(21)>n
-            return no_solution 
+            return no_solution
         end
         d = z1^2 + z1^2
         return (z1*p1 + z2*p2)//d, (z1*p2 - z2*p1)//d, 1
@@ -56,7 +56,7 @@ function CoupledDECancelPrim(b1::T, b2::T,  c1::P, c2::P, D::Derivation, n::Int=
     if n<max(degree(c1), degree(c2))
         return no_solution
     end
-    q1 = Z   
+    q1 = Z
     q2 = Z
     while !iszero(c1) || !iszero(c2)
         m = max(degree(c1), degree(c2))
@@ -96,9 +96,9 @@ function CoupledDECancelExp(b1::T, b2::T,  c1::P, c2::P, D::Derivation, n::Int=t
     ishyperexponential(D) ||
         error("monomial of derivation D must be hyperexponential")
     D0 = BaseDerivation(D)
-    (iscompatible(b1, D0) && iscompatible(b2, D0)) || 
+    (iscompatible(b1, D0) && iscompatible(b2, D0)) ||
         error("coefficients b1 and b2 must be in the domain of the base derivation of D")
-    (iscompatible(c1, D) && iscompatible(c2, D)) || 
+    (iscompatible(c1, D) && iscompatible(c2, D)) ||
         error("polynomials c1 and c2 must be in the domain of derivation D")
     Z = zero(c1)
     no_solution = (Z, Z, 0)
@@ -110,10 +110,10 @@ function CoupledDECancelExp(b1::T, b2::T,  c1::P, c2::P, D::Derivation, n::Int=t
     n1, m, z, ρ = ParametricLogarithmicDerivative(b1 + b2*I, w + 0*I, D0I)
     if  ρ>0 && n1==1
         z1 = real(z)
-        z2 = imag(z)                
-        p1, ρ = InFieldDerivative((z1*c1 - z2*c2)*t^m, D)        
+        z2 = imag(z)
+        p1, ρ = InFieldDerivative((z1*c1 - z2*c2)*t^m, D)
         if ρ<=0 || !isreduced(p1, D)
-            return no_solution 
+            return no_solution
         end
         h = (t//1)^(-m)//(z1^2 + z2^2)
         q10 = (z1*p1 + z2*p2)*h
@@ -123,7 +123,7 @@ function CoupledDECancelExp(b1::T, b2::T,  c1::P, c2::P, D::Derivation, n::Int=t
         end
         p2, ρ = InFieldDerivative((z2*c1 + z1*c2)*t^m, D)
         if ρ<=0 || !isreduced(p1, D)
-            return no_solution 
+            return no_solution
         end
         q20 = (z1*p2 - z2*p1)*h
         q2 = numerator(q20)
@@ -138,7 +138,7 @@ function CoupledDECancelExp(b1::T, b2::T,  c1::P, c2::P, D::Derivation, n::Int=t
     if n<max(degree(c1), degree(c2))
         return no_solution
     end
-    q1 = Z   
+    q1 = Z
     q2 = Z
     while !iszero(c1) || !iszero(c2)
         m = max(degree(c1), degree(c2))
@@ -155,7 +155,7 @@ function CoupledDECancelExp(b1::T, b2::T,  c1::P, c2::P, D::Derivation, n::Int=t
         c1 -= D(s1*t^m) + (b1*s1 - b2*s2)*t^m
         c2 -= D(s2*t^m) + (b2*s1 + b1*s2)*t^m
     end
-    q1, q2, 1    
+    q1, q2, 1
 end
 
 """
@@ -177,9 +177,9 @@ function CoupledDECancelTan(b0::T, b2::T,  c1::P, c2::P, D::Derivation, n::Int=t
     ishypertangent(D) ||
         error("monomial of derivation D must be hypertangent")
     D0 = BaseDerivation(D)
-    (iscompatible(b0, D0) && iscompatible(b2, D0)) || 
+    (iscompatible(b0, D0) && iscompatible(b2, D0)) ||
         error("coefficients b0 and b2 must be in the domain of the base derivation of D")
-    (iscompatible(c1, D) && iscompatible(c2, D)) || 
+    (iscompatible(c1, D) && iscompatible(c2, D)) ||
         error("polynomials c1 and c2 must be in the domain of derivation D")
     Z = zero(c1)
     no_solution = (Z, Z, 0)
@@ -197,8 +197,8 @@ function CoupledDECancelTan(b0::T, b2::T,  c1::P, c2::P, D::Derivation, n::Int=t
     t = gen(parent(c1))
     H = MonomialDerivative(D)
     η = constant_coefficient(divexact(H, t^2 + 1))
-    ktI, I, DI = Complexify(FractionField(parent(c1)), D) # k(t)(√-1)    
-    p = t - I    
+    ktI, I, DI = Complexify(FractionField(parent(c1)), D) # k(t)(√-1)
+    p = t - I
     z = c1(I) + c2(I)*I
     z1 = real(z)
     @assert isone(denominator(z1)) && degree(numerator(z1))<=0
@@ -225,18 +225,18 @@ function CoupledDECancelTan(b0::T, b2::T,  c1::P, c2::P, D::Derivation, n::Int=t
 end
 
 
-function CoupledDESystem(f1::F, f2::F, g1::F, g2::F, D::Derivation) where 
+function CoupledDESystem(f1::F, f2::F, g1::F, g2::F, D::Derivation) where
     {P<:PolyElem, F<:FracElem{P}}
-    iscompatible(f1, D) && iscompatible(f2, D) && iscompatible(g1, D) && iscompatible(g2, D)|| 
+    iscompatible(f1, D) && iscompatible(f2, D) && iscompatible(g1, D) && iscompatible(g2, D)||
         error("rational functions f1. f2. g1, g2 must be in the domain of derivation D")
-    #if iszero(f1) && iszero(f2)  
+    #if iszero(f1) && iszero(f2)
     #    return InFieldDerivative ...
     #end
- 
+
     no_solution = zero(f1), zero(f1), 0
 
     t0 = gen(parent(numerator(f1)))
-    ktI, I0, DI0 = Complexify(parent(f1), D) # k(t)(√-1)        
+    ktI, I0, DI0 = Complexify(parent(f1), D) # k(t)(√-1)
     kIt, t, I, DI =  switch_t_i(ktI, DI0) # k(√-1)(t)
 
     f = transform(f1 + I0*f2, t, I)
@@ -247,7 +247,7 @@ function CoupledDESystem(f1::F, f2::F, g1::F, g2::F, D::Derivation) where
 
     f = f - DI(h0)//h0
     g = h0*g
-    a, b, c, h1, ρ = RdeNormalDenominator(f, g, DI)    
+    a, b, c, h1, ρ = RdeNormalDenominator(f, g, DI)
     ρ>=1 || return no_solution
 
     a, b, c, h2 = RdeSpecialDenominator(a, b, c, DI)
@@ -258,13 +258,13 @@ function CoupledDESystem(f1::F, f2::F, g1::F, g2::F, D::Derivation) where
     ρ>=1 || return no_solution
 
     z, ρ = PolyRischDE(b, c, DI, n)
-    if ρ<=0 
+    if ρ<=0
         return no_solution
     elseif ρ==1
         y = backtransform((α*z + β)//(h0*h1*h2), t0, I0)
         return real(y), imag(y), 1
     end
-    
+
     @assert ρ>=100
     n = ρ - 101
 
@@ -289,7 +289,7 @@ function CoupledDESystem(f1::F, f2::F, g1::F, g2::F, D::Derivation) where
         @assert degree(b1)<=0 && degree(b2)<=0
         z1, z2, ρ = CoupledDECancelExp(constant_coefficient(b1), constant_coefficient(b2), c1, c2,  D, n)
         ρ>=1 || return no_solution
-    elseif ishypertangent(D)             
+    elseif ishypertangent(D)
         η = divexact(MonomialDerivative(D), t0^2+1)
         b0 = b1 + n*t0*η
         @assert degree(b0)<=0 && degree(b2)<=0
@@ -297,14 +297,13 @@ function CoupledDESystem(f1::F, f2::F, g1::F, g2::F, D::Derivation) where
         ρ>=1 || return no_solution
     else
         H = MonomialDerivative(D)
-        throw(NotImplementedError("CoupledDESystem: cancellation case, monomial derivative $H\n@ $(@__FILE__):$(@__LINE__)")) 
+        throw(NotImplementedError("CoupledDESystem: cancellation case, monomial derivative $H\n@ $(@__FILE__):$(@__LINE__)"))
     end
 
     # Note: α, β, h0, h1, h2 are in k(√-1)(t) or k(√-1)[t]
-    α = backtransform(α + Z, t0, I0) 
-    β = backtransform(β + Z, t0, I0) 
-    h = backtransform(h0*h1*h2 + Z, t0, I0) 
+    α = backtransform(α + Z, t0, I0)
+    β = backtransform(β + Z, t0, I0)
+    h = backtransform(h0*h1*h2 + Z, t0, I0)
     y = (α*(z1+z2*I0)+β)//h
     real(y), imag(y), 1
 end
-

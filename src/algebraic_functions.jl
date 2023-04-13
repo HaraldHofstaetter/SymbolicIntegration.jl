@@ -1,6 +1,6 @@
 
-function HermiteReduce(f::AbstractAlgebra.ResFieldElem{P}, DE::AlgebraicExtensionDerivation) where 
-    {T<:FieldElement, P<:PolyElem{T}}   
+function HermiteReduce(f::AbstractAlgebra.ResFieldElem{P}, DE::AlgebraicExtensionDerivation) where
+    {T<:FieldElement, P<:PolyElem{T}}
     # "Lazy" Hermite reduction, see Section 2.1 of:
     # Manuel Bronstein. Symbolic integration tutorial. ISSAC’98, 1998.
     # http://www-sop.inria.fr/cafe/Manuel.Bronstein/publications/issac98.pdf
@@ -12,10 +12,10 @@ function HermiteReduce(f::AbstractAlgebra.ResFieldElem{P}, DE::AlgebraicExtensio
     p = modulus(E)
     n = degree(p)
     M_n_n = MatrixSpace(F, n, n)
-    M_n = MatrixSpace(F, n, 1)   
+    M_n = MatrixSpace(F, n, 1)
     g = zero(E)
 
-    if all([iszero(coeff(p, j)) for j=1:n-1]) # simple radical extension    
+    if all([iszero(coeff(p, j)) for j=1:n-1]) # simple radical extension
         # Simpler method for simple radical extensions, see Section 2.2. of Bronstein's tutorial.
         @assert isone(leading_coefficient(p))
         a = constant_coefficient(p)
@@ -36,7 +36,7 @@ function HermiteReduce(f::AbstractAlgebra.ResFieldElem{P}, DE::AlgebraicExtensio
         dDs_over_Ds = [derivative(D)//D for D in Ds]
         dH_over_H = derivative(H)//H
         Winv = inv(M_n_n([coeff(data(w), j) for j=0:n-1, w in ws]))
-        while true            
+        while true
             fs = Winv*M_n([coeff(data(f), i) for i=0:n-1])
             D = lcm(denominator.(fs)[:,1])
             As = [numerator(f*D) for f in fs]
@@ -53,17 +53,17 @@ function HermiteReduce(f::AbstractAlgebra.ResFieldElem{P}, DE::AlgebraicExtensio
             fs = [As[i]//(U*(V*((i-1)//n*dH_over_H - dDs_over_Ds[i]) - (m-1)*dV)) for i=1:n]
             Q = lcm(denominator.(fs)[:,1])
             Ts = [numerator(f*Q) for f in fs]
-            _, _, R = gcdx(V, Q)            
+            _, _, R = gcdx(V, Q)
             B = sum([rem(R*Ts[i], V)*ws[i] for i=1:n])*1//V^(m - 1)
             g += B
             f -= DE(B)
         end
     end
- 
-    ws = [y^j for j=0:n-1]
-    Winv = M_n_n(1) 
 
-    while true        
+    ws = [y^j for j=0:n-1]
+    Winv = M_n_n(1)
+
+    while true
         fs = Winv*M_n([coeff(data(f), i) for i=0:n-1])
         D = lcm(denominator.(fs)[:,1])
         As = [numerator(f*D) for f in fs]
@@ -79,20 +79,20 @@ function HermiteReduce(f::AbstractAlgebra.ResFieldElem{P}, DE::AlgebraicExtensio
         Ss = [U*V^m*DE(w*1//V^(m-1)) for w in ws]
 
         SM = M_n_n([coeff(data(S), j) for j=0:n-1, S in Ss])
-        d, N = nullspace(SM)        
+        d, N = nullspace(SM)
         if d>0 # Theorem 1
-            _, N = nullspace(SM)            
+            _, N = nullspace(SM)
             w0 = U//V*sum(N[i,1]*ws[i] for i=1:n)
         else
             fs = solve(SM, M_n(As))
-            Q = lcm(denominator.(fs)[:,1])            
+            Q = lcm(denominator.(fs)[:,1])
             Ts = [numerator(f*Q) for f in fs]
             w0 = zero(parent(f))
             gcdVQ = gcd(V, Q)
             if degree(gcdVQ)>=1 # Theorem 2
                 w0 = U*divexact(V, gcdVQ)//gcdVQ*sum([Ts[i]*ws[i] for i=1:n])
-            else                
-                j = 1                
+            else
+                j = 1
                 while j<=n
                     dw = DE(ws[j])
                     dws = Winv*M_n([coeff(data(dw), i) for i=0:n-1])
@@ -102,7 +102,7 @@ function HermiteReduce(f::AbstractAlgebra.ResFieldElem{P}, DE::AlgebraicExtensio
                         break
                     end
                     j += 1
-                end                
+                end
                 if j>n # all denominators of the ws[j]' squarefree, do the reduction
                     _, _, R = gcdx(V, Q)
                     B = sum([rem(R*Ts[i], V)*ws[i] for i=1:n])*1//V^(m - 1)
@@ -128,9 +128,9 @@ function HermiteReduce(f::AbstractAlgebra.ResFieldElem{P}, DE::AlgebraicExtensio
         end
         C = hnf(C)
 
-        ws = [sum([C[i,j]*ws[j] for j=1:n])*1//F for i=1:n]                
-        Winv = inv(M_n_n([coeff(data(w), j) for j=0:n-1, w in ws]))        
-    end    
+        ws = [sum([C[i,j]*ws[j] for j=1:n])*1//F for i=1:n]
+        Winv = inv(M_n_n([coeff(data(w), j) for j=0:n-1, w in ws]))
+    end
 end
 
 
@@ -143,14 +143,14 @@ function IntegralBasis(E::AbstractAlgebra.ResField{P}) where {T<:FieldElement, P
     y = E(gen(Ky))
     f = modulus(E)
     n = degree(f)
-    M_n_n = MatrixSpace(K, n, n)    
+    M_n_n = MatrixSpace(K, n, n)
     MP_n_n = MatrixSpace(base_ring(K), n, n)
-    D = resultant(f, derivative(f))    
+    D = resultant(f, derivative(f))
     @assert isone(denominator(D))
     D = numerator(D)
-    D = 1//leading_coefficient(D) * D    
+    D = 1//leading_coefficient(D) * D
     k = D
-    bs = [y^j for j=0:n-1]    
+    bs = [y^j for j=0:n-1]
     B = M_n_n([coeff(data(bs[j]), i) for i=0:n-1, j=1:n])
     while true
         Ds = SI.Squarefree(D)
@@ -162,42 +162,42 @@ function IntegralBasis(E::AbstractAlgebra.ResField{P}) where {T<:FieldElement, P
             return bs
         end
 
-        # Compute J, the Q-trace radical of V     
+        # Compute J, the Q-trace radical of V
         ZE = zero(E)
         S = [i<=j ? bs[i]*bs[j] : ZE  for i=1:n, j=1:n] # only upper triangle needed
         ZK = zero(K)
         # TODO: optimize computation of TM, which is one of the bottlenecks.
         # Compute only upper triangle of TM, lower triangle by symmetry:
         TM = [i<=j ? numerator(sum([coeff(data(S[i, j]*y^l), l) for l=0:n-1])) : ZK for i=1:n, j=1:n]
-        for i=1:n 
+        for i=1:n
             for j=1:i-1
                 TM[i, j] = TM[j, i]
             end
         end
-        H = hnf(vcat(MP_n_n(TM), MP_n_n(Q)))[1:n,:] # Hermite normal form       
-        J = inv(map(x->x//1, H)) # map(x->x/1, H) is H as element in FractionField          
-        
-        # Compute the idealizer of J         
+        H = hnf(vcat(MP_n_n(TM), MP_n_n(Q)))[1:n,:] # Hermite normal form
+        J = inv(map(x->x//1, H)) # map(x->x/1, H) is H as element in FractionField
+
+        # Compute the idealizer of J
         JB = J*B
-        ms = [E(Ky(reshape(Matrix(JB[:,k]), n))) for k=1:n]  
-        Minv = inv(M_n_n([coeff(data(m), i) for i=0:n-1, m in ms]))   
+        ms = [E(Ky(reshape(Matrix(JB[:,k]), n))) for k=1:n]
+        Minv = inv(M_n_n([coeff(data(m), i) for i=0:n-1, m in ms]))
         MM = 0
-        for k=1:n            
+        for k=1:n
             mbs = [data(ms[k]*b) for b in bs]
             Mk = Minv*M_n_n([coeff(mbs[j], i) for i=0:n-1, j=1:n])
             MM = k==1 ? Mk : vcat(MM, Mk)
-        end     
+        end
         Mhat = hnf(map(x->numerator(x), MM))[1:n,:] # Hermite normal form
-        Mhatinv = inv(map(x->x//1, Mhat))        
+        Mhatinv = inv(map(x->x//1, Mhat))
         k = det(Mhat)
-                
+
         if degree(k)<=0 # is k a unit ?
             return bs
         end
 
-        #Update bs by applying the change of basis        
-        B = transpose(Mhatinv)*B        
-        bs = [E(Ky(reshape(Matrix(B[:,k]), n))) for k=1:n]         
-        D = divexact(D, k^2)        
+        #Update bs by applying the change of basis
+        B = transpose(Mhatinv)*B
+        bs = [E(Ky(reshape(Matrix(B[:,k]), n))) for k=1:n]
+        D = divexact(D, k^2)
     end
 end

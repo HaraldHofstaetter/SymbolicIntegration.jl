@@ -1,8 +1,8 @@
-# This file contains general algorithms inter alia from chapter 1 
+# This file contains general algorithms inter alia from chapter 1
 # of the book
 #
 #    Manuel Bronstein, Symbolic Integration I: Transcendental Functions,
-#    2nd ed., Springer 2005. 
+#    2nd ed., Springer 2005.
 #
 
 using AbstractAlgebra
@@ -33,7 +33,7 @@ struct FunctionTerm <: Term
     arg::RingElement
 end
 
-function Base.show(io::IO, t::FunctionTerm) 
+function Base.show(io::IO, t::FunctionTerm)
     if iszero(t.coeff)
         print("0")
         return
@@ -42,7 +42,7 @@ function Base.show(io::IO, t::FunctionTerm)
         print(io, "-")
     elseif !isone(t.coeff)
         s = string(t.coeff)
-        if findnext("+", s, 2)!==nothing || findnext("-", s, 2)!==nothing        
+        if findnext("+", s, 2)!==nothing || findnext("-", s, 2)!==nothing
             print(io, "(", s, ")")
         else
             print(io, s)
@@ -51,13 +51,13 @@ function Base.show(io::IO, t::FunctionTerm)
     end
     print(io, t.op, "(")
     show(io, t.arg)
-    print(io, ")")   
+    print(io, ")")
 end
 
 struct Result
     t::Vector{Term}
  end
- 
+
  function Base.show(io::IO, r::Result)
      if length(r.t)==0
          print(io, "0")
@@ -68,12 +68,12 @@ struct Result
          s = string(r.t[i])
          if s[1]!='+' && s[1]!='-'
              print(io, " + ", s)
-         else        
+         else
              print(io, " ", s[1], " ", s[2:end])
          end
      end
  end
- 
+
 
 
 isrational(x::T) where T<:Integer = true
@@ -93,7 +93,7 @@ function isrational(x::P) where P<:PolyElem
 end
 
 function isrational(x::F) where {P<:PolyElem, F<:FracElem{P}}
-    isone(denominator(x)) && isrational(numerator(x)) 
+    isone(denominator(x)) && isrational(numerator(x))
 end
 
 
@@ -105,7 +105,7 @@ rationalize(x::fmpq) = convert(Rational{BigInt}, x) # Nemo rational type
 
 function rationalize(x::qqbar) #Nemo algebraic number type
     (degree(x)==1 && iszero(imag(x))) || error("not rational")
-    convert(Rational{BigInt}, fmpq(x)) 
+    convert(Rational{BigInt}, fmpq(x))
 end
 
 function rationalize(x::P) where P<:PolyElem
@@ -119,7 +119,7 @@ function rationalize(x::F) where  {P<:PolyElem, F<:FracElem{P}}
 end
 
 
-rationalize_over_Int(x) = convert(Rational{Int}, rationalize(x)) 
+rationalize_over_Int(x) = convert(Rational{Int}, rationalize(x))
 
 
 function common_leading_coeffs(fs::Vector{F}) where F<:FieldElem
@@ -141,7 +141,7 @@ end
 
 function rational_roots(f::PolyElem{T}) where T<:FieldElement
     p = map_coefficients(c->fmpq(rationalize(c)), constant_factors(f)) # fmpq needs Nemo
-    roots(p) 
+    roots(p)
 end
 
 function Nemo.roots(f::PolyElem{qqbar})
@@ -159,13 +159,13 @@ function Nemo.roots(f::PolyElem{qqbar})
     end
 
     g = map_coefficients(c->fmpq(c), G(X, zeros(parent(X), n)...))
-    
+
     rs = roots(g, QQBar)
     [r for r in rs if iszero(f(r))]
 end
 
 
-valuation_infinity(f::F) where {T<:RingElement, P<:PolyElem{T}, F<:FracElem{P}} = 
+valuation_infinity(f::F) where {T<:RingElement, P<:PolyElem{T}, F<:FracElem{P}} =
     # See Bronstein's book, Definition 4.3.1, p. 115
     degree(denominator(f)) - degree(numerator(f))
 
@@ -176,7 +176,7 @@ function Remainder(x::FracElem{T}, a::T) where T<:RingElement
     r
 end
 
- 
+
 function Base.lcm(as::Vector{T}) where T<:RingElement
     m = length(as)
     if m==0
@@ -198,7 +198,7 @@ end
 
 #PolyPseudoDivide: Implemented in AbstractAlgebra.jl as pseudodivrem
 
-#ExtendedEuclidean: implemented in AbstractAlgebra.jl as gcdx 
+#ExtendedEuclidean: implemented in AbstractAlgebra.jl as gcdx
 #  Note that the order of output parameters is g, s, t instead of s, t, g.
 
 
@@ -208,7 +208,7 @@ EuclideanSize(f::T) where T <: PolyElem = degree(f)
 function Base.gcdx(a::T, b::T, c::T) where T <: RingElem
     # ExtendedEuclidean - diophantine version
     # See Bronstein's book, Section 1.3, p. 13
-    R = parent(a)    
+    R = parent(a)
     (parent(b) == R && parent(c) == R) || error("Incompatible parents")
     g, s, t = gcdx(a, b)
     q, r = divrem(c, g)
@@ -220,7 +220,7 @@ function Base.gcdx(a::T, b::T, c::T) where T <: RingElem
         s = r
         t = t + q*a
     end
-    s, t            
+    s, t
 end
 
 function PartialFraction(a::T, d::Vector{T}) where T <: RingElem
@@ -229,7 +229,7 @@ function PartialFraction(a::T, d::Vector{T}) where T <: RingElem
     if n==1
         q, r = divrem(a, d[1])
         return q, [r]
-    end    
+    end
     prod_d2n = prod(d[2:n])
     a0, r = divrem(a, d[1]*prod_d2n)
     a1, t = gcdx(prod_d2n, d[1], r)
@@ -253,25 +253,25 @@ function PartialFraction(a::T, d::Vector{T}, e::Vector{Int}) where T <: RingElem
 end
 
 function SubResultant(A::PolyElem{T}, B::PolyElem{T}) where T <: RingElement
-    # See Bronstein's book, Section 1.5, p. 24 
+    # See Bronstein's book, Section 1.5, p. 24
     degree(A) >= degree(B) || error("degree(A) must be >= degree(B)")
     T_one = one(leading_coefficient(A)) # 1 of type T
-    Rs = [A, B] # indices shifted! 
+    Rs = [A, B] # indices shifted!
     i = 1
-    γ = T[-T_one] 
+    γ = T[-T_one]
     δ = Int[degree(A)-degree(B)]
     β = T[(-T_one)^(δ[1]+1)]
     r = T[]
     while !iszero(Rs[i+1])
         push!(r, leading_coefficient(Rs[i+1]) )
         Q, R = pseudodivrem(Rs[i-1+1], Rs[i+1])
-        q = divexact(R, β[i])        
+        q = divexact(R, β[i])
         push!(Rs, q)
         i += 1
         h = δ[i-1]<=1 ? (-r[i-1])^δ[i-1]*γ[i-1]^(1-δ[i-1]) : divexact((-r[i-1])^δ[i-1], γ[i-1]^(δ[i-1]-1))
         push!(γ, h)
         push!(δ, degree(Rs[i-1+1]) - degree(Rs[i+1]) )
-        push!(β, -r[i-1]*γ[i]^δ[i])       
+        push!(β, -r[i-1]*γ[i]^δ[i])
     end
     k = i - 1
     zero_poly = zero(A)
@@ -287,7 +287,7 @@ function SubResultant(A::PolyElem{T}, B::PolyElem{T}) where T <: RingElement
     for j=1:k-1
         if isodd(degree(Rs[j-1+1])) && isodd(degree(Rs[j+1]))
             s = -s
-        end        
+        end
         d = -(1+δ[j])*degree(Rs[j+1]) + degree(Rs[j-1+1]) - degree(Rs[j+1+1])
         c_num *= β[j]^degree(Rs[j+1])
         if d>=0
@@ -300,14 +300,14 @@ function SubResultant(A::PolyElem{T}, B::PolyElem{T}) where T <: RingElement
 end
 
 function Squarefree_Musser(A::PolyElem{T}) where T <: RingElement
-    # See Bronstein's book, Section 1.7, p. 29 
+    # See Bronstein's book, Section 1.7, p. 29
     c = content(A)
     S = divexact(A, c)
     Sminus = gcd(S, derivative(S))
     Sstar = divexact(S, Sminus)
     As = PolyElem{T}[]
     k = 1
-    while degree(Sminus)>0 
+    while degree(Sminus)>0
         Y = gcd(Sstar, Sminus)
         push!(As, divexact(Sstar, Y))
         Sstar = Y
@@ -319,8 +319,8 @@ function Squarefree_Musser(A::PolyElem{T}) where T <: RingElement
     As
 end
 
-function Squarefree(A::PolyElem{T}) where T <: RingElement    
-    # See Bronstein's book, Section 1.7, p. 32 
+function Squarefree(A::PolyElem{T}) where T <: RingElement
+    # See Bronstein's book, Section 1.7, p. 32
     c = content(A)
     S = divexact(A, c)
     Sprime = derivative(S)
@@ -341,4 +341,3 @@ function Squarefree(A::PolyElem{T}) where T <: RingElement
     As[1] = c*As[1]
     As
 end
-

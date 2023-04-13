@@ -9,17 +9,17 @@ export integrate
 Construct tower of differential fields.
 
 Given `Hs = [H₁,...,Hₙ]` with `Hᵢ` in `C(x,t₁,...,tₙ)` (i.e., they are fractions
-of multivariate polynomials in variables `x, t₁,...,tₙ` over a field `C`) 
+of multivariate polynomials in variables `x, t₁,...,tₙ` over a field `C`)
 such that `Hᵢ` can be represented as a polynomial in `tᵢ` with coefficients  in `C(x, t₁,...,tᵢ₋₁)` (in particular, `Hᵢ` does not depend on `tᵢ₊₁,...,tₙ`),
 return a field `K = C(x)(t₁)...(tₙ)` isomorphic to `C(x, t₁,...,tₙ)` and a derivation `D` on `K` such that
 `K` is constructed by iteratively adjoining the indeterminates `x`, `t₁`,...,`tₙ`, `C` is the constant field
 of `D`, `D` is `d/dx` on `C(x)`, and `D` is iteratively extended from `C(x)(t₁)...(tᵢ₋₁)` to `C(x)(t₁)...(tᵢ)`
 such that `tᵢ` is monomial over `C(x)(t₁)...(tᵢ₋₁)` with `D(tᵢ)=Hᵢ=Hᵢ(x, t₁,....,tᵢ)`.
 The generators `x` of C(x) over C and `tᵢ` of `C(x)(t₁)...(tᵢ)` over `C(x)(t₁)...(tᵢ₋₁)` are returned
-as `gs=[x, t₁,...,tₙ]`. (Note that these generators, although here denoted by the same symbols for simplicity, are isomorphic but not identical to 
+as `gs=[x, t₁,...,tₙ]`. (Note that these generators, although here denoted by the same symbols for simplicity, are isomorphic but not identical to
 the generators `x, t₁,...,tₙ` of `C(x,t₁,...,tₙ)` given implicitely as the variables of the rational functions `Hᵢ`.)
 
-# Example  
+# Example
 ```julia
 R, (x, t1, t2) = PolynomialRing(QQ, [:x, :t1, :t2])
 Z = zero(R)//1 # zero element of the fraction field of R
@@ -27,7 +27,7 @@ K, gs, D = TowerOfDifferentialFields([t1//x, (t2^2+1)*x*t1 + Z])
 ```
 (Note: by adding `Z` to a polynomial we explicitely transform it to an element of the fraction field.)
 """
-function TowerOfDifferentialFields(Hs::Vector{F})  where 
+function TowerOfDifferentialFields(Hs::Vector{F})  where
     {T<:FieldElement, P<:MPolyElem{T}, F<:FracElem{P}}
     n = length(Hs)
     n>0 || error("height extension tower must be >= 1")
@@ -36,22 +36,22 @@ function TowerOfDifferentialFields(Hs::Vector{F})  where
     nvars(MR) == n + 1 || error("number of monmials must be number of variables - 1")
     syms = symbols(MR)
     K = base_ring(MR)
-    gs = Any[zero(K) for i=1:n+1]    
-    Kt, gs[1] = PolynomialRing(K, syms[1])    
+    gs = Any[zero(K) for i=1:n+1]
+    Kt, gs[1] = PolynomialRing(K, syms[1])
     D = BasicDerivation(Kt)
-    K = FractionField(Kt)       
+    K = FractionField(Kt)
     for i=1:n
-        Kt, gs[i+1] = PolynomialRing(K, syms[i+1])        
+        Kt, gs[i+1] = PolynomialRing(K, syms[i+1])
         p = numerator(Hs[i])
         q = denominator(Hs[i])
         maximum(vcat(0, var_index.(vars(p)), var_index.(vars(q)))) <=i+1 ||
             error("Hs[$(i)] may only depend on $(gens(MR)[1:i+1]))")
-        H = p(gs...)//q(gs...) 
+        H = p(gs...)//q(gs...)
         isone(denominator(H)) ||
             error("Hs[$(i)] must be a polynomial in $(gens(MR[i+1]))")
         H = numerator(H)
         D = ExtensionDerivation(Kt, D, H)
-        K = FractionField(Kt)       
+        K = FractionField(Kt)
     end
     K, gs, D
 end
@@ -61,7 +61,7 @@ end
 
 Transform elements of `C(x,t₁,...,tₙ)` to elements of `C(x)(t₁)...(tₙ)`.
 
-Given `f` in `C(x,t₁,...,tₙ)` and the generators `gs=[x, t₁,...,tₙ]` as returned by 
+Given `f` in `C(x,t₁,...,tₙ)` and the generators `gs=[x, t₁,...,tₙ]` as returned by
 `TowerOfDifferentialFields`, return the corresponding element `f1` in `C(x)(t₁)...(tₙ)`,
 
 # Example
@@ -73,7 +73,7 @@ f = (x+t1)//(x+t2)     # element of FractionField(R)
 f1 = transform_mpoly_to_tower(f, gs)  # element of K
 ```
 """
-function transform_mpoly_to_tower(f::F, gs::Vector) where 
+function transform_mpoly_to_tower(f::F, gs::Vector) where
     {T<:FieldElement, P<:MPolyElem{T}, F<:FracElem{P}}
     numerator(f)(gs...)//denominator(f)(gs...)
 end
@@ -93,7 +93,7 @@ end
 to_symb(t::fmpq) = to_symb(Rational(t))
 
 function to_symb(t::qqbar)
-    if degree(t)==1 
+    if degree(t)==1
         return to_symb(fmpq(t))
     end
     kx, _ = PolynomialRing(Nemo.QQ, :x)
@@ -118,7 +118,7 @@ function to_symb(t::qqbar)
         return to_symb(t + s) - to_symb(s)
     else
         return Root(t)
-    end    
+    end
 end
 
 function height(K::F) where F<:AbstractAlgebra.Field
@@ -135,7 +135,7 @@ function height(R::P) where
     height(base_ring(R))+1
 end
 
-subst_tower(t::Number, subs::Vector, h::Int=0) = to_symb(t)  
+subst_tower(t::Number, subs::Vector, h::Int=0) = to_symb(t)
 
 subst_tower(t::fmpq, subs::Vector, h::Int=0) = to_symb(t)
 
@@ -163,7 +163,7 @@ function convolution(a::Vector{T}, b::Vector{T}, s::Int; output_size::Int=0) whe
     c
 end
 
-function tan2sincos(f::K, arg::SymbolicUtils.Symbolic, vars::Vector, h::Int=0) where 
+function tan2sincos(f::K, arg::SymbolicUtils.Symbolic, vars::Vector, h::Int=0) where
     {T<:FieldElement, P<:PolyElem{T}, K<:FracElem{P}}
     # This function transforms a Nemo/AbstractAlgebra rational funktion with
     # varibale t representing tan(arg) to a SymbolicUtils expression which is
@@ -174,13 +174,13 @@ function tan2sincos(f::K, arg::SymbolicUtils.Symbolic, vars::Vector, h::Int=0) w
     kI = ResidueField(kz, I^2+1)
     kIE, E = PolynomialRing(kI, :E)
     # I represents sqrt(-1), E represents exp(2*I*arg), so that t = I*(1-E)//(1+E) represents tan(arg)
-    t = I*(1 - E)//(1 + E)   
+    t = I*(1 - E)//(1 + E)
     F = numerator(f)(t)//denominator(f)(t)  # F is f as expression in I and E
 
     # Compute as = [a_1, a_2,...] and bs, cs, ds similarly, such that
     #      ∑_j a_j*E^j + I*∑_j b_j*E^j
     # F = -----------------------------
-    #      ∑_j c_j*E^j + I*∑_j d_j*E^j    
+    #      ∑_j c_j*E^j + I*∑_j d_j*E^j
     as = [coeff(data(c), 0) for c in coefficients(numerator(F))] # = real(numerator(F))
     bs = [coeff(data(c), 1) for c in coefficients(numerator(F))] # = imag(numerator(F))
     cs = [coeff(data(c), 0) for c in coefficients(denominator(F))] # = real(denominator(F))
@@ -189,9 +189,9 @@ function tan2sincos(f::K, arg::SymbolicUtils.Symbolic, vars::Vector, h::Int=0) w
     # In the above representation of F we multiply both numerator and denominator with
     # the complex conjugate of the denominator ∑_j c_j*E^(-j) - I*∑_j d_j*E^(-j)
     # and take the real part. We obtain a representation of F of the form
-    #             ∑_j p_j*cos(2*j*arg) + ∑_j q_j*sin(2*j*arg) 
+    #             ∑_j p_j*cos(2*j*arg) + ∑_j q_j*sin(2*j*arg)
     # real(F) = ----------------------------------------------
-    #             ∑_j r_j*cos(2*j*arg) + ∑_j s_j*sin(2*j*arg) 
+    #             ∑_j r_j*cos(2*j*arg) + ∑_j s_j*sin(2*j*arg)
     N = maximum([length(as), length(bs), length(cs), length(ds)])
     ps = convolution(as, cs, +1, output_size=N) + convolution(bs, ds, +1, output_size=N)
     qs = -convolution(bs, cs, -1, output_size=N) + convolution(as, ds, -1, output_size=N)
@@ -203,15 +203,15 @@ function tan2sincos(f::K, arg::SymbolicUtils.Symbolic, vars::Vector, h::Int=0) w
     for j=2:length(ps)
         num += subst_tower(ps[j], vars, h - 1)*cos((j - 1)*arg2)
     end
-    for j=2:length(qs)        
-        num += subst_tower(qs[j], vars, h - 1)*sin((j - 1)*arg2)    
+    for j=2:length(qs)
+        num += subst_tower(qs[j], vars, h - 1)*sin((j - 1)*arg2)
     end
     den = subst_tower(rs[1], vars, h - 1)
     for j=2:length(rs)
         den += subst_tower(rs[j], vars, h - 1)*cos((j - 1)*arg2)
     end
     for j=2:length(ss)
-        den += subst_tower(ss[j], vars, h - 1)*sin((j - 1)*arg2)    
+        den += subst_tower(ss[j], vars, h - 1)*sin((j - 1)*arg2)
     end
     num//den
 end
@@ -233,7 +233,7 @@ function subst_tower(p::P, vars::Vector, h::Int) where
     if iszero(p)
         return zero(vars[h])
     end
-    cs = [subst_tower(c, vars, h - 1) for c in coefficients(p)]    
+    cs = [subst_tower(c, vars, h - 1) for c in coefficients(p)]
     if isa(vars[h], SymbolicUtils.Term) && operation(vars[h])==exp
         # Write polynomial in exp(a) as sum_i c_i*exp(i*a) instead sum_i c_i*exp(a)^i
         a = arguments(vars[h])[1]
@@ -276,11 +276,11 @@ function analyze_expr(f, x::SymbolicUtils.Sym)
     tanArgs = []
     expArgs = []
     restart = true
-    while restart        
+    while restart
         funs = Any[x]
         vars = SymbolicUtils.Sym[x]
         args = Any[x]
-        try 
+        try
             p = analyze_expr(f, funs, vars, args, tanArgs, expArgs)
             return p, funs, vars, args
         catch e
@@ -288,12 +288,12 @@ function analyze_expr(f, x::SymbolicUtils.Sym)
                 restart = true
             else
                 rethrow(e)
-            end                
+            end
         end
     end
 end
 
-function analyze_expr(f::SymbolicUtils.Sym , funs::Vector, vars::Vector{SymbolicUtils.Sym}, 
+function analyze_expr(f::SymbolicUtils.Sym , funs::Vector, vars::Vector{SymbolicUtils.Sym},
                       args::Vector, tanArgs::Vector, expArgs::Vector)
     if hash(f) != hash(funs[1])
         throw(NotImplementedError("integrand contains unsupported symbol $f different from the integration variable $(funs[1])"))
@@ -306,7 +306,7 @@ function analyze_expr(f::Number , funs::Vector, vars::Vector{SymbolicUtils.Sym},
     return f
 end
 
-function analyze_expr(f::Union{SymbolicUtils.Add, SymbolicUtils.Mul, SymbolicUtils.Div}, funs::Vector, 
+function analyze_expr(f::Union{SymbolicUtils.Add, SymbolicUtils.Mul, SymbolicUtils.Div}, funs::Vector,
                       vars::Vector{SymbolicUtils.Sym}, args::Vector, tanArgs::Vector, expArgs::Vector)
     as = arguments(f)
     ps = [analyze_expr(a, funs, vars, args, tanArgs, expArgs) for a in as]
@@ -319,10 +319,10 @@ function analyze_expr(f::SymbolicUtils.Pow, funs::Vector, vars::Vector{SymbolicU
     p2 = analyze_expr(as[2], funs, vars, args, tanArgs, expArgs)
     if isa(p2, Integer)
         return p1^p2
-    elseif isa(p2, Number)        
+    elseif isa(p2, Number)
         throw(NotImplementedError("integrand contains power with unsupported exponent $p2"))
     end
-    exp(p2*log(p1))    
+    exp(p2*log(p1))
 end
 
 is_rational_multiple(a, b) = false
@@ -339,23 +339,23 @@ is_rational_multiple(a::SymbolicUtils.Symbolic, b::SymbolicUtils.Mul) =
 
 rational_multiple(a, b) = error("not a rational multiple")
 
-function rational_multiple(a::SymbolicUtils.Mul, b::SymbolicUtils.Mul)  
+function rational_multiple(a::SymbolicUtils.Mul, b::SymbolicUtils.Mul)
     if !is_rational_multiple(a, b)
-        error("not a rational multiple")        
+        error("not a rational multiple")
     end
     a.coeff//b.coeff
 end
 
-function rational_multiple(a::SymbolicUtils.Mul, b::SymbolicUtils.Symbolic) 
+function rational_multiple(a::SymbolicUtils.Mul, b::SymbolicUtils.Symbolic)
     if !is_rational_multiple(a, b)
-        error("not a rational multiple")        
+        error("not a rational multiple")
     end
     return a.coeff//1
 end
 
 function rational_multiple(a::SymbolicUtils.Symbolic, b::SymbolicUtils.Mul)
     if !is_rational_multiple(a, b)
-        error("not a rational multiple")        
+        error("not a rational multiple")
     end
     return 1//b.coeff
 end
@@ -363,7 +363,7 @@ end
 function tan_nx(n::Int, x)
     sign_n = sign(n)
     n = abs(n)
-    a = zero(x)    
+    a = zero(x)
     s = +1
     for k=1:2:n
         a += s*binomial(n, k)*tan(x)^k
@@ -378,7 +378,7 @@ function tan_nx(n::Int, x)
     sign_n*a/b
 end
 
-function analyze_expr(f::SymbolicUtils.Term , funs::Vector, vars::Vector{SymbolicUtils.Sym}, args::Vector, tanArgs::Vector, expArgs::Vector)    
+function analyze_expr(f::SymbolicUtils.Term , funs::Vector, vars::Vector{SymbolicUtils.Sym}, args::Vector, tanArgs::Vector, expArgs::Vector)
     op = operation(f)
     a = arguments(f)[1]
     if op == exp
@@ -390,7 +390,7 @@ function analyze_expr(f::SymbolicUtils.Term , funs::Vector, vars::Vector{Symboli
             n = rational_multiple(a, expArgs[i])
             if !isone(denominator(n)) # n not an integer
                 expArgs[i] = 1//denominator(n)*expArgs[i]
-                throw(UpdatedArgList())            
+                throw(UpdatedArgList())
             end
             n = numerator(n)
         end
@@ -398,7 +398,7 @@ function analyze_expr(f::SymbolicUtils.Term , funs::Vector, vars::Vector{Symboli
             f = exp(expArgs[i])^n
             return analyze_expr(f, funs, vars, args, tanArgs, expArgs)
         end
-    elseif op==tan        
+    elseif op==tan
         i = findfirst(x -> is_rational_multiple(a, x), tanArgs)
         n = 1
         if i === nothing
@@ -407,9 +407,9 @@ function analyze_expr(f::SymbolicUtils.Term , funs::Vector, vars::Vector{Symboli
             n = rational_multiple(a, tanArgs[i])
             if !isone(denominator(n)) # n not an integer
                 tanArgs[i] = 1//denominator(n)*tanArgs[i]
-                throw(UpdatedArgList())            
+                throw(UpdatedArgList())
             end
-            n = numerator(n) 
+            n = numerator(n)
         end
         if n != 1
             f = tan_nx(n, tanArgs[i])
@@ -432,7 +432,7 @@ function analyze_expr(f::SymbolicUtils.Term , funs::Vector, vars::Vector{Symboli
         return analyze_expr(f, funs, vars, args, tanArgs, expArgs)
     elseif op == coth
         f = (exp(a) + 1/exp(a))/(exp(a) - 1/exp(a))
-        return analyze_expr(f, funs, vars, args, tanArgs, expArgs)        
+        return analyze_expr(f, funs, vars, args, tanArgs, expArgs)
     elseif op == sin # transform to half angle format
         f = 2*tan(1//2*a)/(1 + tan(1//2*a)^2)
         return analyze_expr(f, funs, vars, args, tanArgs, expArgs)
@@ -449,14 +449,14 @@ function analyze_expr(f::SymbolicUtils.Term , funs::Vector, vars::Vector{Symboli
         f = 1/tan(a)
         return analyze_expr(f, funs, vars, args, tanArgs, expArgs)
     end
-    i = findfirst(x -> hash(x)==hash(f), funs) 
+    i = findfirst(x -> hash(x)==hash(f), funs)
     if i !== nothing
         return vars[i]
-    end    
-    op in [exp, log, atan, tan] ||        
+    end
+    op in [exp, log, atan, tan] ||
         throw(NotImplementedError("integrand contains unsupported function $op"))
     p = analyze_expr(a, funs, vars, args, tanArgs, expArgs)
-    tname = Symbol(:t, length(vars)) 
+    tname = Symbol(:t, length(vars))
     t = SymbolicUtils.Sym{Number, Nothing}(tname, nothing)
     push!(funs, f)
     push!(vars, t)
@@ -466,7 +466,7 @@ end
 
 function transform_symtree_to_mpoly(f::SymbolicUtils.Sym, vars::Vector, vars_mpoly::Vector)
     i = findfirst(x -> hash(x)==hash(f), vars)
-    @assert i!== nothing 
+    @assert i!== nothing
     vars_mpoly[i]
 end
 
@@ -482,12 +482,12 @@ transform_symtree_to_mpoly(f::SymbolicUtils.Add, vars::Vector, vars_mpoly::Vecto
 transform_symtree_to_mpoly(f::SymbolicUtils.Mul, vars::Vector, vars_mpoly::Vector) =
     prod([transform_symtree_to_mpoly(a, vars, vars_mpoly) for a in arguments(f)])
 
-function transform_symtree_to_mpoly(f::SymbolicUtils.Div, vars::Vector, vars_mpoly::Vector) 
+function transform_symtree_to_mpoly(f::SymbolicUtils.Div, vars::Vector, vars_mpoly::Vector)
     as = arguments(f)
     transform_symtree_to_mpoly(as[1], vars, vars_mpoly)//transform_symtree_to_mpoly(as[2], vars, vars_mpoly)
 end
 
-function transform_symtree_to_mpoly(f::SymbolicUtils.Pow, vars::Vector, vars_mpoly::Vector) 
+function transform_symtree_to_mpoly(f::SymbolicUtils.Pow, vars::Vector, vars_mpoly::Vector)
     as = arguments(f)
     @assert isa(as[2], Integer)
     if as[2]>=0
@@ -499,7 +499,7 @@ end
 
 
 
-function TowerOfDifferentialFields(terms::Vector{Term})  where 
+function TowerOfDifferentialFields(terms::Vector{Term})  where
     {T<:FieldElement, P<:MPolyElem{T}, F<:FracElem{P}}
     n = length(terms)
     MF = parent(terms[1].arg)
@@ -507,13 +507,13 @@ function TowerOfDifferentialFields(terms::Vector{Term})  where
     nvars(MR) == n || error("number of args must be number of variables")
     syms = symbols(MR)
     K = base_ring(MR)
-    gs = Any[zero(K) for i=1:n]    
-    Kt, gs[1] = PolynomialRing(K, syms[1])    
+    gs = Any[zero(K) for i=1:n]
+    Kt, gs[1] = PolynomialRing(K, syms[1])
     D = BasicDerivation(Kt)
-    K = FractionField(Kt)       
+    K = FractionField(Kt)
     for i=2:n
         f = transform_mpoly_to_tower(terms[i].arg, gs) # needs old gs
-        Kt, gs[i] = PolynomialRing(K, syms[i])  
+        Kt, gs[i] = PolynomialRing(K, syms[i])
         t = gs[i]
 
         op = terms[i].op
@@ -534,7 +534,7 @@ function TowerOfDifferentialFields(terms::Vector{Term})  where
             u, ρ = InFieldDerivative(constant_coefficient(H), D)
             if ρ>0
                 #TODO: For this case there is always a remedy
-                throw(NotImplementedError("integrand seems to contain logarithms with hidden algebraic dependency"))                
+                throw(NotImplementedError("integrand seems to contain logarithms with hidden algebraic dependency"))
             end
         elseif op == exp
             # Check condition of Theorem 5.1.2
@@ -546,10 +546,10 @@ function TowerOfDifferentialFields(terms::Vector{Term})  where
         elseif op == tan
             # Check condition of Theorem 5.10.1
             _, I, DI = Complexify(K, D)
-            η = I*constant_coefficient(divexact(H, t^2 + 1)) 
+            η = I*constant_coefficient(divexact(H, t^2 + 1))
             m, u, ρ = InFieldLogarithmicDerivativeOfRadical(η, DI)
             if ρ>0
-                #TODO: For this case there is a remedy if m=1 or m=-1 
+                #TODO: For this case there is a remedy if m=1 or m=-1
                 throw(NotImplementedError("integrand seems to contain trigonometric functions with hidden algebraic dependency"))
             end
         else
@@ -557,7 +557,7 @@ function TowerOfDifferentialFields(terms::Vector{Term})  where
         end
 
         D = ExtensionDerivation(Kt, D, H)
-        K = FractionField(Kt)       
+        K = FractionField(Kt)
     end
     K, gs, D
 end
@@ -589,12 +589,12 @@ function integrate(f::SymbolicUtils.Symbolic, x::SymbolicUtils.Sym; useQQBar::Bo
         end
         R, vars_mpoly = PolynomialRing(F, Symbol.(vars))
         Z = zero(R)//one(R)
-        args_mpoly = typeof(Z)[transform_symtree_to_mpoly(a, vars, vars_mpoly) + Z for a in args]    
+        args_mpoly = typeof(Z)[transform_symtree_to_mpoly(a, vars, vars_mpoly) + Z for a in args]
         terms = vcat(IdTerm(args_mpoly[1]), Term[FunctionTerm(operation(funs[i]), 1, args_mpoly[i]) for i=2:length(funs)])
-        p_mpoly = transform_symtree_to_mpoly(p, vars, vars_mpoly)           
+        p_mpoly = transform_symtree_to_mpoly(p, vars, vars_mpoly)
         _, gs, D = TowerOfDifferentialFields(terms)
-        p = transform_mpoly_to_tower(p_mpoly + Z, gs)   
-        try 
+        p = transform_mpoly_to_tower(p_mpoly + Z, gs)
+        try
             g, r, ρ = Integrate(p, D)
             g = subst_tower(g, funs)
             if isa(g, SymbolicUtils.Add)
@@ -608,8 +608,8 @@ function integrate(f::SymbolicUtils.Symbolic, x::SymbolicUtils.Sym; useQQBar::Bo
         catch e
             if e isa AlgebraicNumbersInvolved
                 # try again now with algebraic numbers enabled
-                return integrate(f, x, useQQBar=true, 
-                    catchNotImplementedError=catchNotImplementedError, 
+                return integrate(f, x, useQQBar=true,
+                    catchNotImplementedError=catchNotImplementedError,
                     catchAlgorithmFailedError=catchAlgorithmFailedError)
             end
             rethrow(e)
@@ -626,6 +626,6 @@ function integrate(f::SymbolicUtils.Symbolic, x::SymbolicUtils.Sym; useQQBar::Bo
                 return ∫(f, x)
             end
         end
-        rethrow(e)        
+        rethrow(e)
     end
 end

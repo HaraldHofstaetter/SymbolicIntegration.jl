@@ -34,7 +34,7 @@ function (D::NullDerivation)(f::FracElem{T}) where {T<:RingElement}
     zero(f)
 end
 
-function constant_field(D::NullDerivation) 
+function constant_field(D::NullDerivation)
     R = D.domain
     if isa(R, AbstractAlgebra.Field)
         return R
@@ -54,7 +54,7 @@ end
 
 BasicDerivation(domain::FracField{P}) where P<:PolyElem = BasicDerivation(base_ring(domain))
 
-function (D::BasicDerivation{T})(p::PolyElem{T}) where T<:RingElement 
+function (D::BasicDerivation{T})(p::PolyElem{T}) where T<:RingElement
     iscompatible(p, D) || error("p not in domain of D")
     derivative(p)
 end
@@ -66,7 +66,7 @@ end
 
 BaseDerivation(D::BasicDerivation) = NullDerivation(base_ring(D.domain))
 MonomialDerivative(D::BasicDerivation) = one(D.domain)
-function constant_field(D::BasicDerivation) 
+function constant_field(D::BasicDerivation)
     R = base_ring(D.domain)
     if isa(R, AbstractAlgebra.Field)
         return R
@@ -87,7 +87,7 @@ struct ExtensionDerivation{T<:RingElement} <: Derivation
         new{R}(domain, D, H)
     end
 
-    function ExtensionDerivation(domain::PolyRing{F}, D::Derivation, H::PolyElem{F}) where 
+    function ExtensionDerivation(domain::PolyRing{F}, D::Derivation, H::PolyElem{F}) where
         {R<:RingElement, F<:FracElem{R}}
         base_ring(base_ring(domain))==D.domain || error("base ring of domain must be domain of D")
         new{F}(domain, D, H)
@@ -127,8 +127,8 @@ function (D::ExtensionDerivation{T})(f::FracElem{P}) where {T<:RingElement, P<:P
         end
     else
         if iszero(D.H)
-            da = map_coefficients(c->D.D(c), a) 
-            db = map_coefficients(c->D.D(c), b) 
+            da = map_coefficients(c->D.D(c), a)
+            db = map_coefficients(c->D.D(c), b)
         else
             da = map_coefficients(c->D.D(c), a) + D.H*derivative(a)
             db = map_coefficients(c->D.D(c), b) + D.H*derivative(b)
@@ -138,11 +138,11 @@ function (D::ExtensionDerivation{T})(f::FracElem{P}) where {T<:RingElement, P<:P
 end
 
 
-BaseDerivation(D::ExtensionDerivation) = D.D 
-MonomialDerivative(D::ExtensionDerivation) = D.H 
+BaseDerivation(D::ExtensionDerivation) = D.D
+MonomialDerivative(D::ExtensionDerivation) = D.H
 constant_field(D::ExtensionDerivation) = constant_field(D.D)
 
-Base.show(io::IO, D::ExtensionDerivation) = print(io, "Extension by D", 
+Base.show(io::IO, D::ExtensionDerivation) = print(io, "Extension by D",
     gen(domain(D))," = ", MonomialDerivative(D),
     " of ", BaseDerivation(D), " on ", domain(D))
 
@@ -165,31 +165,31 @@ function (D::AlgebraicExtensionDerivation)(f::AbstractAlgebra.ResFieldElem{P}) w
     map_coefficients(derivative, data(f)) + derivative(data(f))*D.dy
 end
 
-BaseDerivation(D::AlgebraicExtensionDerivation) = D.D 
+BaseDerivation(D::AlgebraicExtensionDerivation) = D.D
 #Note: implementation of constant_field requires further thought ...
 #constant_field(D::AlgebraicExtensionDerivation) = constant_field(D.D)
 
-Base.show(io::IO, D::AlgebraicExtensionDerivation) = print(io, "Algebraic extension of ", 
+Base.show(io::IO, D::AlgebraicExtensionDerivation) = print(io, "Algebraic extension of ",
     BaseDerivation(D), " on ", domain(D))
 
 
 
-AbstractAlgebra.degree(D::Derivation) = 
+AbstractAlgebra.degree(D::Derivation) =
     degree(MonomialDerivative(D)) # \delta(t), see Def. 3.4.1
-AbstractAlgebra.leading_coefficient(D::Derivation) = 
+AbstractAlgebra.leading_coefficient(D::Derivation) =
 leading_coefficient(MonomialDerivative(D)) # \lambda(t), see Def. 3.4.1
 Base.iszero(D::Derivation) = false
 Base.iszero(D::NullDerivation) = true
 isbasic(D::Derivation) = false
 isbasic(D::BasicDerivation) = true
-isbasic(D::ExtensionDerivation) = 
+isbasic(D::ExtensionDerivation) =
     iszero(BaseDerivation(D)) && isone(MonomialDerivative(D))
-isprimitive(D::Derivation) = degree(D)==0 # see Def. 5.1.1 
+isprimitive(D::Derivation) = degree(D)==0 # see Def. 5.1.1
 ishyperexponential(D::Derivation) = # see Def, 5.1.1
     degree(D)==1 && iszero(constant_coefficient(MonomialDerivative(D)))
-isnonlinear(D::Derivation) = degree(D)>=2 # see Def. 3.4.1  
+isnonlinear(D::Derivation) = degree(D)>=2 # see Def. 3.4.1
 
-function ishypertangent(D::Derivation) 
+function ishypertangent(D::Derivation)
     # see Def. 5.10.1
     isnonlinear(D) || return false
     t = gen(domain(D))
@@ -215,7 +215,7 @@ isreduced(f::FracElem{P}, D::Derivation) where P<:PolyElem =
     iscompatible(f, D) && isspecial(denominator(f), D)
 
 
-function isconstant(x::T, D::NullDerivation) where T<:RingElement 
+function isconstant(x::T, D::NullDerivation) where T<:RingElement
     @assert iscompatible(x, D)
     true
 end
@@ -225,20 +225,20 @@ function isconstant(x::F, D::NullDerivation) where {P<:PolyElem, F<:FracElem{P}}
     @assert iscompatible(x, D)
     true
 end
-    
-function isconstant(x::T, D::Derivation) where T<:RingElement 
+
+function isconstant(x::T, D::Derivation) where T<:RingElement
     @assert iscompatible(x, D)
     false
 end
 
-function isconstant(x::P, D::BasicDerivation) where P<:PolyElem 
+function isconstant(x::P, D::BasicDerivation) where P<:PolyElem
     @assert iscompatible(x, D)
     degree(x)<=0
 end
 
 function isconstant(x::P, D::ExtensionDerivation) where P<:PolyElem
     @assert iscompatible(x, D)
-    if degree(x)>0 
+    if degree(x)>0
         return false
     else
         return isconstant(constant_coefficient(x), BaseDerivation(D))
@@ -247,11 +247,11 @@ end
 
 function isconstant(x::F, D::Derivation) where {P<:PolyElem, F<:FracElem{P}}
     @assert iscompatible(x, D)
-    isone(denominator(x)) && isconstant(numerator(x), D) 
+    isone(denominator(x)) && isconstant(numerator(x), D)
 end
 
 
-function constantize(x::T, D::NullDerivation) where T<:RingElement 
+function constantize(x::T, D::NullDerivation) where T<:RingElement
     @assert iscompatible(x, D)
     x
 end
@@ -262,12 +262,12 @@ function constantize(x::F, D::NullDerivation) where {P<:PolyElem, F<:FracElem{P}
     x
 end
 
-function constantize(x::T, D::Derivation) where T<:RingElement 
+function constantize(x::T, D::Derivation) where T<:RingElement
     @assert iscompatible(x, D)
     error("not a constant")
 end
 
-function constantize(x::P, D::BasicDerivation) where P<:PolyElem 
+function constantize(x::P, D::BasicDerivation) where P<:PolyElem
     @assert iscompatible(x, D)
     degree(x)<=0 || error("not a constant")
     constant_coefficient(x)
@@ -287,22 +287,22 @@ end
 
 function constant_roots(f::PolyElem{T}, D::Derivation; useQQBar::Bool=false) where T<:FieldElement
     @assert iscompatible(f, D)
-    p = map_coefficients(c->constantize(c, BaseDerivation(D)), constant_factors(f)) 
+    p = map_coefficients(c->constantize(c, BaseDerivation(D)), constant_factors(f))
     if useQQBar
-        return roots(p, QQBar) 
+        return roots(p, QQBar)
     else
         return roots(p)
     end
 end
 
-function constant_roots(f::PolyElem{T}, D::Derivation; useQQBar::Bool=false) where 
+function constant_roots(f::PolyElem{T}, D::Derivation; useQQBar::Bool=false) where
     {T<:AbstractAlgebra.ResFieldElem}
     @assert iscompatible(f, D)
-    p = map_coefficients(c->constantize(c, BaseDerivation(D)), constant_factors(f)) 
+    p = map_coefficients(c->constantize(c, BaseDerivation(D)), constant_factors(f))
     pp = map_coefficients(c->real(c), p*map_coefficients(c->conj(c), p))
     g = gcd(pp, derivative(pp))
     if useQQBar
-        return roots(g, QQBar) 
+        return roots(g, QQBar)
     else
         return roots(g)
     end
@@ -312,11 +312,11 @@ end
     SplitFactor(p, D) -> (pₙ, pₛ)
 
 Splitting factorization.
-    
+
 Given a field `k`, a derivation `D` on `k[t]` and `p` in `k[t]`, return
-`pₙ`, `pₛ` in `k[t]` such that `p=pₙ*pₛ`, `pₛ` is special, and each squarefree 
+`pₙ`, `pₛ` in `k[t]` such that `p=pₙ*pₛ`, `pₛ` is special, and each squarefree
 factor of `pₙ` is normal.
-    
+
 See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 3.5, p. 100.
 """
 function SplitFactor(p::PolyElem{T}, D::Derivation) where T<:FieldElement
@@ -333,15 +333,15 @@ end
     SplitSquarefreeFactor(p, D) -> (Ns, Ss)
 
 Splitting squarefree factorization.
-    
+
 Given a field `k`, a derivation `D` on `k[t]` and `p` in `k[t]`, return
 `Ns=[N₁,...,Nₘ]`, `Ss=[S₁,...,Sₘ]` with  `Nᵢ`, `Sᵢ` in `k[t]` such that
 `p=(N₁*N₂²*...*Nₘᵐ)*(S₁*S₂²*...*Sₘᵐ)` is a splitting factorization of `p`
 and the `Nᵢ` and `Sᵢ` are squarefree and coprime.
-    
+
 See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 3.5, p. 102.
 """
-function SplitSquarefreeFactor(p::PolyElem{T}, D::Derivation) where T<:FieldElement    
+function SplitSquarefreeFactor(p::PolyElem{T}, D::Derivation) where T<:FieldElement
     iscompatible(p, D) || error("polynomial p must be in the domain of derivation D")
     ps = Squarefree(p)
     Ss = [gcd(ps[i], D(ps[i])) for i=1:length(ps)]
@@ -357,7 +357,7 @@ Canonical representation.
 Given a field `k`, a derivation `D` on `k[t]` and `f` in `k(t)`, return
 fₚ, fₛ, fₙ in `k(t)` such that `f=fₚ+fₛ+fₙ` is the canonical representation
 of `f`.
-    
+
 See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 3.5, p. 103.
 """
 function CanonicalRepresentation(f::FracElem{P}, D::Derivation) where {T<:FieldElement, P<:PolyElem{T}}
@@ -370,4 +370,3 @@ function CanonicalRepresentation(f::FracElem{P}, D::Derivation) where {T<:FieldE
     b, c = gcdx(dn, ds, r)
     q, b//ds, c//dn
 end
-

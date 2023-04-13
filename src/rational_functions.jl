@@ -2,7 +2,7 @@
 # rational functions from chapter 2 of the book
 #
 #    Manuel Bronstein, Symbolic Integration I: Transcendental Functions,
-#    2nd ed., Springer 2005. 
+#    2nd ed., Springer 2005.
 #
 
 
@@ -78,7 +78,7 @@ function Base.show(io::IO, t::SumOfLogTerms)
 end
 
 function IntRationalLogPart(A::PolyElem{T}, D::PolyElem{T}; make_monic::Bool=false, symbol=:α) where T <: FieldElement
-    # See Bronstein's book, Section 2.5, p. 51 
+    # See Bronstein's book, Section 2.5, p. 51
     F = base_ring(A)
     Ft, t = PolynomialRing(F, symbol)
     FtX, X = PolynomialRing(Ft, symbols(parent(A))[1])
@@ -86,7 +86,7 @@ function IntRationalLogPart(A::PolyElem{T}, D::PolyElem{T}; make_monic::Bool=fal
     Qs = Squarefree(R)
     ds = degree.(Qs)
     Qs = [f for f in Qs if degree(f)>0]
-    Ss = typeof(X)[] 
+    Ss = typeof(X)[]
     ii = 1
     for i=1:length(ds)
         if ds[i]>0
@@ -99,16 +99,16 @@ function IntRationalLogPart(A::PolyElem{T}, D::PolyElem{T}; make_monic::Bool=fal
                 for j=1:length(As)
                     S = divexact(S, gcd(As[j],Qs[ii])^j)
                 end
-            end     
+            end
             if make_monic
                 Qs[ii] = divexact(Qs[ii], leading_coefficient(Qs[ii]))
                 h = invmod(leading_coefficient(S), Qs[ii])
                 S = FtX([rem(h*c, Qs[ii]) for c in coefficients(S)])
             else
-                S = FtX([rem(c, Qs[ii]) for c in coefficients(S)])                            
+                S = FtX([rem(c, Qs[ii]) for c in coefficients(S)])
             end
             push!(Ss, S)
-            ii+=1                        
+            ii+=1
         end
     end
     [SumOfLogTerms(Q, S) for (Q, S) in zip(Qs, Ss)]
@@ -137,7 +137,7 @@ function Complexify(R::PolyElem{T}; symbols=[:α, :β]) where T <: FieldElement
 end
 
 function LogToAtan(A::PolyElem{T}, B::PolyElem{T}) where T <: FieldElement
-    # See Bronstein's book, Section 2.8, p. 63 
+    # See Bronstein's book, Section 2.8, p. 63
     Q, R = divrem(A, B)
     if iszero(R)
         return [FunctionTerm(atan, 2, Q)]
@@ -162,7 +162,7 @@ function Base.show(io::IO, t::SumOfRealTerms)
     s = string.(parent(t.P).S)
     print(io, "Σ_{$(s[1]),$(s[2]): $(s[2])>0, ")
     show(io, t.P)
-    print(io, " = ") 
+    print(io, " = ")
     show(io, t.Q)
     print(io, " = 0}")
     show(io, t.LT)
@@ -179,7 +179,7 @@ function Base.show(io::IO, t::SumOfRealTerms)
 end
 
 function LogToReal(t::SumOfLogTerms; symbols=[:α, :β]) #{T, PP}) where {T<:FieldElement, PP<:PolyElem{T}}
-    # See Bronstein's book, Section 2.8, p. 69 
+    # See Bronstein's book, Section 2.8, p. 69
     F = base_ring(t.R)
     R, uv = PolynomialRing(F, symbols)
     K = FractionField(R)
@@ -219,12 +219,12 @@ function Eval(t::SumOfLogTerms; real_output::Bool=true)
     var = string(symbols(parent(t.S))[1])
     F = base_ring(t.R)
     as = roots(t.R)
-    if length(as)==degree(t.R)    
+    if length(as)==degree(t.R)
         return [FunctionTerm(log, a, positive_constant_coefficient(
             polynomial(F, [c(a) for c in coefficients(t.S)], var))) for a in as]
     end
-    
-    as = roots(t.R, QQBar)  
+
+    as = roots(t.R, QQBar)
     us = real.(as)
     vs = imag.(as)
     if iszero(vs) || !real_output
@@ -254,8 +254,8 @@ function Eval(t::SumOfLogTerms; real_output::Bool=true)
 end
 
 
-function IntegrateRationalFunction(f::FracElem{P}) where {T<:FieldElement, P<:PolyElem{T}}    
-    # See Bronstein's book, Section 2.5, p. 52 
+function IntegrateRationalFunction(f::FracElem{P}) where {T<:FieldElement, P<:PolyElem{T}}
+    # See Bronstein's book, Section 2.5, p. 52
     g, h = HermiteReduce(numerator(f), denominator(f))
     Q, R = divrem(numerator(h), denominator(h))
     result = Term[]
@@ -272,4 +272,3 @@ function IntegrateRationalFunction(f::FracElem{P}) where {T<:FieldElement, P<:Po
     end
     result
 end
-

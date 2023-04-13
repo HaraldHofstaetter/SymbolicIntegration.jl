@@ -1,7 +1,9 @@
-using SymbolicIntegration, SymbolicUtils
+# Explicitly qualify `integrate` function to avoid name collision with Nemo.integrate
+using SymbolicIntegration: SymbolicIntegration
+using SymbolicUtils: @syms
 @syms x
 
-#Integration Test Problems from 
+#Integration Test Problems from
 #https://rulebasedintegration.org/testProblems.html
 
 #1 Algebraic functions\1.3 Miscellaneous\1.3.1 Rational functions.input
@@ -91,7 +93,7 @@ problems = [
 
 
 for prob in problems
-    result = integrate(prob[1], x)
+    result = SymbolicIntegration.integrate(prob[1], x)
     println("∫", prob[1], "dx = ", result)
     println("expected: ", prob[4])
     println("--------------------------------------------------------------------")

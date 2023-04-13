@@ -1,6 +1,6 @@
-using SymbolicIntegration, SymbolicUtils
-using Symbolics # fopr derivative
-SI = SymbolicIntegration
+import SymbolicIntegration as SI # Avoid namespace collision with Nemo
+using SymbolicUtils: @syms
+using Symbolics: Symbolics # for derivative
 
 @syms x t y Pi p q r
 n =7
@@ -458,7 +458,7 @@ for prob in problems
     print("∫", prob[1], "dx = ")
     if length(prob)<=4
         try
-            result = integrate(prob[1], prob[2], catchNotImplementedError=false, catchAlgorithmFailedError=false)
+            result = SI.integrate(prob[1], prob[2], catchNotImplementedError=false, catchAlgorithmFailedError=false)
             println(result)
             arg = 1.123456789
             err = abs(SymbolicUtils.substitute(prob[1]-Symbolics.derivative(result, prob[2]), prob[2]=>arg))
@@ -480,7 +480,7 @@ for prob in problems
         println("expected: ", prob[4])
     else
         try
-            result = integrate(prob[1], prob[2], catchNotImplementedError=false, catchAlgorithmFailedError=false)
+            result = SI.integrate(prob[1], prob[2], catchNotImplementedError=false, catchAlgorithmFailedError=false)
         catch e
             if e isa prob[5]
                 println(e.msg)

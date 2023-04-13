@@ -1,14 +1,13 @@
 using AbstractAlgebra
 using Nemo
-using SymbolicIntegration
-SI = SymbolicIntegration
+import SymbolicIntegration as SI
 
 using Test
 
 @testset "Complex fields" begin
     QQx, x = PolynomialRing(Nemo.QQ, :x)
     k = FractionField(QQx)
-    D0 = BasicDerivation(k)
+    D0 = SI.BasicDerivation(k)
     kI, I, D = SI.Complexify(k, D0)
     kI1, x1, I1, D1 = SI.switch_t_i(kI, D)
 

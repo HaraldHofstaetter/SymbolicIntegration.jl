@@ -1,7 +1,6 @@
 using AbstractAlgebra
 using Nemo
-using SymbolicIntegration
-SI = SymbolicIntegration
+import SymbolicIntegration as SI
 
 using Test
 
@@ -9,7 +8,7 @@ using Test
     @info "HermiteReduce, example 5.3.1, p. 140"
     QQx, x = PolynomialRing(Nemo.QQ, :x)
     k = FractionField(QQx)
-    D0 = BasicDerivation(QQx)
+    D0 = SI.BasicDerivation(QQx)
     kt, t = PolynomialRing(k, :t)
     D = SI.ExtensionDerivation(kt, D0, 1+t^2)
 
@@ -22,7 +21,7 @@ using Test
     @info "PolynomialReduce, example 5.4.1, p. 141"
     QQx, x = PolynomialRing(Nemo.QQ, :x)
     k = FractionField(QQx)
-    D0 = BasicDerivation(QQx)
+    D0 = SI.BasicDerivation(QQx)
     kt, t = PolynomialRing(k, :t)
     D = SI.ExtensionDerivation(kt, D0, 1+t^2)
 
@@ -35,9 +34,9 @@ using Test
     @info "ResidueReduce, ConstantPart, example 5.6.3, p. 151"
     QQx, x = PolynomialRing(Nemo.QQ, :x)
     k = FractionField(QQx)
-    D0 = BasicDerivation(QQx)
+    D0 = SI.BasicDerivation(QQx)
     kt, t = PolynomialRing(k, :t)
-    D = ExtensionDerivation(kt, D0, 1//x+0*t)
+    D = SI.ExtensionDerivation(kt, D0, 1//x+0*t)
 
     f = (2*t^2-t-x^2)//(t^3-x^2*t)
     ss, Ss, ρ = SI.ResidueReduce(f, D)
@@ -55,12 +54,12 @@ using Test
     @info "IntegratePrimitivePolynomial, example 5.8.1, p. 158"
     QQx, x = PolynomialRing(Nemo.QQ, :x)
     k0 = FractionField(QQx)
-    D0 = BasicDerivation(QQx)
+    D0 = SI.BasicDerivation(QQx)
     k0t0, t0 = PolynomialRing(k0, :t0)
     k = FractionField(k0t0)
-    D1 = ExtensionDerivation(k0t0, D0, 1//x+0*t0)
+    D1 = SI.ExtensionDerivation(k0t0, D0, 1//x+0*t0)
     kt, t = PolynomialRing(k, :t)
-    D = ExtensionDerivation(kt, D1, 1//t0+0*t)
+    D = SI.ExtensionDerivation(kt, D1, 1//t0+0*t)
 
     p = (t0+1//t0)*t - x*1//t0
     q, ρ = SI.IntegratePrimitivePolynomial(p, D)
@@ -72,12 +71,12 @@ using Test
     @info "IntegrateHyperexponentialPolynomial, example 5.9.1, p. 162"
     QQx, x = PolynomialRing(Nemo.QQ, :x)
     k0 = FractionField(QQx)
-    D0 = BasicDerivation(QQx)
+    D0 = SI.BasicDerivation(QQx)
     k0t0, t0 = PolynomialRing(k0, :t0)
     k = FractionField(k0t0)
-    D1 = ExtensionDerivation(k0t0, D0, 1+t0^2)
+    D1 = SI.ExtensionDerivation(k0t0, D0, 1+t0^2)
     kt, t = PolynomialRing(k, :t)
-    D = ExtensionDerivation(kt, D1, (1+t0^2)*t)
+    D = SI.ExtensionDerivation(kt, D1, (1+t0^2)*t)
 
     p = (t0^3+(x+1)*t0^2+t0+x+2)*t + 1//(x^2+1)
     # p must be in k[t, t⁻¹] => must be passed as a rational function
@@ -91,7 +90,7 @@ using Test
     QQx, x = PolynomialRing(Nemo.QQ, :x)
     k = FractionField(QQx)
     kt, t = PolynomialRing(k, :t)
-    D = ExtensionDerivation(kt,  BasicDerivation(QQx), 1+t^2)
+    D = SI.ExtensionDerivation(kt,  SI.BasicDerivation(QQx), 1+t^2)
 
     p = t^2 + x*t + 1
     q, c = SI.IntegrateHypertangentPolynomial(p, D)
@@ -103,7 +102,7 @@ using Test
     QQx, x = PolynomialRing(Nemo.QQ, :x)
     k = FractionField(QQx)
     kt, t = PolynomialRing(k, :t)
-    D = ExtensionDerivation(kt,  BasicDerivation(QQx), 1//2*(1+t^2))
+    D = SI.ExtensionDerivation(kt,  SI.BasicDerivation(QQx), 1//2*(1+t^2))
 
     p = (2*t*1//x)//(t^2+1)
     q, ρ = SI.IntegrateHypertangentReduced(p, D)
@@ -114,7 +113,7 @@ using Test
     QQx, x = PolynomialRing(Nemo.QQ, :x)
     k = FractionField(QQx)
     kt, t = PolynomialRing(k, :t)
-    D = ExtensionDerivation(kt,  BasicDerivation(QQx), 1+t^2)
+    D = SI.ExtensionDerivation(kt,  SI.BasicDerivation(QQx), 1+t^2)
 
     p = (t^5 + t^3 + x^2*t + 1)//(t^2 + 1)^3
     q, ρ = SI.IntegrateHypertangentReduced(p, D)
@@ -130,7 +129,7 @@ end
     @info "RdeNormalDenominator, example 6.1.1, p. 186"
     QQt, t = PolynomialRing(Nemo.QQ, :t)
     k = FractionField(QQt)
-    D = BasicDerivation(QQt)
+    D = SI.BasicDerivation(QQt)
 
     f = 1 + 0//t
     g = 1//t
@@ -142,7 +141,7 @@ end
     QQx, x = PolynomialRing(Nemo.QQ, :x)
     k = FractionField(QQx)
     kt, t = PolynomialRing(k, :t)
-    D = ExtensionDerivation(kt, BasicDerivation(k), 1+t^2)
+    D = SI.ExtensionDerivation(kt, SI.BasicDerivation(k), 1+t^2)
 
     f = t^2+1+0//t
     g = 1//t^2
@@ -155,7 +154,7 @@ end
     QQx, x = PolynomialRing(Nemo.QQ, :x)
     k = FractionField(QQx)
     kt, t = PolynomialRing(k, :t)
-    D = ExtensionDerivation(kt, BasicDerivation(k), t)
+    D = SI.ExtensionDerivation(kt, SI.BasicDerivation(k), t)
 
     a = t^2+2*x*t+x^2
     b = (1+1//x^2)*t^2 + (2*x-1+2//x)*t + x^2 +0//t
@@ -169,7 +168,7 @@ end
     QQx, x = PolynomialRing(Nemo.QQ, :x)
     k = FractionField(QQx)
     kt, t = PolynomialRing(k, :t)
-    D = ExtensionDerivation(kt, BasicDerivation(k), 1 + t^2)
+    D = SI.ExtensionDerivation(kt, SI.BasicDerivation(k), 1 + t^2)
 
     a = t
     b = (t - 1)*(t^2 + 1) + 0//t
@@ -182,10 +181,10 @@ end
     QQx, x = PolynomialRing(Nemo.QQ, :x)
     k0 = FractionField(QQx)
     k0t0, t0 = PolynomialRing(k0, :t0)
-    D0 = ExtensionDerivation(k0t0, BasicDerivation(k0), 1//x^2 + 0*t0)
+    D0 = SI.ExtensionDerivation(k0t0, SI.BasicDerivation(k0), 1//x^2 + 0*t0)
     k = FractionField(k0t0)
     kt, t = PolynomialRing(k, :t)
-    D = ExtensionDerivation(kt, D0, 1//x + 0*t)
+    D = SI.ExtensionDerivation(kt, D0, 1//x + 0*t)
 
     a = t^2
     b = -(1//x^2*t^2+1//(x+0*t0))
@@ -196,7 +195,7 @@ end
 
     @info "RdeBoundDegreeBase, example 6.3.2, p. 199"
     QQt, t = PolynomialRing(Nemo.QQ, :t)
-    D = BasicDerivation(QQt)
+    D = SI.BasicDerivation(QQt)
 
     a = 1 +0*t
     b = -2*t
@@ -209,7 +208,7 @@ end
     QQx, x = PolynomialRing(Nemo.QQ, :x)
     k = FractionField(QQx)
     kt, t = PolynomialRing(k, :t)
-    D = ExtensionDerivation(kt, BasicDerivation(k), t)
+    D = SI.ExtensionDerivation(kt, SI.BasicDerivation(k), t)
 
     # a,b,c ... result of Ex 6.2.1
     a = t^2+2*x*t+x^2
@@ -223,7 +222,7 @@ end
     QQx, x = PolynomialRing(Nemo.QQ, :x)
     k = FractionField(QQx)
     kt, t = PolynomialRing(k, :t)
-    D = ExtensionDerivation(kt, BasicDerivation(k), 1+t^2)
+    D = SI.ExtensionDerivation(kt, SI.BasicDerivation(k), 1+t^2)
 
     a = t
     b = (t-1)*(t^2+1)
@@ -236,7 +235,7 @@ end
     QQx, x = PolynomialRing(Nemo.QQ, :x)
     k = FractionField(QQx)
     kt, t = PolynomialRing(k, :t)
-    D = ExtensionDerivation(kt, BasicDerivation(k), 1+t^2)
+    D = SI.ExtensionDerivation(kt, SI.BasicDerivation(k), 1+t^2)
 
     a = t
     b = (t-1)*(t^2+1)
@@ -251,7 +250,7 @@ end
     k = FractionField(QQx)
     kt, t = PolynomialRing(k, :t)
 
-    D = ExtensionDerivation(kt, BasicDerivation(k), t)
+    D = SI.ExtensionDerivation(kt, SI.BasicDerivation(k), t)
     # a,b,c ... result of example 6.2.1
     a = t^2+2*x*t+x^2
     b = t^2*1//x^2+(2//x-1)*t
@@ -268,8 +267,8 @@ end
     k0t0, t0 = PolynomialRing(k0, :t0)
     k = FractionField(k0t0)
     kt, t = PolynomialRing(k, :t)
-    D0 = ExtensionDerivation(k0t0, BasicDerivation(k0), t0*1//x^2)
-    D = ExtensionDerivation(kt, D0, 1//x+zero(t))
+    D0 = SI.ExtensionDerivation(k0t0, SI.BasicDerivation(k0), t0*1//x^2)
+    D = SI.ExtensionDerivation(kt, D0, 1//x+zero(t))
     a = t^2
     b = -t^2*1//x^2-1//x
     c = (2*x-1)*t^4 + (t0+x)*1//x*t^3 - (t0+4*x^2)*1//(2*x)*t^2 + x*t
@@ -281,7 +280,7 @@ end
 
     @info "SPDE, example 6.4.4, p. 205"
     QQt, t = PolynomialRing(Nemo.QQ, :t)
-    D = BasicDerivation(QQt)
+    D = SI.BasicDerivation(QQt)
 
     a = t^2+t+1
     b = -2*t-1
@@ -296,7 +295,7 @@ end
     QQx, x = PolynomialRing(Nemo.QQ, :x)
     k = FractionField(QQx)
     kt, t = PolynomialRing(k, :t)
-    D = ExtensionDerivation(kt, BasicDerivation(k), 1+t^2)
+    D = SI.ExtensionDerivation(kt, SI.BasicDerivation(k), 1+t^2)
 
     b = t^2+1
     c = t^3+(x+1)*t^2+t+x+2
@@ -307,7 +306,7 @@ end
 
     @info "PolyRischDENoCancel2, example 6.5.2, p. 209"
     kt, t = PolynomialRing(Nemo.QQ, :t)
-    D = BasicDerivation(kt)
+    D = SI.BasicDerivation(kt)
 
     b = zero(kt)
     c = 1//2*t-1//4
@@ -320,7 +319,7 @@ end
     QQx, x = PolynomialRing(Nemo.QQ, :x)
     k = FractionField(QQx)
     kt, t = PolynomialRing(k, :t)
-    D = ExtensionDerivation(kt, BasicDerivation(k), 1 + t^2)
+    D = SI.ExtensionDerivation(kt, SI.BasicDerivation(k), 1 + t^2)
 
     b = 1-t
     c = t^3+t^2-2*x*t-2*x
@@ -333,7 +332,7 @@ end
     QQx, x = PolynomialRing(Nemo.QQ, :x)
     k = FractionField(QQx)
     kt, t = PolynomialRing(k, :t)
-    D = ExtensionDerivation(kt, BasicDerivation(k), 1 + t^2)
+    D = SI.ExtensionDerivation(kt, SI.BasicDerivation(k), 1 + t^2)
 
     b0 = 1 + 0//x
     c = -2*(x + 1)*t - 2*x

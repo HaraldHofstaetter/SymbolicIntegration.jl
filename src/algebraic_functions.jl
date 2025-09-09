@@ -1,6 +1,6 @@
 
 function HermiteReduce(f::AbstractAlgebra.ResFieldElem{P}, DE::AlgebraicExtensionDerivation) where 
-    {T<:FieldElement, P<:PolyElem{T}}   
+    {T<:FieldElement, P<:PolyRingElem{T}}   
     # "Lazy" Hermite reduction, see Section 2.1 of:
     # Manuel Bronstein. Symbolic integration tutorial. ISSAC’98, 1998.
     # http://www-sop.inria.fr/cafe/Manuel.Bronstein/publications/issac98.pdf
@@ -134,7 +134,7 @@ function HermiteReduce(f::AbstractAlgebra.ResFieldElem{P}, DE::AlgebraicExtensio
 end
 
 
-function IntegralBasis(E::AbstractAlgebra.ResField{P}) where {T<:FieldElement, P<:PolyElem{T}}
+function IntegralBasis(E::AbstractAlgebra.ResField{P}) where {T<:FieldElement, P<:PolyRingElem{T}}
     # Trager's algorithm, see Chapter 2 of
     # B.M. Trager. On the integration of algebraic functions. PhD thesis, MIT, Computer Science, 1984.
     # https://dspace.mit.edu/bitstream/handle/1721.1/15391/12487590-MIT.pdf

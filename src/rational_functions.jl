@@ -6,7 +6,7 @@
 #
 
 
-function HermiteReduce_original(A::PolyElem{T}, D::PolyElem{T}) where T <: FieldElement
+function HermiteReduce_original(A::PolyRingElem{T}, D::PolyRingElem{T}) where T <: FieldElement
     # See Bronstein's book, Section 2.2, p. 40
     Ds = Squarefree(D)
     n = length(Ds)
@@ -27,7 +27,7 @@ function HermiteReduce_original(A::PolyElem{T}, D::PolyElem{T}) where T <: Field
     g, h
 end
 
-function HermiteReduce_quadratic(A::PolyElem{T}, D::PolyElem{T}) where T <: FieldElement
+function HermiteReduce_quadratic(A::PolyRingElem{T}, D::PolyRingElem{T}) where T <: FieldElement
     # See Bronstein's book, Section 2.2, p. 41
     g = zero(D)//one(D) # rational function with value 0
     Ds = Squarefree(D)
@@ -47,7 +47,7 @@ function HermiteReduce_quadratic(A::PolyElem{T}, D::PolyElem{T}) where T <: Fiel
     g, A//D
 end
 
-function HermiteReduce(A::PolyElem{T}, D::PolyElem{T}) where T <: FieldElement
+function HermiteReduce(A::PolyRingElem{T}, D::PolyRingElem{T}) where T <: FieldElement
     # See Bronstein's book, Section 2.2, p. 44
     g = zero(D)//one(D) # rational function with value 0
     Dminus = gcd(D, derivative(D))
@@ -63,9 +63,9 @@ function HermiteReduce(A::PolyElem{T}, D::PolyElem{T}) where T <: FieldElement
     return g, A//Dstar
 end
 
-struct SumOfLogTerms{T<:FieldElement, P<:PolyElem{T}} <: Term
+struct SumOfLogTerms{T<:FieldElement, P<:PolyRingElem{T}} <: Term
     R::P
-    S::PolyElem{P}
+    S::PolyRingElem{P}
 end
 
 function Base.show(io::IO, t::SumOfLogTerms)
@@ -77,11 +77,11 @@ function Base.show(io::IO, t::SumOfLogTerms)
     print(io, ")")
 end
 
-function IntRationalLogPart(A::PolyElem{T}, D::PolyElem{T}; make_monic::Bool=false, symbol=:α) where T <: FieldElement
+function IntRationalLogPart(A::PolyRingElem{T}, D::PolyRingElem{T}; make_monic::Bool=false, symbol=:α) where T <: FieldElement
     # See Bronstein's book, Section 2.5, p. 51 
     F = base_ring(A)
-    Ft, t = PolynomialRing(F, symbol)
-    FtX, X = PolynomialRing(Ft, symbols(parent(A))[1])
+    Ft, t = polynomial_ring(F, symbol)
+    FtX, X = polynomial_ring(Ft, symbols(parent(A))[1])
     R, Rs = SubResultant(D(X), A(X)-t*derivative(D)(X))
     Qs = Squarefree(R)
     ds = degree.(Qs)
@@ -114,9 +114,9 @@ function IntRationalLogPart(A::PolyElem{T}, D::PolyElem{T}; make_monic::Bool=fal
     [SumOfLogTerms(Q, S) for (Q, S) in zip(Qs, Ss)]
 end
 
-function Complexify(R::PolyElem{T}; symbols=[:α, :β]) where T <: FieldElement
+function Complexify(R::PolyRingElem{T}; symbols=[:α, :β]) where T <: FieldElement
     F = base_ring(R)
-    Fuv, uv = PolynomialRing(F, symbols)
+    Fuv, uv = polynomial_ring(F, symbols)
     u = uv[1]
     v = uv[2]
     c = collect(coefficients(R))
@@ -136,7 +136,7 @@ function Complexify(R::PolyElem{T}; symbols=[:α, :β]) where T <: FieldElement
     P, Q
 end
 
-function LogToAtan(A::PolyElem{T}, B::PolyElem{T}) where T <: FieldElement
+function LogToAtan(A::PolyRingElem{T}, B::PolyRingElem{T}) where T <: FieldElement
     # See Bronstein's book, Section 2.8, p. 63 
     Q, R = divrem(A, B)
     if iszero(R)
@@ -178,12 +178,12 @@ function Base.show(io::IO, t::SumOfRealTerms)
 
 end
 
-function LogToReal(t::SumOfLogTerms; symbols=[:α, :β]) #{T, PP}) where {T<:FieldElement, PP<:PolyElem{T}}
+function LogToReal(t::SumOfLogTerms; symbols=[:α, :β]) #{T, PP}) where {T<:FieldElement, PP<:PolyRingElem{T}}
     # See Bronstein's book, Section 2.8, p. 69 
     F = base_ring(t.R)
-    R, uv = PolynomialRing(F, symbols)
-    K = FractionField(R)
-    Kx, x = PolynomialRing(K, "x")
+    R, uv = polynomial_ring(F, symbols)
+    K = fraction_field(R)
+    Kx, x = polynomial_ring(K, "x")
     P, Q = Complexify(t.R)
     cc =[Complexify(c) for c in coefficients(t.S)]
     A = Kx([c[1] for c in cc])
@@ -191,7 +191,7 @@ function LogToReal(t::SumOfLogTerms; symbols=[:α, :β]) #{T, PP}) where {T<:Fie
     SumOfRealTerms(t.R, t.S, P, Q, FunctionTerm(log, 1, A^2+B^2), LogToAtan(A, B))
 end
 
-function positive_constant_coefficient(f::PolyElem)
+function positive_constant_coefficient(f::PolyRingElem)
     if constant_coefficient(f)<0
         return -f
     else
@@ -199,17 +199,18 @@ function positive_constant_coefficient(f::PolyElem)
     end
 end
 
-function rationalize_if_possible(x::qqbar) #Nemo algebraic number type
-    if degree(x)==1
-        return fmpq(x)
+function rationalize_if_possible(x::QQBarFieldElem) #Nemo algebraic number type
+    if degree(x)==1 && iszero(imag(x))
+        # Convert to rational using the existing rationalize function from general.jl
+        return rationalize(x)
     else
         return x
     end
 end
 
-function rationalize_if_possible(f::PolyElem{qqbar})
+function rationalize_if_possible(f::PolyRingElem{QQBarFieldElem})
     if maximum(degree.(coefficients(f)))==1
-        return polynomial(Nemo.QQ, fmpq.(coefficients(f)))
+        return polynomial(Nemo.QQ, QQ.(coefficients(f)))
     else
         return f
     end
@@ -224,7 +225,31 @@ function Eval(t::SumOfLogTerms; real_output::Bool=true)
             polynomial(F, [c(a) for c in coefficients(t.S)], var))) for a in as]
     end
     
-    as = roots(t.R, QQBar)  
+    # Try to find roots, including complex ones for simple cases
+    as = roots(t.R)  # First try rational roots
+    
+    # If we don't have enough roots and it's a quadratic, try to find complex roots
+    if length(as) < degree(t.R) && degree(t.R) == 2
+        # For quadratic ax^2 + bx + c, use quadratic formula
+        coeffs = collect(coefficients(t.R))
+        if length(coeffs) >= 2
+            # Pad with zeros if needed
+            while length(coeffs) < 3
+                push!(coeffs, zero(coeffs[1]))
+            end
+            a, b, c = coeffs[3], length(coeffs) > 1 ? coeffs[2] : zero(coeffs[1]), coeffs[1]
+            
+            if !iszero(a)
+                discriminant = b^2 - 4*a*c
+                # Create complex roots using QQBar
+                QQBar = algebraic_closure(Nemo.QQ)
+                sqrt_discriminant = QQBar(discriminant)^(1//2)
+                root1 = (-QQBar(b) + sqrt_discriminant) // (2*QQBar(a))
+                root2 = (-QQBar(b) - sqrt_discriminant) // (2*QQBar(a))
+                as = [root1, root2]
+            end
+        end
+    end  
     us = real.(as)
     vs = imag.(as)
     if iszero(vs) || !real_output
@@ -254,7 +279,7 @@ function Eval(t::SumOfLogTerms; real_output::Bool=true)
 end
 
 
-function IntegrateRationalFunction(f::FracElem{P}) where {T<:FieldElement, P<:PolyElem{T}}    
+function IntegrateRationalFunction(f::FracElem{P}) where {T<:FieldElement, P<:PolyRingElem{T}}    
     # See Bronstein's book, Section 2.5, p. 52 
     g, h = HermiteReduce(numerator(f), denominator(f))
     Q, R = divrem(numerator(h), denominator(h))

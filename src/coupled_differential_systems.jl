@@ -20,7 +20,7 @@ and `degree(q₂)≤n`.
 See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 8.2, p. 260.
 """
 function CoupledDECancelPrim(b1::T, b2::T,  c1::P, c2::P, D::Derivation, n::Int=typemax(Int)) where
-    {T<:FieldElement, P<:PolyElem{T}} # here typemax(Int) represents +infinity
+    {T<:FieldElement, P<:PolyRingElem{T}} # here typemax(Int) represents +infinity
     isprimitive(D) ||
         error("monomial of derivation D must be primitive")
     D0 = BaseDerivation(D)
@@ -92,7 +92,7 @@ and `degree(q₂)≤n`.
 See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 8.2, p. 262.
 """
 function CoupledDECancelExp(b1::T, b2::T,  c1::P, c2::P, D::Derivation, n::Int=typemax(Int)) where
-    {T<:FieldElement, P<:PolyElem{T}} # here typemax(Int) represents +infinity
+    {T<:FieldElement, P<:PolyRingElem{T}} # here typemax(Int) represents +infinity
     ishyperexponential(D) ||
         error("monomial of derivation D must be hyperexponential")
     D0 = BaseDerivation(D)
@@ -173,7 +173,7 @@ and `degree(q₂)≤n`.
 See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 8.2, p. 262.
 """
 function CoupledDECancelTan(b0::T, b2::T,  c1::P, c2::P, D::Derivation, n::Int=typemax(Int)) where
-    {T<:FieldElement, P<:PolyElem{T}} # here typemax(Int) represents +infinity
+    {T<:FieldElement, P<:PolyRingElem{T}} # here typemax(Int) represents +infinity
     ishypertangent(D) ||
         error("monomial of derivation D must be hypertangent")
     D0 = BaseDerivation(D)
@@ -197,7 +197,7 @@ function CoupledDECancelTan(b0::T, b2::T,  c1::P, c2::P, D::Derivation, n::Int=t
     t = gen(parent(c1))
     H = MonomialDerivative(D)
     η = constant_coefficient(divexact(H, t^2 + 1))
-    ktI, I, DI = Complexify(FractionField(parent(c1)), D) # k(t)(√-1)    
+    ktI, I, DI = Complexify(fraction_field(parent(c1)), D) # k(t)(√-1)    
     p = t - I    
     z = c1(I) + c2(I)*I
     z1 = real(z)
@@ -226,7 +226,7 @@ end
 
 
 function CoupledDESystem(f1::F, f2::F, g1::F, g2::F, D::Derivation) where 
-    {P<:PolyElem, F<:FracElem{P}}
+    {P<:PolyRingElem, F<:FracElem{P}}
     iscompatible(f1, D) && iscompatible(f2, D) && iscompatible(g1, D) && iscompatible(g2, D)|| 
         error("rational functions f1. f2. g1, g2 must be in the domain of derivation D")
     #if iszero(f1) && iszero(f2)  

@@ -17,7 +17,7 @@ such that `f=D(g)+h+r`, `h` is simple and `r` is reduced.
 See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 5.4, p. 139.
 """
 function HermiteReduce(f::FracElem{P}, D::Derivation) where 
-    {T<:FieldElement, P<:PolyElem{T}}    
+    {T<:FieldElement, P<:PolyRingElem{T}}    
     iscompatible(f, D) || error("rational function f must be in the domain of derivation D")
     fp, fs, fn = CanonicalRepresentation(f, D)
     a = numerator(fn)
@@ -52,7 +52,7 @@ such that `p=D(q)+r` and `degree(r)<degree(D(t))`.
 See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 5.4, p. 141.
 """
 function PolynomialReduce(p::P, D::Derivation) where 
-    {T<:FieldElement, P<:PolyElem{T}}
+    {T<:FieldElement, P<:PolyRingElem{T}}
     iscompatible(p, D) || error("polynomial p must be in the domain of derivation D")
     isnonlinear(D) || error("monomial of derivation D must be nonlinear")
     δ = degree(D)
@@ -84,18 +84,18 @@ and `ss=[s₁,...,sₘ]`, `sᵢ` in `k[z]`, `Ss=[S₁,...Sₘ]`, `Sᵢ` in `k[z,
 See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 5.6, p. 153.
 """
 function ResidueReduce(f::F, D::Derivation; symbol=:α) where 
-    {T<:FieldElement, P<:PolyElem{T}, F<:FracElem{P}}
+    {T<:FieldElement, P<:PolyRingElem{T}, F<:FracElem{P}}
     iscompatible(f, D) || error("rational function f must be in the domain of derivation D")
     issimple(f, D) || error("rational function f must be simple with respect to derivation D")
     d = denominator(f)
     if isone(d)
-        return PolyElem[], PolyElem{PolyElem}[], 1
+        return PolyRingElem[], PolyRingElem{PolyRingElem}[], 1
     end
     p, a = divrem(numerator(f), d)
     # For SubResultant with respect to t we have to construct the 
     # polynomial ring k[z][t] with z, t in this order (!)
-    kz, z = PolynomialRing(base_ring(d), symbol)
-    kzt, t = PolynomialRing(kz, var(parent(d)))
+    kz, z = polynomial_ring(base_ring(d), symbol)
+    kzt, t = polynomial_ring(kz, var(parent(d)))
     if degree(D(d))<=degree(d)
         r, Rs = SubResultant(d(t), a(t) - z*D(d)(t))
     else
@@ -137,7 +137,7 @@ return  `αs=[α₁,...,αᵣ]` consisting of the roots of those `sᵢ` that hav
 `gs=[g₁,...,gᵣ]` where `gⱼ` in `k[t]` and `gⱼ(t) = Sᵢ(αⱼ,t)`. The remaining `sᵢ` that have at least one root not in `Const(k)`
 and the corresponding `Sᵢ` are returned in `ss1` and `Ss1`.
 """
-function ConstantPart(ss::Vector{P}, Ss::Vector{PP}, D::Derivation) where  {P<:PolyElem, PP<:PolyElem{P}}
+function ConstantPart(ss::Vector{P}, Ss::Vector{PP}, D::Derivation) where  {P<:PolyRingElem, PP<:PolyRingElem{P}}
     #TODO: better name for this function...
     length(ss)==length(Ss) || error("lengths must match")
     if isempty(ss)
@@ -225,7 +225,7 @@ and `p` in `k[t]`, return either `ρ=1` and `q` in `k[t]` such that `p-D(q)` is 
 See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 5.8, p. 158.
 """
 function IntegratePrimitivePolynomial(p::P, D::Derivation) where 
-    {T<:FieldElement, P<:PolyElem{T}}
+    {T<:FieldElement, P<:PolyRingElem{T}}
     iscompatible(p, D) || error("rational function p must be in the domain of derivation D")
     isprimitive(D) || error("monomial of derivation D must be primitive")
     if degree(p)<=0
@@ -256,7 +256,7 @@ and `p` in `k⟨t⟩=k[t,t⁻¹]`, return either `ρ=1` and `q` in `k[t,t⁻¹]`
 See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 5.9, p. 162.
 """
 function IntegrateHyperexponentialPolynomial(p::F, D::Derivation) where 
-    {T<:FieldElement, P<:PolyElem{T}, F<:FracElem{P}}
+    {T<:FieldElement, P<:PolyRingElem{T}, F<:FracElem{P}}
     iscompatible(p, D) || error("rational function p must be in the domain of derivation D")
     ishyperexponential(D) || error("monomial of derivation D must be hyperexponential")
     isreduced(p, D) || error("raional function p must be reduced.")
@@ -297,7 +297,7 @@ and `p` in `k[t]`, return `q` in `k[t]` and `c` in `k` such that `p-D(q)-c*D(t²
 See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 5.10, p. 167.
 """
 function IntegrateHypertangentPolynomial(p::P, D::Derivation) where 
-    {T<:FieldElement, P<:PolyElem{T}}
+    {T<:FieldElement, P<:PolyRingElem{T}}
     iscompatible(p, D) || error("rational function p must be in the domain of derivation D")
     ishypertangent(D) || error("monomial of derivation D must be hypertangent")
     t = gen(parent(p))
@@ -319,7 +319,7 @@ and `p` in `k⟨t⟩`, return either `ρ=1` and `q` in `k⟨t⟩` such that `p-D
 See [Bronstein's book](https://link.springer.com/book/10.1007/b138171), Section 5.10, p. 169.
 """
 function IntegrateHypertangentReduced(p::F, D::Derivation) where 
-    {T<:FieldElement, P<:PolyElem{T}, F<:FracElem{P}}
+    {T<:FieldElement, P<:PolyRingElem{T}, F<:FracElem{P}}
     iscompatible(p, D) || error("rational function p must be in the domain of derivation D")
     ishypertangent(D) || error("monomial of derivation D must be hypertangent")
     isreduced(p, D) || error("rational function p must be reduced.")
@@ -363,7 +363,7 @@ This function corresponds to `IntegreatePrimitive`, `IntegrateHyperexponential` 
 Section 5.8 p. 160, Section 5.9 p. 163, and Section 5.10 p. 172, respectively.
 """
 function Integrate(f:: F, D::Derivation) where
-    {T<:FieldElement, P<:PolyElem{T}, F<:FracElem{P}}
+    {T<:FieldElement, P<:PolyRingElem{T}, F<:FracElem{P}}
     if isbasic(D)
         return IntegrateRationalFunction(f), zero(base_ring(parent(f))), 1
     end
@@ -450,7 +450,7 @@ function InFieldDerivative(f::F, D::Derivation) where F<:FieldElement
 end
 
 function InFieldDerivative(f::F, D::Derivation) where 
-    {T<:FieldElement, P<:PolyElem{T}, F<:FracElem{P}}
+    {T<:FieldElement, P<:PolyRingElem{T}, F<:FracElem{P}}
     # See Bronstein's book, Section 5.12, p. 175
     iscompatible(f, D) || error("rational function f must be in the domain of derivation D")
     Z = zero(f)
@@ -551,7 +551,7 @@ function InFieldLogarithmicDerivativeOfRadical(f::F, D::Derivation; expect_one::
 end
 
 function InFieldLogarithmicDerivativeOfRadical(f::F, D::Derivation; expect_one::Bool=false) where 
-    {T<:FieldElement, P<:PolyElem{T}, F<:FracElem{P}}
+    {T<:FieldElement, P<:PolyRingElem{T}, F<:FracElem{P}}
     iscompatible(f, D) || error("rational function f must be in the domain of derivation D")
     if iszero(f)
         return 1, one(f), 1
@@ -577,7 +577,7 @@ function InFieldLogarithmicDerivativeOfRadical(f::F, D::Derivation; expect_one::
                 # no solution, Rothstein-Trager resultant has non-rational coefficients
                 return no_solution
             end
-            Rs1 = [map_coefficients(c->convert(fmpq, rationalize(c)), R) for R in Rs]
+            Rs1 = [map_coefficients(c->convert(QQFieldElem, rationalize(c)), R) for R in Rs]
             As1 = [roots(R) for R in Rs1]
             if !(all([length(As1[i])==degree(Rs1[i]) for i=1:length(As1)]) &&
                 all([all(isrational.(As1[i])) for i=1:length(As1)]) )

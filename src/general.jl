@@ -80,11 +80,11 @@ isrational(x::T) where T<:Integer = true
 
 isrational(x::T) where T<:Rational = true
 
-isrational(x::fmpq) = true # Nemo rational type
+isrational(x::QQFieldElem) = true # Nemo rational type
 
-isrational(x::qqbar) = degree(x)==1 && iszero(imag(x)) # Nemo algebraic number type
+isrational(x::QQBarFieldElem) = degree(x)==1 && iszero(imag(x)) # Nemo algebraic number type
 
-function isrational(x::P) where P<:PolyElem
+function isrational(x::P) where P<:PolyRingElem
     if degree(x)>0
         return false
     else
@@ -92,7 +92,7 @@ function isrational(x::P) where P<:PolyElem
     end
 end
 
-function isrational(x::F) where {P<:PolyElem, F<:FracElem{P}}
+function isrational(x::F) where {P<:PolyRingElem, F<:FracElem{P}}
     isone(denominator(x)) && isrational(numerator(x)) 
 end
 
@@ -101,19 +101,19 @@ rationalize(x::T) where T<:Integer = convert(Rational{BigInt}, x)
 
 rationalize(x::T) where T<:Rational = convert(Rational{BigInt}, x)
 
-rationalize(x::fmpq) = convert(Rational{BigInt}, x) # Nemo rational type
+rationalize(x::QQFieldElem) = convert(Rational{BigInt}, x) # Nemo rational type
 
-function rationalize(x::qqbar) #Nemo algebraic number type
+function rationalize(x::QQBarFieldElem) #Nemo algebraic number type
     (degree(x)==1 && iszero(imag(x))) || error("not rational")
-    convert(Rational{BigInt}, fmpq(x)) 
+    convert(Rational{BigInt}, Nemo.QQ(x)) 
 end
 
-function rationalize(x::P) where P<:PolyElem
+function rationalize(x::P) where P<:PolyRingElem
     degree(x)<=0 || error("not rational")
     rationalize(constant_coefficient(x))
 end
 
-function rationalize(x::F) where  {P<:PolyElem, F<:FracElem{P}}
+function rationalize(x::F) where  {P<:PolyRingElem, F<:FracElem{P}}
     isone(denominator(x)) || error("not rational")
     rationalize(numerator(x))
 end
@@ -126,7 +126,7 @@ function common_leading_coeffs(fs::Vector{F}) where F<:FieldElem
     fs
 end
 
-function common_leading_coeffs(fs::Vector{F}) where {T<:FieldElement, P<:PolyElem{T}, F<:FracElem{P}}
+function common_leading_coeffs(fs::Vector{F}) where {T<:FieldElement, P<:PolyRingElem{T}, F<:FracElem{P}}
     l = lcm([denominator(f) for f in fs])
     Fs = [divexact(l*numerator(f), denominator(f)) for f in fs]
     d = maximum([degree(F) for F in Fs])
@@ -134,20 +134,20 @@ function common_leading_coeffs(fs::Vector{F}) where {T<:FieldElement, P<:PolyEle
     common_leading_coeffs([coeff(F, d)//l1 for F in Fs])
 end
 
-function constant_factors(f::PolyElem{T}) where T<:FieldElement
+function constant_factors(f::PolyRingElem{T}) where T<:FieldElement
     f0 = parent(f)(common_leading_coeffs(collect(coefficients(f))))
     gcd(f, f0)
 end
 
-function rational_roots(f::PolyElem{T}) where T<:FieldElement
-    p = map_coefficients(c->fmpq(rationalize(c)), constant_factors(f)) # fmpq needs Nemo
+function rational_roots(f::PolyRingElem{T}) where T<:FieldElement
+    p = map_coefficients(c->QQ(rationalize(c)), constant_factors(f)) # QQ needs Nemo
     roots(p) 
 end
 
-function Nemo.roots(f::PolyElem{qqbar})
+function Nemo.roots(f::PolyRingElem{QQBarFieldElem})
     n = degree(f)
     X = gen(parent(f))
-    _, xys= PolynomialRing(Nemo.QQBar, vcat(:x,  [Symbol("y$i") for i = 1:n]))
+    _, xys= polynomial_ring(Nemo.QQBar, vcat(:x,  [Symbol("y$i") for i = 1:n]))
     x = xys[1]
     ys = xys[2:end]
 
@@ -158,14 +158,14 @@ function Nemo.roots(f::PolyElem{qqbar})
         G = prod([ G(x, vcat(zeros(Int, i-1), α, ys[i+1:end])...) for α in conjugates(as[i])])
     end
 
-    g = map_coefficients(c->fmpq(c), G(X, zeros(parent(X), n)...))
+    g = map_coefficients(c->QQ(c), G(X, zeros(parent(X), n)...))
     
-    rs = roots(g, QQBar)
+    rs = roots(g)
     [r for r in rs if iszero(f(r))]
 end
 
 
-valuation_infinity(f::F) where {T<:RingElement, P<:PolyElem{T}, F<:FracElem{P}} = 
+valuation_infinity(f::F) where {T<:RingElement, P<:PolyRingElem{T}, F<:FracElem{P}} = 
     # See Bronstein's book, Definition 4.3.1, p. 115
     degree(denominator(f)) - degree(numerator(f))
 
@@ -203,7 +203,7 @@ end
 
 
 EuclideanSize(f::T) where T <: Integer = abs(f)
-EuclideanSize(f::T) where T <: PolyElem = degree(f)
+EuclideanSize(f::T) where T <: PolyRingElem = degree(f)
 
 function Base.gcdx(a::T, b::T, c::T) where T <: RingElem
     # ExtendedEuclidean - diophantine version
@@ -252,7 +252,7 @@ function PartialFraction(a::T, d::Vector{T}, e::Vector{Int}) where T <: RingElem
     a0, A
 end
 
-function SubResultant(A::PolyElem{T}, B::PolyElem{T}) where T <: RingElement
+function SubResultant(A::PolyRingElem{T}, B::PolyRingElem{T}) where T <: RingElement
     # See Bronstein's book, Section 1.5, p. 24 
     degree(A) >= degree(B) || error("degree(A) must be >= degree(B)")
     T_one = one(leading_coefficient(A)) # 1 of type T
@@ -299,13 +299,13 @@ function SubResultant(A::PolyElem{T}, B::PolyElem{T}) where T <: RingElement
     constant_coefficient(divexact(s*c_num*Rs[k+1]^degree(Rs[k-1+1]), c_den)), vcat(Rs[1:k+1], zero_poly)
 end
 
-function Squarefree_Musser(A::PolyElem{T}) where T <: RingElement
+function Squarefree_Musser(A::PolyRingElem{T}) where T <: RingElement
     # See Bronstein's book, Section 1.7, p. 29 
     c = content(A)
     S = divexact(A, c)
     Sminus = gcd(S, derivative(S))
     Sstar = divexact(S, Sminus)
-    As = PolyElem{T}[]
+    As = PolyRingElem{T}[]
     k = 1
     while degree(Sminus)>0 
         Y = gcd(Sstar, Sminus)
@@ -319,14 +319,14 @@ function Squarefree_Musser(A::PolyElem{T}) where T <: RingElement
     As
 end
 
-function Squarefree(A::PolyElem{T}) where T <: RingElement    
+function Squarefree(A::PolyRingElem{T}) where T <: RingElement    
     # See Bronstein's book, Section 1.7, p. 32 
     c = content(A)
     S = divexact(A, c)
     Sprime = derivative(S)
     Sminus = gcd(S, Sprime)
     Sstar = divexact(S, Sminus)
-    As = PolyElem{T}[]
+    As = PolyRingElem{T}[]
     k = 1
     Y = divexact(Sprime, Sminus)
     Z = Y - derivative(Sstar)

@@ -2,7 +2,7 @@
 
 struct ComplexExtensionDerivation{T<:FieldElement, P<:PolyElem{T}} <: Derivation
     domain::AbstractAlgebra.ResField{P}
-    D::Derivation    
+    D::Derivation
     function ComplexExtensionDerivation(domain::AbstractAlgebra.ResField{P}, D::Derivation) where {T<:FieldElement, P<:PolyElem{T}}
         base_ring(base_ring(base_ring(domain)))==D.domain || error("base ring of domain must be domain of D")
         m = modulus(domain)
@@ -24,7 +24,7 @@ function Base.imag(f::AbstractAlgebra.ResFieldElem{P}) where {T<:FieldElement, P
     #degree(m)==2 && isone(coeff(m, 0)) && iszero(coeff(m, 1)) && isone(coeff(m,2)) ||
     #    error("f must be element of residue field modulo X^2+1.")
     coeff(data(f), 1)
-end 
+end
 
 import Base: (*)
 
@@ -44,9 +44,9 @@ end
 Base.iszero(D::ComplexExtensionDerivation) = iszero(D.D)
 isbasic(D::ComplexExtensionDerivation) = isbasic(D.D)
 MonomialDerivative(D::ComplexExtensionDerivation) = MonomialDerivative(D.D)
-BaseDerivation(D::ComplexExtensionDerivation) = D.D 
+BaseDerivation(D::ComplexExtensionDerivation) = D.D
 
-function constant_field(D::ComplexExtensionDerivation) 
+function constant_field(D::ComplexExtensionDerivation)
     C = constant_field(D.D)
     Cz, I = PolynomialRing(C, :I)
     ResidueField(Cz, I^2+1)
@@ -55,19 +55,19 @@ end
 isconstant(f::AbstractAlgebra.ResFieldElem{P}, D::ComplexExtensionDerivation) where {T<:FieldElement, P<:PolyElem{T}} =
     isconstant(real(f), D.D) && isconstant(imag(f), D.D)
 
-function constantize(f::AbstractAlgebra.ResFieldElem{P}, D::ComplexExtensionDerivation) where {T<:FieldElement, P<:PolyElem{T}} 
+function constantize(f::AbstractAlgebra.ResFieldElem{P}, D::ComplexExtensionDerivation) where {T<:FieldElement, P<:PolyElem{T}}
     u = constantize(real(f), D.D)
     v = constantize(imag(f), D.D)
     C = parent(u)
     Cz, I = PolynomialRing(C, :I)
-    CI = ResidueField(Cz, I^2+1)   
+    CI = ResidueField(Cz, I^2+1)
     CI(u+v*I)
 end
 
 isrational(f::AbstractAlgebra.ResFieldElem{P}) where {T<:FieldElement, P<:PolyElem{T}} =
     isrational(real(f)) && iszero(imag(f))
 
-function rationalize(f::AbstractAlgebra.ResFieldElem{P}) where {T<:FieldElement, P<:PolyElem{T}} 
+function rationalize(f::AbstractAlgebra.ResFieldElem{P}) where {T<:FieldElement, P<:PolyElem{T}}
     iszero(imag(f)) || error("not rational")
     rationalize(real(f))
 end
@@ -78,9 +78,9 @@ contains_I(P::PolyRing{T}) where T<:RingElement = contains_I(base_ring(P))
 
 contains_I(F::FracField{T}) where T<:RingElement = contains_I(base_ring(F))
 
-function contains_I(F::AbstractAlgebra.ResField{P}) where {T<:FieldElement, P<:PolyElem{T}}    
+function contains_I(F::AbstractAlgebra.ResField{P}) where {T<:FieldElement, P<:PolyElem{T}}
     m = modulus(F)
-    if degree(m)==2 && isone(coeff(m, 0)) && iszero(coeff(m, 1)) && isone(coeff(m,2)) 
+    if degree(m)==2 && isone(coeff(m, 0)) && iszero(coeff(m, 1)) && isone(coeff(m,2))
         return true
     else
         error("contains_I not appplicable for residue field with modulus != X^2+1.")
@@ -95,9 +95,9 @@ get_I(P::PolyRing{T}) where T<:RingElement = get_I(base_ring(P)) + zero(P)
 
 get_I(F::FracField{T}) where T<:RingElement = get_I(base_ring(F)) + zero(F)
 
-function get_I(F::AbstractAlgebra.ResField{P}) where {T<:FieldElement, P<:PolyElem{T}}    
+function get_I(F::AbstractAlgebra.ResField{P}) where {T<:FieldElement, P<:PolyElem{T}}
     m = modulus(F)
-    if degree(m)==2 && isone(coeff(m, 0)) && iszero(coeff(m, 1)) && isone(coeff(m,2)) 
+    if degree(m)==2 && isone(coeff(m, 0)) && iszero(coeff(m, 1)) && isone(coeff(m,2))
         return gen(base_ring(F)) + zero(F)
     else
         error("get_I not appplicable for residue field with modulus != X^2+1.")
@@ -127,7 +127,7 @@ end
 
 Given a field `k` not containing `√-1` and a derivation `D` on `k`, return the complexified field
 `k1=k(√-1)`, the generator `I≈√-1` of this field and the unique extension derivation `D1` on `k1` of `D` that
-satisfies `D1(√-1)=0`. 
+satisfies `D1(√-1)=0`.
 """
 function Complexify(k::AbstractAlgebra.Field, D::Derivation) # where {T <:FieldElement, F<: AbstractAlgebra.Field{T}}
     !contains_I(k) || error("k already contains I=sqrt(-1)")
@@ -147,9 +147,9 @@ return the field `K1=k(√-1)(t)`, the generators `t` and `I≈√-1` for `K1`, 
 the derivation `D1` on `K1` corresponding to `D`
 such that the differential fields `(K,D)` and `(K1,D1)` are isomorphic.
 """
-function switch_t_i(K::AbstractAlgebra.ResField{P}, D::Derivation) where 
+function switch_t_i(K::AbstractAlgebra.ResField{P}, D::Derivation) where
     {T<:FieldElement, R<:PolyElem{T}, F<:FracElem{R}, P<:PolyElem{F}}
-    domain(D)==K || error("K must be the domain of D")        
+    domain(D)==K || error("K must be the domain of D")
     k = base_ring(base_ring(base_ring(base_ring(K))))
     D0 = BaseDerivation(BaseDerivation(D))
     kI, I, D0I = Complexify(k, D0)
@@ -173,11 +173,11 @@ end
 transform elements of `k(t)(√-1)` to elements of `k(√-1)(t)`.
 
 Given an element `f` of a complexified field of the form `K=k(t)(√-1)`
-and the generators `t` and `I≈√-1` for the field `K1=k(√-1)(t)` 
+and the generators `t` and `I≈√-1` for the field `K1=k(√-1)(t)`
 (as returned by `switch_t_i`), return the corresponding element
 `f1` in `K1`
 """
-function transform(f::K, t, I) where 
+function transform(f::K, t, I) where
     {T<:FieldElement, R<:PolyElem{T}, F<:FracElem{R}, P<:PolyElem{F}, K<:AbstractAlgebra.ResFieldElem{P}}
     a = numerator(real(f))(t)
     b = denominator(real(f))(t)
@@ -192,7 +192,7 @@ end
 transform elements of `k(√-1)(t)` to elements of `k(t)(√-1)`.
 
 Given an element `f` of a field of the form `K=k(√-1)(t)`
-and the generators `t` and `I≈√-1` for the isomorphic 
+and the generators `t` and `I≈√-1` for the isomorphic
 field `K1=k(t)(√-1)`, return the corresponding element
 `f1` in `K1`
 """
@@ -207,7 +207,7 @@ function backtransform(f::K, t, I) where
 end
 
 
-function InFieldDerivative(f::K, D::ComplexExtensionDerivation) where 
+function InFieldDerivative(f::K, D::ComplexExtensionDerivation) where
     {T<:FieldElement, R<:PolyElem{T}, F<:FracElem{R}, P<:PolyElem{F}, K<:AbstractAlgebra.ResFieldElem{P}}
     ktI = parent(f)
     I0 = ktI(gen(base_ring(ktI)))
@@ -220,7 +220,7 @@ end
 
 #Note: InFieldLogarithmicDerivative is merely a wrapper for InFieldLogarithmicDerivativeOfRadical
 
-function InFieldLogarithmicDerivativeOfRadical(f::K, D::ComplexExtensionDerivation; expect_one::Bool=false) where 
+function InFieldLogarithmicDerivativeOfRadical(f::K, D::ComplexExtensionDerivation; expect_one::Bool=false) where
     {T<:FieldElement, R<:PolyElem{T}, F<:FracElem{R}, P<:PolyElem{F}, K<:AbstractAlgebra.ResFieldElem{P}}
     ktI = parent(f)
     I0 = ktI(gen(base_ring(ktI)))
@@ -231,36 +231,36 @@ function InFieldLogarithmicDerivativeOfRadical(f::K, D::ComplexExtensionDerivati
     n, backtransform(u, t0, I0), ρ
 end
 
-function RischDE(f::K, g::K, D::ComplexExtensionDerivation) where 
+function RischDE(f::K, g::K, D::ComplexExtensionDerivation) where
     {T<:FieldElement, R<:PolyElem{T}, F<:FracElem{R}, P<:PolyElem{F}, K<:AbstractAlgebra.ResFieldElem{P}}
     ktI = parent(f)
     I0 = ktI(gen(base_ring(ktI)))
     t0 = gen(base_ring(base_ring(base_ring(ktI))))
-    _, t, I, D =  switch_t_i(ktI, D)  
+    _, t, I, D =  switch_t_i(ktI, D)
     f = transform(f, t, I)
     g = transform(g, t, I)
-    y, ρ = RischDE(f, g, D) 
+    y, ρ = RischDE(f, g, D)
     backtransform(y, t0, I0), ρ
 end
 
-function ParamRischDE(f::K, gs::Vector{K}, D::ComplexExtensionDerivation) where 
-    {T<:FieldElement, R<:PolyElem{T}, F<:FracElem{R}, P<:PolyElem{F}, K<:AbstractAlgebra.ResFieldElem{P}}
-    ktI = parent(f)
-    I0 = ktI(gen(base_ring(ktI)))
-    t0 = gen(base_ring(base_ring(base_ring(ktI))))    
-    _, t, I, D =  switch_t_i(ktI, D)
-    f = transform(f, t, I)
-    gs = [transform(g, t, I) for g in gs]
-    hs, A = ParamRischDE(f, gs, D) # could A have complex entries ???? 
-    [backtransform(h, t0, I0) for h in hs], A
-end
-
-function LimitedIntegrate(f::K, w::K, D::ComplexExtensionDerivation) where 
+function ParamRischDE(f::K, gs::Vector{K}, D::ComplexExtensionDerivation) where
     {T<:FieldElement, R<:PolyElem{T}, F<:FracElem{R}, P<:PolyElem{F}, K<:AbstractAlgebra.ResFieldElem{P}}
     ktI = parent(f)
     I0 = ktI(gen(base_ring(ktI)))
     t0 = gen(base_ring(base_ring(base_ring(ktI))))
-    _, t, I, D =  switch_t_i(ktI, D)    
+    _, t, I, D =  switch_t_i(ktI, D)
+    f = transform(f, t, I)
+    gs = [transform(g, t, I) for g in gs]
+    hs, A = ParamRischDE(f, gs, D) # could A have complex entries ????
+    [backtransform(h, t0, I0) for h in hs], A
+end
+
+function LimitedIntegrate(f::K, w::K, D::ComplexExtensionDerivation) where
+    {T<:FieldElement, R<:PolyElem{T}, F<:FracElem{R}, P<:PolyElem{F}, K<:AbstractAlgebra.ResFieldElem{P}}
+    ktI = parent(f)
+    I0 = ktI(gen(base_ring(ktI)))
+    t0 = gen(base_ring(base_ring(base_ring(ktI))))
+    _, t, I, D =  switch_t_i(ktI, D)
     f = transform(f, t, I)
     w = transform(w, t, I)
     v, cs, ρ = LimitedIntegrate(f, w, D) # could cs have complex elements ???
@@ -272,9 +272,9 @@ function ParametricLogarithmicDerivative(f::K, w::K, D::ComplexExtensionDerivati
     ktI = parent(f)
     I0 = ktI(gen(base_ring(ktI)))
     t0 = gen(base_ring(base_ring(base_ring(ktI))))
-    _, t, I, D =  switch_t_i(ktI, D)  
+    _, t, I, D =  switch_t_i(ktI, D)
     f = transform(f, t, I)
     w = transform(w, t, I)
-    n, m, v, ρ = ParametricLogarithmicDerivative(f, w, D) 
+    n, m, v, ρ = ParametricLogarithmicDerivative(f, w, D)
     n, m, backtransform(v, t0, I0), ρ
 end
